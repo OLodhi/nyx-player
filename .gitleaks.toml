@@ -1,0 +1,11 @@
+# Détection de secrets (gitleaks) : règles par défaut, plus les valeurs publiques ou factices connues.
+# La clé « publishable » Supabase de web/auth/supabase-config.js porte la marque « gitleaks:allow » sur sa
+# ligne : un vrai secret ajouté ailleurs dans ce fichier serait encore signalé.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Valeurs factices des tests"
+regexTarget = "line"
+# Jeton d'exemple de jwt.io (sub 1234567890) : sert à tester le masquage des jetons dans les journaux
+regexes = [ '''eyJhbGciOiJIUzI1NiJ9\.eyJzdWIiOiIxMjM0NTY3ODkwIn0\.''' ]

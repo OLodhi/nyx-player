@@ -1,0 +1,8 @@
+{
+  "name": "nyx-publication-signature",
+  "private": true,
+  "description": "Outil de signature des installeurs Windows (tauri signer), installé seul sur une machine neuve par .github/workflows/release.yml, sans les dépendances de l'app.",
+  "dependencies": {
+    "@tauri-apps/cli": "2.11.5"
+  }
+}

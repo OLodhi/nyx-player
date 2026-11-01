@@ -1,0 +1,60 @@
+/**
+ * ResetOptionsModal - Styles additionnels
+ */
+
+.reset-options-modal {
+    max-width: 28rem;
+}
+
+.reset-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+}
+
+.reset-option-item {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--hover-overlay);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-out);
+}
+
+.reset-option-item:hover {
+    background: var(--active-overlay);
+}
+
+.reset-option-item input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.1rem;
+    accent-color: var(--nyx-red);
+    cursor: pointer;
+}
+
+.reset-option-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.reset-option-label {
+    font-weight: var(--font-medium);
+    color: var(--text-primary);
+}
+
+.reset-option-desc {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.reset-warning {
+    font-size: var(--text-sm);
+    color: var(--color-warning);
+    margin: var(--space-2) 0 var(--space-4) 0;
+}

@@ -1,0 +1,15 @@
+[package]
+name = "tauri-plugin-nyx-android"
+version = "0.1.0"
+description = "Nyx Player native Android bridge: embedded Media3 player and Keystore-backed secure storage"
+edition = "2021"
+license = "GPL-3.0-or-later"
+rust-version = "1.77.2"
+links = "tauri-plugin-nyx-android"
+publish = false
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }

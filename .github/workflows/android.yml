@@ -1,0 +1,223 @@
+# Fabrication des APK Android : compile tout (l'interface web, le Rust et le code Kotlin du lecteur,
+# plugin Android), signe l'APK et le propose au téléchargement dans l'onglet « Actions » (rubrique
+# « Artifacts »). Installation : télécharger l'artefact, le décompresser, puis `adb install -r`.
+#
+# Même compilation qu'en local (`./scripts/android.ps1 build --apk --split-per-abi --target armv7`) :
+# version optimisée (« release »), signée ensuite avec la clé de debug, comme les APK de test du PC.
+# Deux APK, fabriqués en parallèle par deux machines (la durée reste celle d'un seul) :
+#   - armv7 (32 bits) : Chromecast / Android TV, qui n'accepte que celui-ci ;
+#   - arm64 (64 bits) : téléphones récents. Android 15 affiche « pas compatible avec la dernière
+#     version d'Android » devant un APK 32 bits, même s'il fonctionne.
+# Le bouton « Run workflow » (choix « abi ») permet de n'en fabriquer qu'un, mais GitHub ne l'affiche
+# que pour un workflow présent sur main, donc après la prochaine publication.
+# Les tests Kotlin du plugin Android (logique du lecteur, sans appareil) tournent avec l'armv7.
+#
+# Dépôt public `kunai974/nyx-player` (minutes gratuites) : à chaque PR qui touche l'app (chemins
+# ci-dessous), sans étiquette, y compris vers `main` (on y travaille par PR vers `main`). Ce sont les
+# tests Kotlin et la compilation Android qui manquaient au cloud. Pas d'envoi sur `main` : la PR a
+# déjà fabriqué l'APK du même code.
+# Dépôt privé (atelier) : jamais tout seul sur une branche de travail (économie des minutes GitHub, circuit
+# `integration` → `develop`).
+# Seulement sur une PR portant l'étiquette `ci-github` (une PR vers `main` sans étiquette ne le lance
+# pas : la PR `integration` → `develop` a déjà fourni l'APK), ou au bouton « Run workflow ». Sinon, les APK se fabriquent sur le PC
+# par la CI complète.
+#
+# Secrets du dépôt (Settings → Secrets and variables → Actions), à ajouter une fois :
+#   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY : sans eux, l'APK compile mais ne peut pas se connecter ;
+#   ANDROID_DEBUG_KEYSTORE_B64 : la clé de debug du PC encodée en base64, pour que l'APK s'installe
+#     par-dessus Nyx sans rien effacer. Sans elle, une clé jetable est créée à chaque fois.
+name: Android
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - 'src/**'
+      - 'src-tauri/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.npmrc'
+      - 'vite.config.ts'
+      - 'tsconfig*.json'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+    inputs:
+      abi:
+        description: 'Architecture (armv7 = Chromecast / Android TV, arm64 = téléphone)'
+        type: choice
+        default: armv7 et arm64
+        options:
+          - armv7
+          - arm64
+          - armv7 et arm64
+
+# Une autre étiquette posée sur la PR ne doit pas annuler un passage en cours : groupe à part.
+concurrency:
+  group: android-${{ github.ref }}${{ (github.event.action == 'labeled' && github.event.label.name != 'ci-github') && format('-{0}', github.run_id) || '' }}
+  # Sur main (dépôt public), chaque fusion garde son passage complet : seules les PR s'annulent.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    name: APK Android (${{ matrix.abi }})
+    if: >-
+      (github.repository == 'kunai974/nyx-player' && github.event.action != 'labeled') ||
+      (github.event_name != 'pull_request' && github.event_name != 'push') ||
+      (github.event.action == 'labeled' && github.event.label.name == 'ci-github') ||
+      (github.event_name == 'pull_request' && github.event.action != 'labeled' &&
+        contains(github.event.pull_request.labels.*.name, 'ci-github'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      # Un APK en échec n'arrête pas l'autre : il reste téléchargeable.
+      fail-fast: false
+      matrix:
+        # Sans choix (PR, envoi) : les deux.
+        abi: ${{ fromJSON(inputs.abi == 'armv7' && '["armv7"]' || inputs.abi == 'arm64' && '["arm64"]' || '["armv7","arm64"]') }}
+    env:
+      # Même valeurs factices que ci.yml si les secrets manquent : l'APK compile, sans connexion possible.
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://example.invalid' }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'ci-placeholder' }}
+      ABI_CHOICE: ${{ matrix.abi }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      # Cible de cette machine : dossier de sortie Gradle, cible Tauri, cible Rust.
+      - name: Architecture
+        id: abi
+        run: |
+          case "$ABI_CHOICE" in
+            armv7) tauri='--target armv7'; rust='armv7-linux-androideabi'; dirs='arm' ;;
+            arm64) tauri='--target aarch64'; rust='aarch64-linux-android'; dirs='arm64' ;;
+            *) echo "::error::Architecture inconnue : $ABI_CHOICE"; exit 1 ;;
+          esac
+          {
+            echo "tauri=$tauri"
+            echo "rust=$rust"
+            echo "dirs=$dirs"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Bibliothèque libmpv (AAR) hors de git dans le dépôt public : téléchargée depuis la release des
+      # dépendances natives, empreinte vérifiée. Déjà en place avec la bonne empreinte : rien à faire.
+      - name: Bibliothèque libmpv
+        run: node scripts/binaires-natifs.mjs android
+
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          # Épinglée par empreinte, l'action ne lit plus la chaîne dans son nom : la donner ici
+          toolchain: stable
+          targets: ${{ steps.abi.outputs.rust }}
+
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          workspaces: src-tauri
+          key: android-${{ steps.abi.outputs.rust }}
+
+      # NDK préinstallé sur la machine GitHub ; le SDK Android aussi (ANDROID_HOME).
+      - name: NDK
+        run: echo "NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> "$GITHUB_ENV"
+
+      - name: Alerte si les secrets Supabase manquent
+        if: env.VITE_SUPABASE_URL == 'https://example.invalid'
+        run: echo "::warning::Secrets VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY absents - l'APK ne pourra pas se connecter."
+
+      # Lance aussi « pnpm build » (interface web) puis Gradle, qui compile le Rust et le Kotlin.
+      - name: Compilation
+        run: pnpm tauri android build --ci --apk --split-per-abi ${{ steps.abi.outputs.tauri }}
+
+      # Tests JVM de la logique du lecteur (AudioFocusPolicyTest, PlaybackPolicyTest…), sans appareil.
+      # Après la compilation : le projet Gradle du plugin n'existe qu'une fois tauri.settings.gradle créé.
+      - name: Tests Kotlin
+        if: matrix.abi == 'armv7'
+        working-directory: src-tauri/gen/android
+        run: bash ./gradlew --no-daemon :tauri-plugin-nyx-android:testDebugUnitTest
+
+      - name: Signature
+        id: sign
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_B64 }}
+          RUN_DIR: ${{ runner.temp }}
+          # Sur une PR, github.sha est le commit de fusion temporaire : prendre celui affiché dans la PR.
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)"
+          ks="$RUN_DIR/debug.keystore"
+          trap 'rm -f "$ks"' EXIT
+          if [ -n "$KEYSTORE_B64" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$ks"
+            echo "key=pc" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Secret ANDROID_DEBUG_KEYSTORE_B64 absent - clé jetable : désinstaller Nyx avant d'installer cet APK."
+            keytool -genkeypair -keystore "$ks" -storepass android -keypass android -alias androiddebugkey \
+              -keyalg RSA -keysize 2048 -validity 30 -dname 'CN=Android Debug,O=Android,C=US' >/dev/null
+            echo "key=jetable" >> "$GITHUB_OUTPUT"
+          fi
+          short="${HEAD_SHA::7}"
+          mkdir -p apk
+          for dir in ${{ steps.abi.outputs.dirs }}; do
+            name=$([ "$dir" = arm ] && echo armv7 || echo arm64)
+            unsigned="src-tauri/gen/android/app/build/outputs/apk/$dir/release/app-$dir-release-unsigned.apk"
+            "$tools/zipalign" -f -P 16 4 "$unsigned" "$RUN_DIR/aligned.apk"
+            "$tools/apksigner" sign --ks "$ks" --ks-pass pass:android --key-pass pass:android \
+              --out "apk/nyx-player-$name-$short.apk" "$RUN_DIR/aligned.apk"
+            "$tools/apksigner" verify "apk/nyx-player-$name-$short.apk"
+          done
+          ls -lh apk
+          echo "short=$short" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: nyx-player-apk-${{ matrix.abi }}-${{ steps.sign.outputs.short }}
+          path: apk/*.apk
+          # Stockage Actions limité à 0,5 Go par mois, compté heure par heure : les APK s'effacent après
+          # 2 jours (« Re-run all jobs » sur le passage, possible pendant 30 jours, les refait).
+          retention-days: 2
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Résumé
+        env:
+          KEY: ${{ steps.sign.outputs.key }}
+        run: |
+          {
+            echo "## APK Nyx Player ($ABI_CHOICE)"
+            echo
+            echo "Téléchargement : rubrique **Artifacts** en bas de cette page (fichier zip, gardé 2 jours ; ensuite « Re-run all jobs »)."
+            echo
+            if [ "$ABI_CHOICE" = armv7 ]; then
+              echo "- \`nyx-player-armv7-…apk\` : Chromecast / Android TV (fonctionne aussi sur un téléphone, avec une alerte d'Android 15)."
+            else
+              echo "- \`nyx-player-arm64-…apk\` : téléphone. Ne s'installe pas sur le Chromecast."
+            fi
+            echo
+            echo "Installation : \`adb install -r <fichier.apk>\` (l'APK de la même architecture que l'appareil)."
+            if [ "$KEY" = jetable ]; then
+              echo
+              echo "> Clé jetable (secret ANDROID_DEBUG_KEYSTORE_B64 absent) : désinstaller Nyx avant d'installer cet APK."
+            fi
+            if [ "$VITE_SUPABASE_URL" = https://example.invalid ]; then
+              echo
+              echo "> Secrets Supabase absents : cet APK ne peut pas se connecter à votre compte."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

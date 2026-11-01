@@ -1,0 +1,71 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# MPV binary
+resources/mpv/mpv.exe
+
+# Environment variables (API keys) : seul l'exemple sans secret est suivi
+.env
+.env.*
+!.env.example
+
+# Clés et magasins de clés (signature des APK, mises à jour) : jamais dans git
+*.key
+*.jks
+*.keystore
+*.p12
+*.pfx
+
+# État local de la CLI Supabase
+supabase/.temp/
+
+# graphify (graphe de connaissances régénérable, jamais versionné)
+.graphify_*
+.graphifyignore
+graphify-out/
+
+# Rapports de l'audit d'affichage (captures du catalogue de l'utilisateur : local uniquement)
+audit-out/
+banc-out/
+
+# Résultats de l'audit performance (régénérables : pnpm perf:*)
+perf-out/
+
+# Registre de l'app d'exemple de l'outil d'audit (créé par un passage d'essai)
+audit/exemple/registre.json
+
+
+# Claude Code : réglages personnels et copies de travail des sessions parallèles (local uniquement)
+.claude/settings.local.json
+.claude/worktrees/
+# Fichiers de test locaux, jamais commités (voir CLAUDE.md)
+tv-harness.html
+zz-preview-remote-TEST-ONLY.json
+
+# Sortie de tests enregistrée à la main (peut contenir des chemins du PC)
+vitest_output.txt
+
+# Rapport de couverture des tests (pnpm test:coverage)
+coverage/

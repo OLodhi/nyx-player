@@ -1,0 +1,21 @@
+{
+  "description": "Scénario joué sur le vrai mpv (relevé enregistré dans trace-mpv.json) puis sur le lecteur simulé (lecteurSimuleContrat.test.ts). Chaque étape : une action, puis l'attente des événements qu'elle produit.",
+  "proprietes": ["pause", "time-pos", "duration", "filename", "seeking", "paused-for-cache", "eof-reached", "core-idle", "volume", "mute", "aid", "sid", "speed", "sub-scale", "track-list"],
+  "etapes": [
+    { "nom": "chargement", "commande": ["loadfile", "A", "replace"], "attente_ms": 1500 },
+    { "nom": "saut relatif", "commande": ["seek", "3", "relative"], "attente_ms": 800 },
+    { "nom": "piste audio 2", "propriete": ["aid", 2], "attente_ms": 500 },
+    { "nom": "sous-titres 1", "propriete": ["sid", 1], "attente_ms": 500 },
+    { "nom": "sous-titres 0", "propriete": ["sid", 0], "attente_ms": 500 },
+    { "nom": "pause", "propriete": ["pause", true], "attente_ms": 500 },
+    { "nom": "reprise de la lecture", "commande": ["cycle", "pause"], "attente_ms": 500 },
+    { "nom": "saut près de la fin", "commande": ["seek", "fin-1", "absolute"], "attente_ms": 2500 },
+    { "nom": "fichier suivant sans arrêt", "commande": ["loadfile", "B", "replace"], "attente_ms": 1500 },
+    { "nom": "arrêt", "commande": ["stop"], "attente_ms": 600 },
+    { "nom": "option de départ", "propriete": ["start", "5"], "attente_ms": 300 },
+    { "nom": "chargement avec reprise", "commande": ["loadfile", "A", "replace"], "attente_ms": 1500 },
+    { "nom": "piste audio automatique", "propriete": ["aid", "auto"], "attente_ms": 500 },
+    { "nom": "arrêt final", "commande": ["stop"], "attente_ms": 600 },
+    { "nom": "saut sans fichier", "commande": ["seek", "3", "relative"], "attente_ms": 300 }
+  ]
+}

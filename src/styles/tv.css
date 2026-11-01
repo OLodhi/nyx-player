@@ -1,0 +1,922 @@
+/* ============================================================================
+   ANDROID TV — interface « 10 pieds »
+   Même APK que le téléphone : la marque `.nyx-tv` est posée sur <html> par main.tsx
+   quand le plugin natif détecte une TV (UiModeManager / leanback).
+   - La mise en page reste celle du bureau, sur une toile fixe de 1280 × 720 mise à l'échelle
+     de l'écran (utils/tvScale.ts). On ne change ici que ce qui
+     concerne la distance de lecture et la télécommande.
+   - Chaque sélecteur est préfixé `.nyx-tv` : aucun effet ailleurs, quel que soit
+     l'ordre des feuilles de style (même garde-fou que styles/mobile.css).
+   - Règles de parcours à la télécommande : src/utils/spatialNavigation/index.ts
+   Test : src/styles/__tests__/tvCss.test.ts vérifie le préfixage.
+   ============================================================================ */
+
+:root.nyx-tv {
+  /* Lecture à 3 m : tout est agrandi d'un cran via la racine */
+  font-size: 18px;
+
+  /* Zone sûre (overscan) : beaucoup de téléviseurs agrandissent l'image et en rognent les bords, sans
+     réglage pour l'éviter (4 à 5 % mesurés sur une vraie télé). Règle d'Android TV : 5 % de chaque bord, soit
+     64 px à gauche et à droite et 36 px en haut et en bas sur la toile de 1280 × 720.
+     Jamais une réduction de la page (elle faisait couper le contenu par la WebView) : seuls les
+     éléments (boutons, textes, listes) sont écartés du bord, un par un ; fonds, bannière et vidéo
+     restent plein écran. */
+  --tv-safe-x: 5vw;
+  --tv-safe-y: 5vh;
+
+  /* Barre latérale dans la zone sûre. Tous les décalages de contenu en dépendent (--sidebar-safe-zone,
+     --tv-sidebar-left, --tv-content-offset) : début des carrousels, textes de la bannière, colonnes de
+     Live TV et des Paramètres suivent la barre. L'espace entre la barre et le contenu reste celui
+     d'avant (3vw) : tout se décale avec la barre, rien d'autre ne bouge. */
+  --sidebar-m: var(--tv-safe-x);
+  --tv-sidebar-gap: 3vw;
+  --sidebar-safe-zone: calc(var(--sidebar-w) + var(--sidebar-m) + var(--tv-sidebar-gap));
+  --tv-content-offset: calc(var(--tv-sidebar-left) + var(--tv-sidebar-w) + var(--tv-sidebar-gap));
+
+  /* Fin des carrousels : place pour défiler jusqu'à la zone sûre à droite (règles des carrousels) */
+  --carousel-end-space: var(--tv-safe-x);
+
+  /* Mise en évidence lisible à 3 m sans être envahissante (0,25rem jugé trop épais) */
+  --focus-ring-width: 0.15rem;
+  --focus-ring-offset: 0.15rem;
+  /* Pas de halo : il débordait sur les boutons voisins, rapprochés sur les fiches */
+  --focus-ring-glow: none;
+}
+
+/* ---------------- Mise en évidence du focus ---------------- */
+
+/* La télécommande ne produit pas toujours `:focus-visible` dans la WebView : sur TV, tout élément
+   focusé est mis en évidence. Exception : un clic souris (mode TV de test sous Windows) ne doit
+   pas laisser de cadre ; `nyx-pointer` est retiré à la première touche (spatialNavigation/). */
+:root.nyx-tv:not(.nyx-pointer) :focus {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--focus-ring-glow);
+}
+
+/* Jamais de cadre autour de la page entière (Chromecast) : sans élément sélectionné, la première
+   flèche pouvait cadrer tout l'écran. Seul un élément de l'interface porte le cadre de focus. */
+:root.nyx-tv:not(.nyx-pointer) body:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Boutons ronds dont le style de bureau retire le contour avec !important (icônes de la barre
+   latérale, retour et remise à zéro des fiches) : sans ça, le focus y était invisible et la barre
+   semblait inatteignable. Le liseré suit leur forme ronde. */
+:root.nyx-tv:not(.nyx-pointer) .nav-item:focus,
+:root.nyx-tv:not(.nyx-pointer) .back-button:focus,
+:root.nyx-tv:not(.nyx-pointer) .reset-progress-btn:focus {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color) !important;
+  color: var(--text-primary);
+}
+
+/* Zone qui défile (synopsis) en cours de lecture : liseré blanc, les flèches la font défiler */
+:root.nyx-tv:not(.nyx-pointer) [data-nav-engaged]:focus {
+  outline-color: var(--text-primary);
+}
+
+/* Interrupteurs des Paramètres (guide TV, lecture en continu…) : la vraie case, de 0 × 0, était
+   ignorée par la télécommande et l'interrupteur inatteignable (Chromecast). Elle couvre
+   l'interrupteur, reste invisible, et le liseré est dessiné sur l'interrupteur. */
+.nyx-tv .toggle-switch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+:root.nyx-tv:not(.nyx-pointer) .toggle-switch input:focus {
+  outline: none;
+}
+
+:root.nyx-tv:not(.nyx-pointer) .toggle-switch input:focus + .toggle-slider {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Bouton « lecture » rond des cartes « Reprendre la lecture » : son flou d'arrière-plan (10 par rangée)
+   était la principale cause des saccades à la télécommande sur le Chromecast (55 % d'images en
+   retard avec, 23 % sans). Voile sombre fixe, même rond et même bordure. */
+.nyx-tv .card-play-button {
+  background: rgba(10, 12, 25, 0.5);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Fenêtre de mise à jour (par-dessus l'écran en cours) : fond opaque au lieu du verre flouté,
+   même règle que les autres flous coûteux du Chromecast ci-dessous. */
+.nyx-tv .update-notification__content {
+  background: rgba(10, 12, 28, 0.97);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Suite de la fluidité (Chromecast) : chacun de ces effets coûte peu seul, mais ensemble ils
+   doublaient les images en retard à la télécommande (≈ 24-33 % → 12 % sans eux, barre latérale gardée).
+   Remplacés par des équivalents sans calcul d'arrière-plan. */
+
+/* Bouton « + » (Ma liste) des affiches et de la bannière : voile sombre au lieu du verre flouté */
+.nyx-tv .watchlist-btn {
+  background-color: rgba(10, 12, 25, 0.55);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Ma liste : pastille ronde « film / série » de chaque affiche. Son flou, multiplié par les affiches à
+   l'écran, faisait toute la lenteur de la page (Chromecast : 100 % d'images en retard, 16 % sans).
+   Fond déjà sombre à 70 % : aspect quasi identique. */
+.nyx-tv .type-badge {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Fiches film et série (Chromecast : film 34-39 % d'images en retard, 12 % sans ces flous ;
+   série 79-83 %, 35 %). Pastilles (type, durée, année, note), étiquette « Trailer », boutons de remise à
+   zéro des épisodes, et le panneau du menu des sources, déjà opaque à 96 %, qui gardait son flou même
+   fermé. Fonds inchangés : l'aspect reste très proche sur le fond assombri des fiches. */
+.nyx-tv .movie-detail-page .badge,
+.nyx-tv .series-detail-page .badge,
+.nyx-tv .trailer-label,
+.nyx-tv .series-detail-page .episode-reset-btn,
+.nyx-tv .series-detail-page .reset-season-btn,
+.nyx-tv .movie-detail-page .reset-progress-btn,
+.nyx-tv .nyx-dropdown__panel {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Live TV (Chromecast : 36-41 % d'images en retard dans la liste des catégories, 23 % sans).
+   La colonne des catégories en verre dépoli en était la cause principale ; un flou plus léger ne
+   changeait rien. Fond sombre à 85 % à la place (aspect à valider par l'utilisateur). La fenêtre de
+   diagnostic cachée de chaque carte de chaîne gardait aussi un flou inutile. */
+.nyx-tv .tv-categories-sidebar {
+  background: rgba(12, 12, 20, 0.85);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.nyx-tv .channel-card__debug-popup {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Ouverture des fiches film et série, allégée sur TV (choix validé). Chromecast : pire
+   image 200-250 ms à l'ouverture, 167 ms ainsi ; 90 % des images sous 68 ms au lieu de ≈ 120 ms. Les
+   fondus restent (les éléments démarrent invisibles et n'apparaissent qu'à la fin de leur animation),
+   sans zoom ni glissement, plus courts ; l'image de fond apparaît en 0,3 s ; le logo ne flotte plus
+   (animation sans fin qui faisait redessiner la fiche en continu). `fadeIn` : opacité seule. */
+.nyx-tv .movie-detail-page,
+.nyx-tv .series-detail-page {
+  transform: none;
+  animation-name: fadeIn;
+  animation-duration: 0.25s;
+}
+
+.nyx-tv .movie-detail-page .main-layer.active > *,
+.nyx-tv .series-detail-page .main-layer.active > *,
+.nyx-tv .similar-movies-carousel-container.ready {
+  animation-name: fadeIn;
+  animation-duration: 0.3s;
+}
+
+.nyx-tv .movie-detail-page .backdrop-bg,
+.nyx-tv .series-detail-page .backdrop-bg {
+  transition-duration: 0.3s;
+}
+
+/* Nom seul : le raccourci `animation` remettait `animation-fill-mode` à `none` et le logo, enfant de
+   `.main-layer` (opacité 0 au départ), disparaissait à la fin de son fondu d'entrée. */
+.nyx-tv .movie-detail-page .detail-logo,
+.nyx-tv .series-detail-page .detail-logo {
+  animation-name: none;
+}
+
+/* Fiches film et série : le logo titre (ou le titre) démarrait à 80 px du haut, sous le bas de la flèche
+   Retour (zone sûre + 4 rem = 100 px) : trop près d'elle (Chromecast). Le contenu commence
+   maintenant un cran sous la flèche. */
+.nyx-tv .movie-detail-page .detail-layout,
+.nyx-tv .series-detail-page .detail-layout {
+  padding-top: calc(var(--tv-safe-y) + 4rem + var(--space-4));
+}
+
+/* Carrousel « Similaires » : will-change permanent = un calque graphique de plus en continu sur la
+   fiche, sans animation qui en profite sur TV. L'isolation (empilement) reste. */
+.nyx-tv .similar-movies-carousel-container {
+  will-change: auto;
+}
+
+/* Bannière d'accueil : pastilles (recommandé, année, durée, qualité) et boutons « Lecture » /
+   « Détails ». Leur flou se recalculait pendant la navigation plus bas, même hors de l'écran
+   (Chromecast : accueil 13-16 % d'images en retard, 7 % sans les flous restants). « Détails »,
+   très transparent, prend le voile sombre des autres boutons pour rester lisible sur l'image. */
+.nyx-tv .hero-banner .match-score,
+.nyx-tv .hero-banner .year,
+.nyx-tv .hero-banner .duration,
+.nyx-tv .hero-banner .quality-badge,
+.nyx-tv .btn-hero-play {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.nyx-tv .btn-hero-info {
+  background-color: rgba(10, 12, 25, 0.55);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Bouton « + » des cartes dépliées et de « Voir tout », panneau d'informations d'une carte : des règles
+   plus précises gardaient leur flou malgré la règle générale du bouton « + » */
+.nyx-tv .carousel-card.show-info > .card-watchlist-btn,
+.nyx-tv .carousel-card.show-details > .card-watchlist-btn,
+.nyx-tv .category-detail-card.show-details .card-watchlist-btn,
+.nyx-tv .card-info-overlay.active {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Points de la bannière */
+.nyx-tv .hero-dot {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Halo sous l'icône active de la barre : dégradé qui s'estompe au lieu d'un flou (même taille visible) */
+.nyx-tv .active-glow {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: radial-gradient(circle, rgba(229, 9, 20, 0.85) 0%, rgba(180, 7, 16, 0.35) 40%, rgba(180, 7, 16, 0) 70%);
+  filter: none;
+}
+
+/* Carte qui perd la sélection : reprend sa taille sans animation (comme à l'agrandissement) */
+.nyx-tv .carousel-card,
+.nyx-tv .channel-card,
+.nyx-tv .watchlist-card,
+.nyx-tv .category-detail-card {
+  transition: none;
+}
+
+/* Éléments qui apparaissent sur la carte focusée (bouton « + », bandeau d'infos, dégradé du haut) : sans fondu.
+   Les cartes n'ont plus de calque graphique propre (≈ 100 calques évités), leurs fondus tournaient donc sur le fil
+   principal : le style de 220 à 280 éléments était recalculé image par image pendant 0,3 s à chaque flèche
+   (trace Chromecast). Ils apparaissent tout de suite, comme l'agrandissement de la carte. */
+.nyx-tv .carousel-card > .card-watchlist-btn,
+.nyx-tv .card-watchlist-btn.watchlist-btn,
+.nyx-tv .carousel-card .card-bottom-bar,
+.nyx-tv .carousel-card .card-image-wrapper::before,
+.nyx-tv .category-detail-card .card-top-gradient,
+.nyx-tv .category-detail-card .card-title-overlay {
+  transition: none;
+}
+
+/* Affiche sans fondu : une affiche dont l'opacité change pendant le défilement relançait 0,3 s de fondu, environ
+   40 % des images perdues à l'arrivée des affiches (banc du navigateur bridé). Garde-fou pour toute carte TV qui
+   jouerait encore sur l'opacité de son image. */
+.nyx-tv .carousel-card img {
+  transition: none;
+}
+
+/* Carte d'affiche en attente (rail de l'accueil, railRow.ts) : son image a perdu son adresse, et Chromium dessinerait
+   dessus son icône « image cassée ». Cachée ici plutôt que retirée de la carte : la retirer puis la remettre à chaque
+   affiche coûtait des images au défilement (banc du navigateur bridé). Case grise nue. */
+.nyx-tv .rail-slot .carousel-card img:not([src]) {
+  visibility: hidden;
+}
+
+/* « Voir tout » (CategoryDetailCard, gridPoster.ts) : même case grise nue que les cartes du rail. */
+.nyx-tv .category-detail-card .card-poster img:not([src]) {
+  visibility: hidden;
+}
+
+/* Pas de fondu d'entrée des cartes sur TV (comme la rangée, juste au-dessus) : chaque carte montée rejouait
+   0,4 s d'opacité et de montée sur le fil principal, une par flèche en latéral et une rangée entière à
+   chaque montage, soit une grande part des recalculs de style « Animation » mesurés sur Chromecast. */
+.nyx-tv .carousel-card:not(.skeleton) {
+  animation: none;
+}
+
+/* Connexion au compte et ajout du fournisseur : la carte dépassait la toile 16:9 (haut et bas coupés,
+   logo de 9 rem). Logo réduit, espacements resserrés : tout tient en 720. */
+.nyx-tv .supabase-auth__brand-logo,
+.nyx-tv .login-brand-logo {
+  height: 5rem;
+}
+
+.nyx-tv .supabase-auth__header,
+.nyx-tv .login-logo-container {
+  margin-bottom: var(--space-4);
+}
+
+.nyx-tv .supabase-auth__card,
+.nyx-tv .login-box {
+  padding: var(--space-6);
+}
+
+.nyx-tv .login-box .form-group {
+  margin-bottom: var(--space-3);
+}
+
+/* Champs de la carte, clavier ouvert : le liseré extérieur était rogné par la carte, qui défile. Il est
+   dessiné à l'intérieur du champ, et le champ garde un peu d'air quand la carte défile jusqu'à lui. */
+:root.nyx-tv:not(.nyx-pointer) .supabase-auth__input:focus {
+  outline-offset: calc(-1 * var(--focus-ring-width));
+}
+
+.nyx-tv .supabase-auth__input {
+  scroll-margin-block: var(--space-4);
+}
+
+/* Écrans d'entrée (connexion, choix du profil, ajout du fournisseur) dans la zone sûre : le bouton de
+   langue, à 1 rem du coin, était rogné par la télé, et la carte de connexion (90 % de la hauteur) comme
+   le contenu du choix du profil touchaient la bande rognée en haut et en bas. Le fond reste plein écran ;
+   la carte (hauteur de la page, 100 %) garde de l'air au-delà de la zone sûre et défile si besoin. Logo du choix du
+   profil réduit comme celui de la connexion (même écran d'entrée, même taille). */
+.nyx-tv .lang-toggle {
+  top: var(--tv-safe-y);
+  right: var(--tv-safe-x);
+}
+
+.nyx-tv .supabase-auth__card {
+  max-height: calc(100% - 4 * var(--tv-safe-y));
+}
+
+.nyx-tv .profile-selector__content {
+  padding: var(--tv-safe-y) var(--tv-safe-x);
+}
+
+.nyx-tv .profile-selector__logo {
+  height: 5rem;
+}
+
+/* Bandeau « base de l'appareil abîmée » sur le choix du profil : haut de 160 px dans sa largeur de bureau,
+   il poussait « Se déconnecter » sous le bas de la toile (720 px), hors d'atteinte. Le bandeau prend la
+   largeur de l'écran (texte sur trois lignes au plus) et les écarts se resserrent, seulement quand il
+   est affiché ; l'écran sans bandeau ne change pas. */
+.nyx-tv .profile-selector__content--db-damaged {
+  gap: var(--space-5);
+}
+
+.nyx-tv .profile-selector__content--db-damaged .profile-selector__logo {
+  margin-bottom: 0;
+}
+
+.nyx-tv .profile-selector__db-damaged {
+  max-width: none;
+  margin-bottom: 0;
+}
+
+/* Même bandeau sur l'erreur de chargement des profils : dans les 36 rem du bureau, le texte tombait sur
+   six lignes étroites ; il prend la largeur de la zone sûre */
+.nyx-tv .profile-error-db-notice {
+  width: calc(100% - 2 * var(--tv-safe-x));
+  max-width: none;
+}
+
+/* Retouches de la zone sûre, écran par écran (le haut de l'écran est rogné par beaucoup de télés) :
+   - Recherche : le champ, centré à droite de la barre latérale, paraissait décalé vers la droite ; il est
+     centré sur l'écran (même retrait des deux côtés) et descend sous la zone sûre. Le message sous le champ
+     garde les mêmes retraits, pour rester centré dessous.
+   - Fiches film et série : le bouton retour, à 3 % du haut, descend dans la zone sûre.
+   - Paramètres : un peu plus d'air en haut et à droite, au-delà de la zone sûre. */
+.nyx-tv .search-header {
+  padding-top: calc(var(--tv-safe-y) + var(--space-4));
+  padding-right: var(--sidebar-safe-zone);
+}
+
+.nyx-tv .no-results {
+  padding-right: var(--sidebar-safe-zone);
+}
+
+.nyx-tv .movie-detail-page .back-button,
+.nyx-tv .series-detail-page .back-button {
+  top: var(--tv-safe-y);
+}
+
+.nyx-tv .settings-main {
+  padding-top: calc(var(--tv-safe-y) + var(--space-4));
+  padding-right: calc(var(--tv-safe-x) + var(--space-4));
+}
+
+/* Ma liste : sur la toile de 1280 px, la page n'avait que 1,75 rem (31,5 px) en haut et à droite. Le titre
+   touchait le haut de l'écran et la dernière colonne de cartes le bord droit, deux zones que beaucoup de
+   télés rognent. Mêmes retraits que les Paramètres ; le fond de la page reste plein écran. */
+.nyx-tv .watchlist-page {
+  padding-top: calc(var(--tv-safe-y) + var(--space-4));
+  padding-right: calc(var(--tv-safe-x) + var(--space-4));
+}
+
+/* Synopsis d'une fiche film : cadre haut d'exactement 3 lignes, pour qu'une fois déroulé aucune ligne
+   ne soit coupée en deux par le haut du cadre */
+.nyx-tv .movie-detail-page .synopsis-container {
+  font-size: clamp(0.875rem, 1.5vw, 1.0625rem);
+  line-height: var(--leading-normal);
+  max-height: calc(3em * var(--leading-normal));
+}
+
+/* Synopsis d'une fiche série : même cadre de 3 lignes que le film, sélectionnable seulement s'il est coupé */
+.nyx-tv .series-detail-page .synopsis-container {
+  font-size: clamp(0.875rem, 1.5vw, 1.0625rem);
+  line-height: var(--leading-normal);
+  max-height: calc(3em * var(--leading-normal));
+}
+
+.nyx-tv .series-detail-page .synopsis-container .synopsis {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Cartes : le focus les met en avant */
+:root.nyx-tv .carousel-card:focus,
+:root.nyx-tv .channel-card:focus,
+:root.nyx-tv .profile-card:focus,
+:root.nyx-tv .watchlist-card:focus,
+:root.nyx-tv .category-detail-card:focus {
+  transform: scale(1.06);
+  z-index: 5;
+  /* Sans animation pour les profils ; les cartes de contenu ont l'agrandissement doux de la règle suivante */
+  transition: none;
+}
+
+/* Agrandissement doux (validé à l'œil sur le Chromecast, défilement instantané) : seule la carte qui reçoit
+   le focus grandit, en 120 ms, par `transform` seulement, que le compositeur joue sans mise en page. La transition est
+   posée sur l'état focusé : la carte quittée reprend sa taille d'un coup (règle « Carte qui perd la sélection »), une
+   seule carte s'anime à la fois et rien ne s'accumule, même à plusieurs appuis par seconde. L'ancien
+   agrandissement animé coûtait ≈ 10 points d'images en retard, avec le défilement animé en même temps. */
+:root.nyx-tv .carousel-card:focus,
+:root.nyx-tv .channel-card:focus,
+:root.nyx-tv .watchlist-card:focus,
+:root.nyx-tv .category-detail-card:focus {
+  transition: transform 120ms ease-out;
+}
+
+/* Éléments dans une liste qui défile (catégories, rubriques) : le liseré extérieur était rogné par
+   la liste. Il est dessiné à l'intérieur de l'élément, sans halo. */
+:root.nyx-tv:not(.nyx-pointer) .tv-category-item:focus,
+:root.nyx-tv:not(.nyx-pointer) .settings-nav-item:focus {
+  outline-offset: calc(-1 * var(--focus-ring-width));
+  box-shadow: none;
+}
+
+/* Guide TV : les programmes se touchent, le liseré extérieur passait sous le programme voisin */
+:root.nyx-tv:not(.nyx-pointer) .guide-program:focus,
+:root.nyx-tv:not(.nyx-pointer) .guide-tv-grid__channel-cell:focus {
+  outline-offset: calc(-1 * var(--focus-ring-width));
+  box-shadow: none;
+}
+
+/* Guide TV : la vue suit la sélection sans la cacher sous la colonne des chaînes, qui reste à gauche */
+.nyx-tv .guide-tv-grid__body {
+  scroll-padding-left: 10rem;
+}
+
+/* Tous les carrousels défilants : la vue suit la carte sélectionnée sans la laisser sous la barre latérale,
+   qui reste à gauche (à l'essai : l'accueil, la Recherche et les Similaires de la fiche
+   le faisaient aussi, pas seulement les épisodes). Un nouveau carrousel à défilement horizontal s'ajoute
+   ici ; un test (tvCss.test.ts) le vérifie. */
+.nyx-tv .content-carousel,
+.nyx-tv .tv-carousel-track,
+.nyx-tv .episodes-carousel {
+  scroll-padding-left: var(--sidebar-safe-zone);
+  /* Au bout de la rangée, la dernière carte s'arrête dans la zone sûre au lieu d'arriver au ras du bord
+     droit, que beaucoup de télés rognent. La fin de la rangée garde la place d'y défiler (règle ci-dessous). */
+  scroll-padding-right: var(--tv-safe-x);
+}
+
+/* Fin des carrousels : de quoi défiler jusqu'à la zone sûre à droite (accueil, Similaires, Recherche,
+   épisodes). Sans cet espace, la dernière carte restait au ras du bord droit, même avec la marge de
+   défilement. Le carrousel virtualisé de l'accueil n'a pas de padding : sa piste s'allonge d'autant
+   (--carousel-end-space, déclarée en tête de fichier, lue par rail/railRow.ts). */
+.nyx-tv .content-carousel,
+.nyx-tv .tv-carousel-track,
+.nyx-tv .all-results-view .content-carousel,
+.nyx-tv .similar-movies-carousel-container .content-carousel,
+.nyx-tv .series-detail-page .episodes-carousel {
+  padding-right: var(--tv-safe-x);
+}
+
+/* Épisodes : le carrousel coupe tout ce qui dépasse en hauteur. Pas d'agrandissement, et assez de
+   marge pour le liseré au-dessus et en dessous des cartes. */
+.nyx-tv .series-detail-page .episodes-carousel {
+  padding-top: calc(var(--focus-ring-width) + var(--focus-ring-offset) + var(--space-3));
+  padding-bottom: calc(var(--focus-ring-width) + var(--focus-ring-offset) + var(--space-5));
+}
+
+.nyx-tv .series-detail-page .episode-card-netflix:focus {
+  border-color: var(--focus-ring-color);
+}
+
+/* ---------------- Actions des cartes ---------------- */
+
+/* Pas de survol à la télécommande : l'état Ma liste (et la progression d'un épisode) s'affiche sur
+   la carte focusée, là où l'appui long sur OK agit (useTvLongPress) */
+.nyx-tv .carousel-card:focus > .card-watchlist-btn,
+.nyx-tv .tv-card-layer > .card-watchlist-btn,
+.nyx-tv .watchlist-card:focus .card-watchlist-btn,
+.nyx-tv .category-detail-card:focus .card-watchlist-btn,
+.nyx-tv .episode-card-netflix:focus .episode-reset-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Calque de sélection des rangées de l'accueil (Lists/tvCardLayerLogic.ts) : le bouton Ma liste et la note de la carte
+   sélectionnée, une seule fois par rangée au lieu d'une fois par carte. Il reprend la place et l'agrandissement de la
+   carte (posés en ligne), au-dessus d'elle, et laisse passer la souris. */
+.nyx-tv .tv-card-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 6;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  pointer-events: none;
+  transform-origin: center top;
+  scale: 1.06;
+}
+
+.nyx-tv .tv-card-layer[hidden],
+.nyx-tv .tv-card-layer [hidden] {
+  display: none;
+}
+
+/* Calque qui vient de changer de carte : le bouton Ma liste (fond, contour, icône) prend l'état de la nouvelle carte
+   d'un coup */
+.nyx-tv .tv-card-layer--moving .watchlist-btn,
+.nyx-tv .tv-card-layer--moving .watchlist-btn__icon {
+  transition: none;
+}
+
+/* Bouton Ma liste de la carte focusée : fondu de 120 ms (`opacity`, `transform`), avec l'agrandissement de la carte.
+   Seulement à l'apparition : sur la carte quittée, il disparaît d'un coup (sans fondu, règle des cartes plus haut). */
+.nyx-tv .carousel-card:focus > .card-watchlist-btn,
+.nyx-tv .watchlist-card:focus .card-watchlist-btn,
+.nyx-tv .category-detail-card:focus .card-watchlist-btn {
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out;
+}
+
+/* Titre de la carte focusée (bandeau du bas), comme au survol prolongé de la souris sur bureau. Le titre trop long
+   défile en boucle (`data-title-overflow`, Lists/cardTitle.ts) après 1 s sur la carte : rien ne défile pendant qu'on
+   passe de carte en carte, et une seule carte à la fois. */
+.nyx-tv .carousel-card:focus .card-bottom-bar,
+.nyx-tv .category-detail-card:focus .card-title-overlay {
+  opacity: 1;
+  transform: none;
+}
+
+.nyx-tv .carousel-card:focus[data-title-overflow] .card-title {
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-repeat: no-repeat;
+}
+
+.nyx-tv .category-detail-card:focus[data-title-overflow] .card-title-overlay {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.nyx-tv .carousel-card:focus[data-title-overflow] .card-title .title-text--copy,
+.nyx-tv .category-detail-card:focus[data-title-overflow] .card-title-overlay .title-text--copy {
+  display: inline-block;
+}
+
+.nyx-tv .carousel-card:focus[data-title-overflow] .card-title .title-text {
+  animation: marquee 8s linear 1s infinite;
+}
+
+.nyx-tv .category-detail-card:focus[data-title-overflow] .card-title-overlay .title-text {
+  animation: categoryMarquee 8s linear 1s infinite;
+}
+
+/* Survol sans souris (WebView d'Android TV, Lists/cardTitle.ts) : la carte que la page amène sous le pointeur resté à
+   sa place ne s'agrandit pas et ne passe pas au premier plan ; seul le focus compte. Mode TV sous Windows : le survol
+   revient comme sur bureau après un premier clic de la souris (`nyx-pointer`). */
+/* stylelint-disable defensive-css/no-accidental-hover -- annule le survol de bureau là où il arrive sans souris : sous
+   (hover: hover), la règle ne vaudrait plus si la WebView se déclare sans survol, alors que le survol de bureau, lui,
+   s'applique sans condition */
+:root.nyx-tv:not(.nyx-pointer) .carousel-card:hover:not(:focus),
+:root.nyx-tv:not(.nyx-pointer) .category-detail-card:hover:not(:focus) {
+  transform: none;
+  box-shadow: none;
+}
+
+:root.nyx-tv:not(.nyx-pointer) .carousel-card:hover:not(:focus) .card-play-button {
+  opacity: 0.85;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+:root.nyx-tv:not(.nyx-pointer) .content-carousel-container:hover {
+  z-index: 5;
+}
+
+:root.nyx-tv:not(.nyx-pointer) .carousel-card:hover:not(:focus) > .card-watchlist-btn {
+  opacity: 0;
+  transform: scale(0.8);
+  backdrop-filter: none;
+}
+/* stylelint-enable defensive-css/no-accidental-hover */
+
+/* Bouton « + » de la carte focusée : voile sombre (.watchlist-btn, plus haut), jamais de flou. Sur une Chromecast,
+   ce seul flou, redessiné à chaque flèche, faisait passer l'accueil de 10 à 20 % d'images en retard. */
+.nyx-tv .carousel-card > .card-watchlist-btn.watchlist-btn {
+  backdrop-filter: none; /* l'emporte aussi sur le flou du survol à la souris (ContentCarousel.css) */
+  -webkit-backdrop-filter: none;
+}
+
+.nyx-tv .channel-card__favorite {
+  opacity: 1;
+}
+
+/* Catégorie Live TV focusée : l'épingle apparaît comme au survol sur bureau, l'appui long sur OK
+   l'épingle ou la retire */
+.nyx-tv .tv-category-item:focus .tv-category-item__pin-btn {
+  opacity: 0.4;
+}
+
+.nyx-tv .tv-category-item:focus .tv-category-item__pin-btn.pinned {
+  opacity: 1;
+}
+
+/* Ma liste : les colonnes se partagent toute la largeur de la toile (même nombre de colonnes, cartes
+   un peu plus larges) au lieu de laisser une bande vide à droite. */
+.nyx-tv .watchlist-grid {
+  grid-template-columns: repeat(auto-fill, minmax(clamp(9.5rem, 12vw, 13rem), 1fr));
+}
+
+/* ---------------- Confort de lecture ---------------- */
+
+/* Carrousels de l'accueil trop éloignés les uns des autres : 1 rem de moins sous les
+   cartes (l'agrandissement de 1,06 tient largement) et 0,5 rem de moins entre deux rangées (1 rem
+   aujourd'hui, `.dashboard-content` dans DashboardPage.css), soit 1,5 rem par rangée. Limité à l'accueil :
+   les Similaires de la fiche et les autres écrans gardent leurs espacements. La hauteur réservée d'une
+   rangée pas encore montée baisse d'autant, pour que rien ne saute au montage. */
+.nyx-tv .dashboard-content .content-carousel {
+  padding-bottom: 1.5rem;
+}
+
+.nyx-tv .dashboard-content .content-carousel-container {
+  margin-bottom: var(--space-2);
+}
+
+/* Accueil Films / Séries, rail recyclé (components/Iptv/rail) : chaque catégorie réserve la hauteur exacte d'une
+   rangée montée, relevée sur la première remplie, et les rangées sont dans un calque posé sur la liste, glissées à la
+   hauteur de leur emplacement. Rien ne change donc de hauteur au montage, ce qu'exige le défilement joué par le
+   compositeur (scrollAnimator.ts). */
+.nyx-tv .rail {
+  position: relative;
+}
+
+.nyx-tv .rail .lazy-category {
+  min-height: var(--rail-row-height, 25rem);
+}
+
+.nyx-tv .rail-layer,
+.nyx-tv .rail-slot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+}
+
+/* Pas de fondu d'entrée : une rangée du rail est construite d'avance hors de l'écran, elle jouait son entrée sans être
+   vue, avec deux calques graphiques de plus le temps de l'animation. */
+.nyx-tv .rail .iptv-category-section {
+  animation: none;
+}
+
+/* Onglets de l'accueil pendant son chargement : leur place est gardée, sans eux (DashboardModeSwitch). */
+.nyx-tv .dashboard-mode-switch--reserved {
+  visibility: hidden;
+}
+
+/* Accueil Suggestions sur le rail : chaque rangée réserve au moins la hauteur d'une rangée de l'accueil (25 rem de
+   `.virtual-dashboard-row`, ContentCarousel.css, moins les 1,5 rem gagnés par rangée sur TV), pour garder le même
+   écart entre deux rangées. */
+.nyx-tv .rail .rail-carousel-row {
+  min-height: 23.5rem;
+  contain: layout;
+}
+
+.nyx-tv .rail .content-carousel-container {
+  animation: none;
+}
+
+/* Rangée en chargement : barre grise immobile, comme ses cadres (un reflet animé coûte sur une petite télé), posée sur
+   le titre vide, qui garde à la rangée la hauteur d'une rangée remplie. */
+.nyx-tv .rail .skeleton-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: none;
+}
+
+/* Toutes les rangées du rail ont la hauteur de la première mesurée : un nom de catégorie ou de carrousel trop long
+   reste sur une ligne, coupé, au lieu de faire déborder sa rangée sur la suivante. */
+.nyx-tv .rail .carousel-title,
+.nyx-tv .rail .iptv-category-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nyx-tv .carousel-title,
+.nyx-tv .iptv-category-title {
+  font-size: var(--text-2xl);
+}
+
+.nyx-tv .hero-overview,
+.nyx-tv .option-description,
+.nyx-tv .card-synopsis {
+  font-size: var(--text-base);
+}
+
+/* Libellés jamais coupés (Chromecast : « Données & C… » dans les rubriques des Paramètres,
+   « Cloudflare (1.1.1.1… » dans la liste du DNS). À 3 m, un libellé coupé ne se lit pas : il passe à
+   la ligne s'il ne tient pas, dans n'importe quelle langue et quelle que soit la taille du texte
+   choisie sur la TV. Les rubriques gagnent aussi un peu de largeur pour tenir sur une ligne. */
+.nyx-tv .settings-sidebar__nav {
+  padding-inline: 0.5rem;
+}
+
+.nyx-tv .settings-nav-item {
+  padding-inline: 0.7rem;
+}
+
+.nyx-tv .settings-nav-item__label,
+.nyx-tv .nyx-dropdown__value,
+.nyx-tv .nyx-dropdown__item-label {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.nyx-tv .nyx-dropdown__value {
+  text-align: start;
+}
+
+/* Menu des sources d'une fiche : un nom de source très long le faisait passer sur deux lignes,
+   ce qui alourdissait la rangée de boutons (et la faisait passer à la ligne sur la fiche série). Fermé,
+   il garde une seule ligne et une largeur bornée ; le nom entier se lit dans la liste ouverte, dont
+   les libellés passent toujours à la ligne (règle ci-dessus). */
+.nyx-tv .source-selector {
+  max-width: 20rem;
+}
+
+.nyx-tv .source-selector .nyx-dropdown__trigger {
+  min-width: 0;
+}
+
+.nyx-tv .source-selector .nyx-dropdown__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------- Lecteur ---------------- */
+
+/* Verrouillage de l'écran tactile : sans objet à la télécommande */
+.nyx-tv .player-smart-lock-fixed {
+  display: none;
+}
+
+/* Commandes du lecteur dans la zone sûre : croix, titre et boutons étaient à moins de 2 % des bords, dans
+   la bande que la télé rogne. Seul le contenu des barres s'écarte : leurs voiles sombres (fond de la barre)
+   vont toujours jusqu'aux bords, comme la vidéo. La barre du bas grandit d'autant : la liste d'épisodes,
+   posée au-dessus d'elle, suit (--player-controls-height). */
+.nyx-tv .player-top-bar {
+  padding: var(--tv-safe-y) var(--tv-safe-x) 1rem;
+}
+
+.nyx-tv .player-bottom-bar {
+  padding: 0 var(--tv-safe-x) var(--tv-safe-y);
+}
+
+.nyx-tv .player-overlay {
+  --player-controls-height: calc(7rem + var(--tv-safe-y) - 1rem);
+}
+
+/* Zapping rapide (chaînes en direct) : les deux panneaux partent du bord de l'écran, leur fond y reste.
+   Catégories : seuls les textes rentrent dans la zone sûre (le titre arrive juste à la zone sûre en haut).
+   Le retrait se pose dans chaque bloc (en-tête, zone des épinglées, liste) et non sur la colonne : les
+   fonds, séparateurs et ombres de ces blocs vont ainsi jusqu'au bord de l'écran, au lieu de dessiner une
+   case détachée du bord. Le panneau s'élargit de la zone sûre pour garder la place des noms, et la vidéo
+   se réduit d'autant (computeLeftMarginRatio, useChannelSwitcher.ts). Chaînes : un peu d'air à gauche
+   dans la liste qui défile, pour que la carte agrandie au focus et son liseré ne soient plus coupés. */
+.nyx-tv .channel-switcher__sidebar {
+  width: calc(18vw + var(--tv-safe-x));
+  min-width: calc(12rem + var(--tv-safe-x));
+  max-width: calc(16rem + var(--tv-safe-x));
+}
+
+.nyx-tv .channel-switcher__sidebar .tv-categories-sidebar__header {
+  padding-top: var(--tv-safe-y);
+  padding-left: calc(var(--tv-safe-x) + var(--space-5));
+}
+
+.nyx-tv .channel-switcher__sidebar .tv-categories-sidebar__fixed,
+.nyx-tv .channel-switcher__sidebar .tv-categories-sidebar__scrollable {
+  padding-left: calc(var(--tv-safe-x) + var(--space-3));
+}
+
+.nyx-tv .channel-switcher__grid {
+  padding-top: var(--tv-safe-y);
+}
+
+.nyx-tv .channel-switcher__grid .channel-grid > div {
+  padding-left: 0.75rem;
+}
+
+/* Barre de progression focusée : Gauche / Droite avancent et reculent (usePlayerRemote) */
+.nyx-tv .player-progress-container:focus .player-progress-bg {
+  height: 0.375rem;
+}
+
+.nyx-tv .player-progress-container:focus .player-progress-handle {
+  opacity: 1;
+}
+
+/* ============================================================================
+   Lot test de l'audit d'affichage, prouvé par avant / après
+   ============================================================================ */
+
+/* Icônes de la barre latérale : pas de transition à la télécommande. Le bureau les anime en 0,3 s sur toutes les
+   propriétés (`transition: all`) ; à la télécommande, chaque déplacement du focus change le contour et la couleur, que
+   le navigateur ne sait pas animer sur le processeur graphique : le style de la barre était recalculé à chaque image
+   pendant 0,3 s (35 à 50 recalculs par flèche, mesure sur la Chromecast). Sans transition, le cadre de focus apparaît
+   tout de suite. */
+.nyx-tv .nav-item,
+.nyx-tv .nav-icon {
+  transition: none;
+}
+
+/* Clavier système ouvert : la fenêtre passe de 720 à 400 de haut, et la barre latérale, fixée en
+   haut et en bas (100vh), s'écrasait : ses icônes s'empilaient au pied de la barre. Elle garde la
+   hauteur de la toile (calculée au démarrage, tvScale.ts) ; le clavier la recouvre en bas.
+   Fond : voile sombre à 82 % et pas de flou. Le verre dépoli de Windows (fond et flou de App.css) a été essayé sur la Chromecast :
+   on y a perdu en fluidité, le voile est donc définitif. Ne pas
+   le retirer sans nouvel essai à l'œil sur l'appareil. */
+.nyx-tv .sidebar {
+  top: var(--tv-safe-y);
+  bottom: auto;
+  background: rgba(12, 12, 20, 0.82);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  height: calc(var(--tv-canvas-h, 100%) - var(--tv-safe-y) * 2);
+}
+
+/* Focus rogné par la rangée ou la grille qui défile : la carte focalisée grossit
+   de 6 % et dessine un liseré de 0,3 rem ; il faut ≈ 0,75 rem de marge de chaque côté, plus que ce que laissaient
+   ces conteneurs (overflow caché ou fondu). Marge intérieure plus grande, compensée par une marge négative
+   pour ne pas bouger la mise en page ; jamais d'overflow visible sur les longues listes (fluidité). */
+
+/* Recherche : rangées de chaînes et de films, haut et bas (la piste cache son débordement vertical) */
+.nyx-tv .tv-carousel-track {
+  padding-block: 0.875rem;
+  margin-block: -0.375rem;
+}
+
+.nyx-tv .all-results-view .tv-carousel-track {
+  padding-bottom: 0.875rem;
+  margin-bottom: -0.375rem;
+}
+
+/* Live TV : grille de chaînes, première ligne. Le fondu du haut (1 rem) effaçait le liseré, la cellule ne laissait
+   que 0,75 rem : plus de fondu en haut (le focus centre la ligne, rien ne passe sous le bord) et 0,5 rem d'air
+   (la grille descend donc de 0,5 rem, y compris dans la liste de zapping du lecteur qui la réutilise).
+   Banc cloud (1re rangée, défileur à 0) : 9 px de padding pour ≈ 11,3 px nécessaires (agrandissement du
+   focus 6,6 px, décalage 2,7 px, liseré 2 px) : le haut du liseré dépassait de 2,3 px et le défileur le rognait.
+   0,75 rem de padding : la grille descend de 0,25 rem de plus. Pas de marge négative pour la reprendre : le parent
+   (.live-tv-page__content, overflow-y auto) rognerait au même endroit.
+   Ce padding n'avait pourtant AUCUN effet (sonde : carte toujours à 141,4 px, conteneur
+   interne à 151,7) : les cellules de react-window sont en position absolute et se calaient sur le bord du
+   défileur, le conteneur interne n'étant pas positionné. Il devient le repère des cellules (règle plus bas). */
+.nyx-tv .channel-grid > div {
+  padding-top: 0.75rem;
+  mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 3rem), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 3rem), transparent 100%);
+  mask-repeat: no-repeat;
+}
+
+.nyx-tv .channel-grid > div > div {
+  position: relative;
+}
+
+/* Colonnes des catégories (Live TV) et des rubriques (Paramètres), haut de la page Live TV : la marge
+   de la barre (--sidebar-m) est horizontale sur TV ; en haut et en bas, ces cadres suivent la zone sûre
+   verticale, comme la barre latérale. */
+.nyx-tv .tv-categories-sidebar,
+.nyx-tv .settings-sidebar {
+  top: var(--tv-safe-y);
+  bottom: var(--tv-safe-y);
+}
+
+.nyx-tv .live-tv-page {
+  padding-top: var(--tv-safe-y);
+  /* Cartes de chaînes et guide hors de la bande rognée à droite. La grille garde déjà 32 px à droite
+     (RIGHT_PADDING, ChannelGrid.tsx) : la page ajoute le reste de la zone sûre. */
+  padding-right: calc(var(--tv-safe-x) - 32px);
+}

@@ -1,0 +1,12 @@
+{
+  "identifier": "com.nyxplayer.app.audit",
+  "productName": "Nyx Player Audit",
+  "bundle": {
+    "createUpdaterArtifacts": false
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": []
+    }
+  }
+}

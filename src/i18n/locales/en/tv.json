@@ -1,0 +1,23 @@
+{
+  "favorites_title": "My Favorites",
+  "channels_default": "Channels",
+  "channels_count": "{{count}} channels",
+  "empty_favorites_title": "No favorite channels",
+  "empty_favorites_desc": "Add channels to favorites to see them here.",
+  "empty_category_title": "No channels in this category",
+  "empty_category_desc": "Select another category.",
+  "browse_channels": "Browse channels",
+  "sidebar_title": "Channels",
+  "sidebar_favorites": "Favorites",
+  "sidebar_pinned": "Pinned",
+  "sidebar_all": "All",
+  "category_search_placeholder": "Search a category",
+  "pin": "Pin",
+  "unpin": "Unpin",
+  "no_channels_category": "No channels in this category",
+  "sidebar_guide": "Guide",
+  "favorite_add": "Add to favorites",
+  "favorite_remove": "Remove from favorites",
+  "guide_load_error": "Could not load the TV guide. Please try again in a moment.",
+  "guide_loading": "Loading guide…"
+}

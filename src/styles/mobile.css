@@ -1,0 +1,962 @@
+/* ============================================================================
+   MOBILE / COMPACT LAYOUT
+   Téléphone portrait (≤ 900px) et paysage (hauteur ≤ 520px).
+   Importé statiquement après App.css (même bundle CSS) et limité à la marque de
+   plateforme posée par main.tsx sur <html> : chaque sélecteur est préfixé par
+   `.nyx-mobile` (`:root.nyx-mobile` pour les variables).
+   - Desktop : la marque n'existe jamais → aucune règle ne s'applique, même fenêtre étroite.
+   - Mobile : le préfixe (+1 classe) fait gagner la surcouche indépendamment de l'ordre
+     des feuilles (Vite peut réordonner le CSS entre dev et build).
+   Test : src/styles/__tests__/mobileCss.test.ts vérifie que tout sélecteur est préfixé.
+   ============================================================================ */
+
+@media (max-width: 900px), (max-height: 520px) {
+  :root.nyx-mobile {
+    /* La sidebar verticale devient une île flottante en bas de l'écran */
+    --sidebar-w: 0px;
+    --sidebar-m: 0px;
+    --sidebar-safe-zone: var(--space-4);
+    --nav-island-h: 60px;
+    --nav-island-gap: var(--space-3);
+    /* Hauteur couverte par l'île depuis le bas de l'écran */
+    --bottom-nav-h: calc(var(--nav-island-h) + var(--nav-island-gap));
+    /* Le contenu défile sous l'île : chaque zone de défilement finit par cette marge,
+       pour que la dernière ligne puisse remonter au-dessus */
+    --nyx-scroll-end: calc(var(--bottom-nav-h) + var(--space-4));
+    --tv-sidebar-w: 0px;
+    --tv-sidebar-left: 0px;
+    --tv-content-offset: var(--space-4);
+  }
+
+  /* Pas d'effets de survol "collants" après un tap */
+  @media (hover: none) {
+    .nyx-mobile .nav-item:hover,
+    .nyx-mobile .carousel-card:hover,
+    .nyx-mobile .btn-hero-play:hover,
+    .nyx-mobile .btn-hero-info:hover,
+    .nyx-mobile .tv-category-item:hover {
+      transform: none;
+    }
+  }
+
+  /* ---------------- Layout global ---------------- */
+
+  .nyx-mobile .container {
+    flex-direction: column;
+  }
+
+  /* Clavier ouvert (viewportHeight.ts) : l'île masquerait le champ ou les résultats */
+  :root.nyx-mobile.nyx-keyboard-open .sidebar {
+    display: none;
+  }
+
+  /* ---------------- Connexion, profils, chargement ---------------- */
+
+  /* La carte touchait les bords de l'écran */
+  .nyx-mobile .supabase-auth {
+    padding: var(--space-4);
+  }
+
+  .nyx-mobile .supabase-auth__card {
+    max-height: 100%;
+    padding: var(--space-6) var(--space-5);
+  }
+
+  .nyx-mobile .supabase-auth__brand-logo,
+  .nyx-mobile .login-brand-logo,
+  .nyx-mobile .loading-screen__logo,
+  .nyx-mobile .profile-selector__logo {
+    height: auto;
+    width: min(60vw, 13rem);
+  }
+
+  /* Ajout du fournisseur : même carte que la connexion au compte. Elle touchait les bords de l'écran et
+     passait sous le bouton de langue : marges, départ sous le bouton, défilement
+     dans la carte si l'écran est trop court. */
+  .nyx-mobile .login-container {
+    box-sizing: border-box;
+    height: 100%;
+    padding: calc(var(--space-4) * 2 + 2.25rem) var(--space-4) var(--space-4);
+  }
+
+  .nyx-mobile .login-box {
+    box-sizing: border-box;
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-6) var(--space-5);
+  }
+
+  /* Écrans de connexion et d'ajout du fournisseur : zones tactiles invisibles de 44 points au moins
+     autour des petits boutons et liens (onglets 28, « Mot de passe oublié » 14, œil 25, langue 31…),
+     dessin inchangé. Texte de base de 14 px sur téléphone. */
+  .nyx-mobile .supabase-auth__tab,
+  .nyx-mobile .login-box .tab-buttons button,
+  .nyx-mobile .confirm-modal-actions .nyx-btn,
+  .nyx-mobile .supabase-auth__forgot,
+  .nyx-mobile .supabase-auth__back-link,
+  .nyx-mobile .supabase-auth__legal-footer button,
+  .nyx-mobile .supabase-auth__terms-link,
+  .nyx-mobile .supabase-auth .nyx-btn,
+  .nyx-mobile .login-box .nyx-btn,
+  .nyx-mobile .login-back-btn,
+  .nyx-mobile .supabase-logout-link,
+  .nyx-mobile .session-error-banner__dismiss,
+  .nyx-mobile .supabase-auth__email-suggestion-actions button {
+    position: relative;
+  }
+
+  .nyx-mobile .lang-toggle::after,
+  .nyx-mobile .supabase-auth__tab::after,
+  .nyx-mobile .login-box .tab-buttons button::after,
+  .nyx-mobile .confirm-modal-actions .nyx-btn::after,
+  .nyx-mobile .supabase-auth__eye-toggle::after,
+  .nyx-mobile .login-eye-toggle::after,
+  .nyx-mobile .supabase-auth__forgot::after,
+  .nyx-mobile .supabase-auth__back-link::after,
+  .nyx-mobile .supabase-auth__legal-footer button::after,
+  .nyx-mobile .supabase-auth__terms-link::after,
+  .nyx-mobile .supabase-auth .nyx-btn::after,
+  .nyx-mobile .login-box .nyx-btn::after,
+  .nyx-mobile .login-back-btn::after,
+  .nyx-mobile .supabase-logout-link::after,
+  .nyx-mobile .session-error-banner__dismiss::after,
+  .nyx-mobile .supabase-auth__email-suggestion-actions button::after {
+    content: "";
+    position: absolute;
+  }
+
+  /* Langue 31 de haut ; onglets 28 */
+  .nyx-mobile .lang-toggle::after {
+    inset: -0.5rem 0;
+  }
+  .nyx-mobile .supabase-auth__tab::after,
+  .nyx-mobile .login-box .tab-buttons button::after {
+    inset: -0.6rem 0;
+  }
+
+  /* Boutons des fenêtres de confirmation (changement de fournisseur…) : 32 */
+  .nyx-mobile .confirm-modal-actions .nyx-btn::after {
+    inset: -0.55rem 0;
+  }
+  /* Œil du mot de passe : 25 × 25 */
+  .nyx-mobile .supabase-auth__eye-toggle::after,
+  .nyx-mobile .login-eye-toggle::after {
+    inset: -0.7rem;
+  }
+  /* Liens d'une ligne : 14 à 16 de haut */
+  .nyx-mobile .supabase-auth__forgot::after,
+  .nyx-mobile .supabase-auth__back-link::after {
+    inset: -1.1rem 0;
+  }
+  .nyx-mobile .supabase-auth__legal-footer button::after,
+  .nyx-mobile .supabase-auth__terms-link::after {
+    inset: -1.15rem -0.5rem;
+  }
+  /* Bouton principal : 40 */
+  .nyx-mobile .supabase-auth .nyx-btn::after,
+  .nyx-mobile .login-box .nyx-btn::after {
+    inset: -0.25rem 0;
+  }
+  /* « Retour aux profils » 29, « Se déconnecter » 26 */
+  .nyx-mobile .login-back-btn::after {
+    inset: -0.55rem 0;
+  }
+  .nyx-mobile .supabase-logout-link::after {
+    inset: -0.65rem 0;
+  }
+  /* Croix des bandeaux : 19 × 26 */
+  .nyx-mobile .session-error-banner__dismiss::after {
+    inset: -0.65rem -0.9rem;
+  }
+
+  /* Suggestion d'adresse e-mail (« Oui » / « Non ») : 22 de haut */
+  .nyx-mobile .supabase-auth__email-suggestion-actions button::after {
+    inset: -0.9rem 0;
+  }
+
+  /* Case des conditions : toute la ligne réagit au doigt, haute de 44 points */
+  .nyx-mobile .supabase-auth__terms-checkbox {
+    min-height: 3.2rem;
+    align-items: center;
+  }
+
+  /* Écran trop court pour tout centrer : on défile au lieu de rogner (bouton « Se déconnecter ») */
+  .nyx-mobile .profile-selector {
+    align-items: flex-start;
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+  }
+
+  .nyx-mobile .profile-selector__content {
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-4) var(--space-7);
+    margin: auto;
+  }
+
+  .nyx-mobile .profile-selector__actions {
+    margin-top: var(--space-5);
+  }
+
+  /* Bandeau « base de l'appareil abîmée » (choix du profil, erreur réseau, fournisseur) : côte à côte,
+     le bouton « Réinitialiser cet appareil » prenait 60 % de la largeur et écrasait le texte en une
+     colonne étroite aux mots coupés (constaté sur un téléphone). Le texte garde la ligne de l'icône, le bouton
+     passe dessous, sur toute la largeur. */
+  .nyx-mobile .local-db-notice {
+    flex-wrap: wrap;
+  }
+
+  .nyx-mobile .local-db-notice__text {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .nyx-mobile .local-db-notice__reset {
+    flex-basis: 100%;
+    white-space: normal;
+  }
+
+  /* ---------------- Navigation : île flottante en bas ---------------- */
+
+  /* Même DA que la barre latérale du bureau (verre transparent, bords arrondis, détachée des
+     bords), posée en bas et centrée. Déconnexion : Paramètres, en bas de la liste des rubriques. */
+  .nyx-mobile .sidebar {
+    top: auto;
+    right: 0;
+    bottom: var(--nav-island-gap);
+    left: 0;
+    width: fit-content;
+    max-width: calc(100% - 2 * var(--space-4));
+    height: var(--nav-island-h);
+    margin: 0 auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 var(--space-3);
+    /* Gélule : rayon = demi-hauteur. --radius-full (50 %) donnait une ellipse aux bouts effilés */
+    border-radius: calc(var(--nav-island-h) / 2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 15, 20, 0.35);
+    backdrop-filter: blur(10px) saturate(160%);
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.35);
+  }
+
+  /* Pas d'état survol au doigt : il resterait accroché après un tap */
+  .nyx-mobile .sidebar:hover {
+    background: rgba(15, 15, 20, 0.35);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .nyx-mobile .sidebar-logo,
+  .nyx-mobile .sidebar-footer {
+    display: none;
+  }
+
+  .nyx-mobile .sidebar-nav {
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: var(--space-2);
+  }
+
+  .nyx-mobile .nav-item {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  .nyx-mobile .nav-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Notifications (réglages, reprise de lecture) : au-dessus de l'île, pas dessous */
+  .nyx-mobile .settings-toast,
+  .nyx-mobile .detail-toast {
+    right: var(--space-4);
+    bottom: calc(var(--bottom-nav-h) + var(--space-3));
+    left: var(--space-4);
+    text-align: center;
+  }
+
+  /* DevPanel (DEV uniquement) au-dessus de la barre de navigation */
+  .nyx-mobile .dev-panel-toggle {
+    bottom: calc(var(--bottom-nav-h) + var(--space-3));
+  }
+
+  /* ---------------- Dashboard ---------------- */
+
+  .nyx-mobile .hero-banner {
+    height: 58vh;
+    min-height: 22rem;
+    margin-bottom: 0;
+    /* Desktop : none pour laisser passer les clics vers le sélecteur de mode que la bannière
+       recouvre (margin-bottom négatif). Sur téléphone il n'y a pas de recouvrement, et il faut
+       recevoir le balayage sur l'affiche elle-même, pas seulement sur les points. */
+    pointer-events: auto;
+    animation: none;
+    background-size: cover;
+  }
+
+  .nyx-mobile .hero-overlay {
+    padding-left: 0;
+    align-items: flex-end;
+    background: linear-gradient(to bottom,
+        rgba(2, 10, 25, 0.1) 0%,
+        rgba(2, 10, 25, 0.35) 45%,
+        rgba(2, 10, 25, 0.92) 100%);
+  }
+
+  .nyx-mobile .hero-content {
+    width: 100%;
+    max-width: none;
+    padding: 0 var(--space-4) var(--space-10);
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .nyx-mobile .hero-logo {
+    max-width: 70vw;
+    max-height: 5rem;
+  }
+
+  .nyx-mobile .hero-title {
+    font-size: 1.75rem;
+  }
+
+  .nyx-mobile .hero-overview {
+    font-size: var(--text-sm);
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    max-width: 100%;
+  }
+
+  .nyx-mobile .hero-buttons {
+    justify-content: flex-start;
+    gap: var(--space-2);
+  }
+
+  .nyx-mobile .btn-hero-play,
+  .nyx-mobile .btn-hero-info {
+    padding: 0.6rem 1rem;
+    font-size: var(--text-sm);
+  }
+
+  .nyx-mobile .hero-dots {
+    bottom: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  /* Points un peu plus grands (le contenu change surtout par balayage horizontal) */
+  .nyx-mobile .hero-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  .nyx-mobile .dashboard-mode-switch {
+    margin-top: 0;
+    padding: var(--space-3) var(--space-4);
+    overflow-x: auto;
+    overscroll-behavior: auto;
+    scrollbar-width: none;
+    pointer-events: auto;
+  }
+
+  .nyx-mobile .dashboard-mode-switch::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nyx-mobile .mode-pill {
+    min-width: 0;
+    flex-shrink: 0;
+    padding: 0.5rem var(--space-4);
+    font-size: var(--text-sm);
+  }
+
+  .nyx-mobile .dashboard-content {
+    padding-top: var(--space-2);
+    min-height: 0;
+  }
+
+  .nyx-mobile .carousel-title {
+    font-size: var(--text-lg);
+  }
+
+  .nyx-mobile .content-carousel {
+    padding: var(--space-3) var(--space-4) var(--space-4) var(--space-4);
+    gap: var(--space-3);
+    scroll-snap-type: x proximity;
+  }
+
+  .nyx-mobile .dashboard-content .content-carousel {
+    gap: var(--space-3);
+  }
+
+  .nyx-mobile .carousel-card {
+    width: clamp(6.5rem, 30vw, 9.5rem);
+  }
+
+  /* « Reprendre la lecture » : le bouton de 5rem du bureau couvrait l'affiche d'un tiers de large */
+  .nyx-mobile .card-play-button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .nyx-mobile .card-play-button .play-icon {
+    margin-left: 0.15rem;
+    font-size: 1.1rem;
+  }
+
+  /* Titre (≈1.5rem) + carte 2:3 + marges : évite les grands vides entre rangées. La hauteur suit la
+     carte, plafonnée comme elle (clamp(6.5rem, 30vw, 9.5rem) × 1,5) : avec 45vw seul, la réserve
+     continuait de grandir sur tablette alors que la carte plafonne. */
+  .nyx-mobile .virtual-dashboard-row,
+  .nyx-mobile .lazy-category {
+    min-height: calc(clamp(9.75rem, 45vw, 14.25rem) + 5.5rem);
+  }
+
+  /* Onglets Films / Séries : même respiration que Suggestions */
+  .nyx-mobile .iptv-mode {
+    padding-top: var(--space-2);
+    min-height: 0;
+  }
+
+  .nyx-mobile .iptv-category-section {
+    margin-bottom: var(--space-3);
+  }
+
+  .nyx-mobile .iptv-category-title {
+    font-size: var(--text-lg);
+  }
+
+  /* ---------------- Live TV ---------------- */
+
+  /* Les catégories passent par LiveTvMobileBar (barre + liste depuis le bas) :
+     TvCategoriesSidebar n'est pas rendue sur téléphone (App.tsx). */
+
+  /* Guide TV : la grille récupère les marges de la page (32px gagnés) */
+  .nyx-mobile .guide-tv-grid {
+    /* Rangées de 3,25rem (ci-dessous) : les cales du guide virtualisé suivent */
+    --guide-row-height: 3.25rem;
+
+    margin: 0 calc(-1 * var(--space-4));
+  }
+
+  /* Guide TV : la colonne des chaînes prenait 10rem sur un écran de 360px */
+  .nyx-mobile .guide-tv-grid__header-corner,
+  .nyx-mobile .guide-tv-grid__channels {
+    width: 6.5rem;
+    min-width: 6.5rem;
+  }
+
+  .nyx-mobile .guide-tv-grid__channel-cell {
+    height: 3.25rem;
+    gap: var(--space-1);
+    padding: 0 var(--space-2);
+  }
+
+  .nyx-mobile .guide-tv-grid__channel-logo {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .nyx-mobile .guide-tv-grid__row {
+    height: 3.25rem;
+  }
+
+  .nyx-mobile .guide-program {
+    height: calc(3.25rem - 0.5rem);
+    padding: 0 0.35rem;
+  }
+
+  .nyx-mobile .live-tv-page {
+    padding: var(--space-3) var(--space-4) 0;
+  }
+
+  .nyx-mobile .live-tv-page__header {
+    margin-bottom: var(--space-3);
+  }
+
+  .nyx-mobile .live-tv-page__title {
+    font-size: var(--text-2xl);
+  }
+
+  .nyx-mobile .channel-card {
+    padding: var(--space-2);
+    border-radius: var(--radius-lg);
+  }
+
+  .nyx-mobile .channel-card__logo {
+    margin-bottom: var(--space-1);
+  }
+
+  .nyx-mobile .channel-card__name {
+    font-size: var(--text-xs);
+  }
+
+  /* Horaire du programme : même taille que le nom de la chaîne (était illisible, 9 px) */
+  .nyx-mobile .channel-card__epg-time {
+    font-size: var(--text-xs);
+  }
+
+  .nyx-mobile .channel-card__favorite {
+    width: 1.75rem;
+    height: 1.75rem;
+    top: var(--space-1);
+    right: var(--space-1);
+  }
+
+  /* ---------------- Ma liste ---------------- */
+
+  .nyx-mobile .watchlist-page {
+    min-height: 0;
+    padding: var(--space-5) var(--space-4) var(--space-8);
+  }
+
+  /* Autant de colonnes que la largeur le permet : 3 sur téléphone (comme avant), 6 environ sur tablette,
+     affiches d'environ 110 à 150 points, au lieu de 3 colonnes géantes. */
+  .nyx-mobile .watchlist-grid,
+  .nyx-mobile .watchlist-skeleton-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(30%, 7.5rem), 1fr));
+    gap: var(--space-3);
+  }
+
+  /* ---------------- Paramètres : liste de rubriques, puis rubrique ---------------- */
+
+  /* Le défilement horizontal des onglets était peu ergonomique au doigt :
+     la liste des rubriques devient l'écran d'accueil (SettingsPage : `compact`). */
+  .nyx-mobile .settings-page {
+    flex-direction: column;
+  }
+
+  .nyx-mobile .settings-sidebar {
+    position: relative;
+    left: auto;
+    top: auto;
+    bottom: auto;
+    width: 100%;
+    height: 100%;
+    flex: 1 1 auto;
+    border-radius: 0;
+    border-width: 0;
+    background: transparent;
+    animation: none;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+  }
+
+  .nyx-mobile .settings-sidebar__header {
+    padding: var(--space-5) var(--space-4) var(--space-3);
+  }
+
+  .nyx-mobile .settings-sidebar__nav {
+    gap: var(--space-3);
+    /* Haut : la première rubrique touchait le titre « Paramètres » */
+    padding: var(--space-4) var(--space-4) var(--space-6);
+    overflow: visible;
+    mask-image: none;
+    mask-repeat: repeat;
+    -webkit-mask-image: none;
+  }
+
+  .nyx-mobile .settings-nav-item {
+    width: 100%;
+    /* La liste sert d'écran d'accueil : lignes espacées, pas collées les unes aux autres */
+    margin: 0 0 var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    font-size: var(--text-base);
+  }
+
+  /* Chevron : indique qu'on ouvre une page */
+  .nyx-mobile .settings-nav-item::after {
+    content: '›';
+    margin-left: auto;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .nyx-mobile .settings-nav-item.active::before {
+    display: none;
+  }
+
+  /* Déconnexion : détachée des rubriques, en rouge comme le bouton de la barre du bureau */
+  .nyx-mobile .settings-nav-item--logout {
+    margin-top: var(--space-4);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+  }
+
+  .nyx-mobile .settings-nav-item--logout::after {
+    content: none;
+  }
+
+  .nyx-mobile .settings-main {
+    padding: 0 var(--space-4) var(--space-8);
+  }
+
+  .nyx-mobile .settings-back {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    margin: 0 0 var(--space-3);
+    padding: var(--space-4) 0 var(--space-3);
+    border: none;
+    background: linear-gradient(to bottom, rgba(6, 9, 20, 0.96) 70%, rgba(6, 9, 20, 0));
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .nyx-mobile .settings-back svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  /* Titre + boutons « Rafraîchir / Modifier » : 370px de large sur un écran de 360 */
+  .nyx-mobile .settings-section > h3 {
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+  }
+
+  .nyx-mobile .header-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  /* Libellés français plus longs : le contrôle passe sous le texte plutôt que de déborder */
+  .nyx-mobile .settings-option {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  /* Le texte garde au moins 60 % de la ligne : sinon un menu deroulant large le reduisait
+     a une colonne de trois caracteres (cas « DNS Securise »). */
+  .nyx-mobile .option-info {
+    flex: 1 1 60%;
+    min-width: 60%;
+  }
+
+  .nyx-mobile .option-label,
+  .nyx-mobile .option-description {
+    overflow-wrap: anywhere;
+  }
+
+  /* Controles etroits (interrupteurs) : ils restent sur la ligne du texte */
+  .nyx-mobile .settings-option > *:not(.option-info) {
+    max-width: 100%;
+  }
+
+  /* Menus deroulants : pleine largeur sous le texte, meme gabarit dans toutes les rubriques */
+  .nyx-mobile .settings-option .nyx-dropdown {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+
+  /* ---------------- Pages détail film / série ---------------- */
+
+  /* Desktop : le carrousel "similaires" est collé en bas du viewport → grand vide sur téléphone */
+  .nyx-mobile .similar-movies-carousel-container {
+    margin-top: var(--space-6);
+  }
+
+  /* Une seule ligne écrasait le bouton « Ma liste » entre Lecture et le sélecteur de source */
+  .nyx-mobile .action-buttons {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .nyx-mobile .action-buttons > * {
+    flex: 0 0 auto;
+  }
+
+  /* Le padding 1.25rem (media 48em de SeriesDetailPage.css) s'ajoute à la safe-zone
+     et rogne les épisodes à droite */
+  .nyx-mobile .series-detail-page .content-overlay {
+    padding: 0 0 var(--space-6);
+  }
+
+  /* Même dégagement que la page film pour le bouton retour */
+  .nyx-mobile .series-detail-page .detail-layout {
+    flex: 0 0 auto;
+    padding-top: clamp(5rem, 10vh, 7rem);
+  }
+
+  /* ---------------- Lecteur ---------------- */
+
+  .nyx-mobile .player-time {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Colonnes gauche/droite à leur taille naturelle : les tiers égaux débordent sur ~550px */
+  .nyx-mobile .player-controls-left,
+  .nyx-mobile .player-controls-right {
+    flex: 0 1 auto;
+    gap: 0.25rem;
+  }
+
+  .nyx-mobile .player-controls-center {
+    min-width: 0;
+  }
+
+  /* Liste des chaînes ouverte : la vidéo n'a plus que ~60 % de la largeur et la barre complète
+     débordait sur l'image. Lecteur réduit à l'essentiel : lecture/pause, « Chaînes TV » (referme
+     la liste) et la croix. Le bandeau du programme est masqué : les lignes de la liste l'affichent. */
+  .nyx-mobile .player-overlay.channel-switcher--open .player-controls-left > :not(:first-child),
+  .nyx-mobile .player-overlay.channel-switcher--open .player-controls-right,
+  .nyx-mobile .player-overlay.channel-switcher--open .player-progress-container,
+  .nyx-mobile .player-overlay.channel-switcher--open .epg-banner {
+    display: none;
+  }
+
+  /* Paysage : le panneau dépassait sous le bas de l'écran */
+  .nyx-mobile .geek-stats-overlay {
+    top: 3.5rem;
+    right: var(--space-3);
+    bottom: 4.5rem;
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    font-size: 0.7rem;
+  }
+
+  /* Épisode suivant : la carte verticale du bureau (image 16:9 sur 19rem + texte ≈ 18rem de haut)
+     dépassait en haut de l'écran paysage → carte horizontale, image à gauche */
+  .nyx-mobile .binge-popup {
+    right: var(--space-4);
+    /* Au-dessus de la zone tactile de la barre de progression */
+    bottom: 5.75rem;
+    flex-direction: row;
+    width: min(23rem, calc(100vw - 2rem));
+    /* stylelint-disable-next-line defensive-css/require-dynamic-viewport-height -- vh = dvh en WebView, dvh inconnu avant Chrome 108 */
+    max-height: calc(100vh - 6.75rem);
+  }
+
+  /* La croix se rattache à la carte entière (coin haut droit), plus au milieu sur l'image */
+  .nyx-mobile .binge-popup-cover {
+    position: static;
+    flex: 0 0 38%;
+    aspect-ratio: auto;
+  }
+
+  .nyx-mobile .binge-popup-close {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .nyx-mobile .binge-popup-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+
+  .nyx-mobile .binge-popup-content {
+    padding-right: 2rem;
+  }
+
+  .nyx-mobile .binge-popup-countdown {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  /* Menu audio / sous-titres : trop haut et trop large, il touchait le haut de l'écran */
+  .nyx-mobile .player-audio-sub-popup {
+    width: min(37.5rem, calc(100vw - 2rem));
+    /* stylelint-disable-next-line defensive-css/require-dynamic-viewport-height -- vh = dvh en WebView, dvh inconnu avant Chrome 108 */
+    max-height: calc(100vh - 7rem);
+  }
+
+  .nyx-mobile .popup-content-row {
+    min-height: 0;
+  }
+
+  .nyx-mobile .popup-list {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Téléphone : volume via les touches physiques, le slider au survol est inutilisable */
+  @media (hover: none) {
+    .nyx-mobile .player-volume-container {
+      display: none;
+    }
+  }
+
+  /* ---------------- Fin de défilement sous l’île de navigation ---------------- */
+
+  /* Pas de réserve sous `main` ni sous les pages détail : l'île flotte au-dessus du contenu
+     (même principe que la barre latérale du bureau), les pages gèrent leur fin de défilement.
+     En fin de bloc : prime sur les marges propres à chaque page définies plus haut.
+     La marge va sur le calque qui porte le fond ou le voile (fiche film : .content-overlay),
+     sinon la zone sous l’île montre l’image sans le voile. Guide TV : sur la colonne des chaînes
+     (fond opaque), la ligne s’étire et la grille des programmes suit. */
+  .nyx-mobile .dashboard-page,
+  .nyx-mobile .watchlist-page,
+  .nyx-mobile .category-detail-page,
+  .nyx-mobile .search-content-area > .all-results-view,
+  .nyx-mobile .live-tv-page__content,
+  .nyx-mobile .guide-tv-grid__channels,
+  .nyx-mobile .settings-sidebar__nav,
+  .nyx-mobile .settings-main,
+  .nyx-mobile .movie-detail-page .content-overlay,
+  .nyx-mobile .series-detail-page .content-overlay {
+    padding-bottom: var(--nyx-scroll-end);
+  }
+
+  /* Grille de chaînes : garde le fondu du bas du bureau, elle s’arrête donc au-dessus de l’île
+     (marge de .live-tv-page__content). Le guide TV défile lui-même : la marge va dans son corps. */
+  .nyx-mobile .live-tv-page__content--guide {
+    padding-bottom: 0;
+  }
+}
+
+/* Écrans tactiles : ce qui n'apparaît qu'au survol doit rester accessible */
+@media (hover: none) {
+  .nyx-mobile .channel-card__favorite {
+    opacity: 0.75;
+  }
+
+  .nyx-mobile .tv-category-item.active .tv-category-item__pin-btn,
+  .nyx-mobile .tv-category-item__pin-btn.pinned {
+    opacity: 0.8;
+  }
+}
+
+/* Lecteur tactile : barre de progression plus facile à attraper, poignée visible sans survol */
+@media (hover: none) {
+  .nyx-mobile .player-progress-container {
+    height: 2.5rem;
+    padding: 1rem 0;
+    margin-block: -0.5rem;
+    touch-action: none;
+  }
+
+  .nyx-mobile .player-progress-handle {
+    opacity: 1;
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .nyx-mobile .player-progress-container.scrubbing .player-progress-bg {
+    height: 0.375rem;
+  }
+
+  .nyx-mobile .player-progress-container.scrubbing .player-progress-handle {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+/* ============================================================================
+   Lot test de l'audit d'affichage, prouvé par avant / après
+   ============================================================================ */
+@media (max-width: 900px), (max-height: 520px) {
+  /* Fiches : métadonnées à 9,6 px (plancher 0,6875 rem d'une taille variable, sur une racine de
+     14 px). Charte : métadonnées en « Label » ; pastilles et numéros un cran dessous. */
+  .nyx-mobile .movie-detail-page .badge,
+  .nyx-mobile .series-detail-page .badge,
+  .nyx-mobile .series-detail-page .episode-num-label {
+    font-size: var(--text-sm);
+  }
+
+  .nyx-mobile .movie-detail-page .genres,
+  .nyx-mobile .movie-detail-page .casting,
+  .nyx-mobile .series-detail-page .genres,
+  .nyx-mobile .series-detail-page .casting {
+    font-size: var(--text-md);
+  }
+
+  .nyx-mobile .trailer-label {
+    font-size: var(--text-xs);
+  }
+
+  /* Bandeau « Mise à jour disponible » : posé sur l'île de navigation, il cachait les onglets.
+     Il s'affiche au-dessus, comme les autres notifications. */
+  .nyx-mobile .update-notification {
+    bottom: calc(var(--bottom-nav-h) + var(--space-3));
+  }
+
+  /* Cœur des favoris : 25 points, le plus petit bouton de l'app. Zone tactile invisible de 44
+     points autour, dessin inchangé. */
+  .nyx-mobile .channel-card__favorite::after {
+    content: "";
+    position: absolute;
+    inset: -0.75rem;
+  }
+
+  /* « Lecture » d'un épisode : 27 points de haut, l'action principale de la carte. Zone tactile
+     invisible de 0,75rem au-dessus et au-dessous (texte de base de 14 px sur téléphone : 48 points),
+     dessin inchangé ; la carte laisse 0,75rem sous le bouton. */
+  .nyx-mobile .series-detail-page .episode-play-btn {
+    position: relative;
+  }
+
+  .nyx-mobile .series-detail-page .episode-play-btn::after {
+    content: "";
+    position: absolute;
+    inset: -0.75rem 0;
+  }
+}
+
+/* Paysage téléphone : l’île basse mange trop de hauteur → île verticale à gauche.
+   min-width : en portrait, le clavier ouvert réduit la hauteur (viewportHeight.ts) et pourrait
+   faire passer l’écran pour un paysage (360 × 340) ; un vrai paysage téléphone dépasse 560px. */
+@media (max-height: 520px) and (orientation: landscape) and (min-width: 560px) {
+  :root.nyx-mobile {
+    --bottom-nav-h: 0px;
+    --sidebar-w: calc(64px + var(--space-2));
+    --sidebar-safe-zone: calc(64px + var(--space-2) + var(--space-3));
+    --tv-content-offset: calc(64px + var(--space-2) + var(--space-3));
+  }
+
+  .nyx-mobile .container {
+    flex-direction: row;
+  }
+
+  .nyx-mobile .sidebar {
+    top: var(--space-2);
+    right: auto;
+    bottom: var(--space-2);
+    left: var(--space-2);
+    width: 64px;
+    max-width: none;
+    height: auto;
+    margin: 0;
+    flex-direction: column;
+    padding: var(--space-2) 0;
+    border-radius: 40px;
+  }
+
+  .nyx-mobile .sidebar-nav {
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+
+  .nyx-mobile .hero-banner {
+    /* stylelint-disable-next-line defensive-css/require-dynamic-viewport-height -- vh = dvh en WebView, dvh inconnu avant Chrome 108 */
+    height: 100vh;
+    min-height: 0;
+  }
+
+  .nyx-mobile .hero-content {
+    padding-left: var(--sidebar-safe-zone);
+    width: 70%;
+  }
+}

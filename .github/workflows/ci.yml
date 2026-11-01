@@ -1,0 +1,110 @@
+# Vérifications : types, tests, lint, règlement CSS, build web. Même enchaînement qu'en local avec
+# `pnpm verify`.
+# Dépôt public `kunai974/nyx-player` (minutes gratuites) : à chaque PR et à chaque envoi sur `main`,
+# sans étiquette. La condition `github.repository` le reconnaît : les mêmes fichiers servent aux deux
+# dépôts, et l'atelier privé garde ses règles d'économie ci-dessous
+# (scripts/test/workflows-economie.test.mjs les vérifie).
+# Dépôt privé (atelier) : jamais tout seul sur une branche de travail (économie des minutes GitHub, circuit
+# `integration` → `develop`).
+#   - PR vers `main` (publication) : automatique ;
+#   - toute autre PR : seulement avec l'étiquette `ci-github` (à poser sur la PR `integration` → `develop`
+#     quand on choisit GitHub plutôt que la CI complète sur le PC) ;
+#   - bouton « Run workflow » (visible une fois ce fichier arrivé sur `main`).
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  # Dépôt public seulement : la condition « if » des tâches écarte les envois sur l'atelier privé.
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Une autre étiquette posée sur la PR ne doit pas annuler un passage en cours : groupe à part.
+concurrency:
+  group: ci-${{ github.ref }}${{ (github.event.action == 'labeled' && github.event.label.name != 'ci-github') && format('-{0}', github.run_id) || '' }}
+  # Sur main (dépôt public), chaque fusion garde son passage complet : seules les PR s'annulent.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Types, tests, lint, CSS, build
+    if: >-
+      (github.repository == 'kunai974/nyx-player' && github.event.action != 'labeled') ||
+      (github.event_name != 'pull_request' && github.event_name != 'push') ||
+      (github.event.action == 'labeled' && github.event.label.name == 'ci-github') ||
+      (github.event_name == 'pull_request' && github.event.action != 'labeled' &&
+        (github.base_ref == 'main' || contains(github.event.pull_request.labels.*.name, 'ci-github')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Valeurs factices : le client Supabase exige une URL au chargement, aucun appel réel n'est fait.
+      VITE_SUPABASE_URL: https://example.invalid
+      VITE_SUPABASE_ANON_KEY: ci-placeholder
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Types
+        run: pnpm typecheck
+
+      - name: Tests
+        run: pnpm test:run
+
+      # Les erreurs déjà présentes sont listées dans eslint-suppressions.json : seules les nouvelles échouent.
+      - name: Lint
+        run: pnpm lint
+
+      # Règlement CSS (docs/CSS_RULES.md) ; CSS ancien gelé dans stylelint-suppressions.json.
+      - name: CSS
+        run: pnpm lint:css
+
+      - name: Build web
+        run: pnpm exec vite build
+
+  # Les garde-fous de Claude (.claude/hooks/garde-fous.mjs) protègent aussi le PC Windows : leurs tests y
+  # tournent, avec les fins de ligne CRLF que Git pour Windows met à l'extraction (core.autocrlf) et
+  # les chemins en C:\… Seulement ce fichier : la suite complète est restée bloquée sans sortie pendant
+  # 20 min sur la machine Windows de GitHub, alors qu'elle passe sur le PC.
+  garde-fous-windows:
+    name: Garde-fous sous Windows
+    if: >-
+      (github.repository == 'kunai974/nyx-player' && github.event.action != 'labeled') ||
+      (github.event_name != 'pull_request' && github.event_name != 'push') ||
+      (github.event.action == 'labeled' && github.event.label.name == 'ci-github') ||
+      (github.event_name == 'pull_request' && github.event.action != 'labeled' &&
+        (github.base_ref == 'main' || contains(github.event.pull_request.labels.*.name, 'ci-github')))
+    runs-on: windows-latest
+    timeout-minutes: 10
+    env:
+      VITE_SUPABASE_URL: https://example.invalid
+      VITE_SUPABASE_ANON_KEY: ci-placeholder
+    steps:
+      - name: Fins de ligne comme sous Git pour Windows
+        run: git config --global core.autocrlf true
+
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Tests des garde-fous
+        # Garde-fous absents d'une copie publique du dépôt : rien à tester, pas d'échec
+        run: pnpm exec vitest run scripts/test/garde-fous.test.mjs --reporter=verbose --passWithNoTests

@@ -1,0 +1,82 @@
+[package]
+name = "nyxplayer"
+version = "0.8.0"
+description = "Nyx Player — IPTV Player with embedded MPV"
+authors = ["Nyx Player"]
+license = "GPL-3.0-or-later"
+edition = "2021"
+
+[lib]
+name = "nyxplayer_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[features]
+# APK des émulateurs et version d'audit Windows seulement : ouvre le débogage de la WebView, pour que l'audit automatique de
+# l'affichage (Playwright) puisse piloter l'app. Jamais dans un APK ou un .exe distribué.
+audit = ["tauri/devtools"]
+
+[build-dependencies]
+# Même ligne mineure que tauri (2.11) : tauri 2.11.6 exige tauri-build 2.6.x
+tauri-build = { version = "~2.6.3", features = [] }
+
+[dependencies]
+# 2.11.6 : corrige GHSA-7gmj-67g7-phm9 (2.11.1) et GHSA-w28w-mhc8-qvjv (2.11.6). Ligne 2.11 tenue (~) :
+# @tauri-apps/api et @tauri-apps/cli doivent rester sur la même version mineure (package.json)
+tauri = { version = "~2.11.6", features = [] }
+tauri-plugin-opener = "2"
+# Base de la page (secure_db.rs), ouverte directement par sqlx
+sqlx = { version = "0.8", default-features = false, features = ["sqlite", "runtime-tokio", "json"] }
+indexmap = { version = "2", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
+log = "0.4"
+env_logger = "0.11"
+form_urlencoded = "1"
+# Déjà présent via reqwest : décode les réponses du fournisseur selon leur jeu de caractères
+encoding_rs = "0.8"
+tokio = { version = "1", features = ["full"] }
+# DNS sécurisé (dns.rs) : DoH avec ring et les racines webpki, comme la pile TLS d'Android.
+# Sans « system-config » : la configuration DNS de l'appareil n'est jamais lue (repli tokio::net).
+hickory-resolver = { version = "0.26.3", default-features = false, features = ["tokio", "https-ring", "webpki-roots"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+# Certificats HTTPS de mpv.exe (mpv_tls.rs) : autorités du système exportées en PEM, chacune
+# relue avant d'être gardée. Déjà présentes via rustls (hickory, Android) : aucun paquet en plus
+rustls-pki-types = "1"
+rustls-webpki = { version = "0.103", default-features = false, features = ["std"] }
+base64 = "0.22"
+quick-xml = "0.41"
+# Affiches du fournisseur réduites hors de l'écran (poster_thumbs.rs) : lecture JPEG, PNG et WebP seulement
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+flate2 = "1"
+tauri-plugin-process = "2"
+tauri-plugin-os = "2"
+regex = "1.12.3"
+# Always compiled so its ACL permissions exist on every target; native code only runs on Android.
+tauri-plugin-nyx-android = { path = "plugins/tauri-plugin-nyx-android" }
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-mpv = "0.5.2"
+# Coffre du système (identifiants IPTV), atteint seulement par les commandes nyx_secret_* (secret_vault.rs).
+# Mêmes version et moteurs que l'ancien tauri-plugin-keyring 0.1.0 : identifiants de la 0.7.6 retrouvés.
+keyring = { version = "3.6.1", features = ["apple-native", "windows-native", "sync-secret-service"] }
+tauri-plugin-updater = "2"
+reqwest = { version = "0.12", features = ["json"] }
+# Magasin d'autorités du système lu pour mpv.exe (mpv_tls.rs)
+rustls-native-certs = "0.8"
+
+# native-tls would pull OpenSSL into the Android cross-build; desktop keeps the OS TLS stack.
+# charset, http2 et system-proxy étaient toujours actifs en 0.11 : gardés pour un comportement identique.
+[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "charset", "http2", "system-proxy"] }
+
+# Fils de préparation des affiches en faible priorité (poster_thumbs.rs). Déjà présent via tokio : aucun paquet en plus
+[target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+webview2-com = "0.38"
+windows = { version = "0.61", features = ["Win32_System_Com"] }
+
+[dev-dependencies]
+# Moteur simulé de Tauri : les tests appellent les commandes à travers les droits réels de l'app
+tauri = { version = "~2.11.6", features = ["test"] }

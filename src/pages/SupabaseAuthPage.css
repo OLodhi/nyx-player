@@ -1,0 +1,529 @@
+/* =========================================
+   SUPABASE AUTH PAGE — Login / Register
+   Phase 2 — Design Tokens via var()
+   ========================================= */
+
+/* ---- Page container ---- */
+.supabase-auth {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  /* stylelint-disable-next-line defensive-css/require-dynamic-viewport-height -- vh = dvh en WebView, dvh inconnu avant Chrome 108 */
+  height: 100vh;
+  width: 100vw;
+  background: transparent;
+  position: relative;
+}
+
+/* ---- Card ---- */
+.supabase-auth__card {
+  width: 100%;
+  max-width: 26rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  padding: var(--space-8);
+  background: var(--surface-raised);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  animation: authCardSlideIn var(--duration-slow) var(--ease-out);
+}
+
+/* Card scrollbar — pattern scrollbar-thin ajouté en className dans le TSX */
+
+@keyframes authCardSlideIn {
+  from {
+    transform: translateY(1.5rem) scale(0.97);
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- Header ---- */
+.supabase-auth__header {
+  text-align: center;
+  margin-bottom: var(--space-7);
+}
+
+.supabase-auth__brand-logo {
+  height: 9rem;
+  width: auto;
+  margin: 0 auto var(--space-4);
+  display: block;
+  filter: drop-shadow(0 0 1rem rgba(255, 255, 255, 0.15));
+}
+
+.supabase-auth__subtitle {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  font-weight: var(--font-regular);
+  line-height: var(--leading-normal);
+  margin: 0;
+}
+
+/* ---- Tabs ---- */
+.supabase-auth__tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-6);
+  background: var(--surface-whisper);
+  border-radius: var(--radius-md);
+  padding: var(--space-1);
+}
+
+.supabase-auth__tab {
+  flex: 1;
+  padding: var(--space-2);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.supabase-auth__tab:hover {
+  color: var(--text-primary);
+  background: var(--hover-overlay);
+}
+
+.supabase-auth__tab--active {
+  color: var(--text-primary);
+  background: var(--nyx-blue-subtle);
+  box-shadow: 0 0 0.75rem rgba(40, 40, 163, 0.15);
+}
+
+/* ---- Form ---- */
+.supabase-auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.supabase-auth__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.supabase-auth__label {
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.supabase-auth__input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--nyx-dark);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-family: var(--font-body);
+  line-height: var(--leading-normal);
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+  box-sizing: border-box;
+}
+
+.supabase-auth__input:focus-visible {
+  outline: none;
+  border-color: var(--focus-border);
+  box-shadow: 0 0 0 0.1875rem rgba(40, 40, 163, 0.15);
+}
+
+.supabase-auth__input::placeholder {
+  color: var(--text-disabled);
+}
+
+/* Pas de bouton natif « afficher le mot de passe » (Edge, donc WebView2) ni de bouton de saisie
+   automatique (WebKit) : l'app a le sien. Deux règles, car un navigateur ignore toute une liste de
+   sélecteurs dès qu'il ne connaît pas l'un d'eux. Sans !important : une règle de l'app l'emporte
+   déjà sur le style par défaut du navigateur. */
+.supabase-auth__input::-ms-reveal {
+  display: none;
+}
+
+.supabase-auth__input::-webkit-credentials-auto-fill-button {
+  display: none;
+}
+
+/* ---- Password field wrapper ---- */
+.supabase-auth__input-wrapper {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.supabase-auth__input-wrapper .supabase-auth__input {
+  padding-right: 2.75rem;
+}
+
+.supabase-auth__eye-toggle {
+  position: absolute;
+  right: var(--space-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-lg);
+  line-height: 1;
+  padding: var(--space-1);
+  color: var(--text-icon);
+  opacity: 0.7;
+  transition: opacity var(--duration-fast) var(--ease-out);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.supabase-auth__eye-toggle:hover {
+  opacity: 1;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---- Submit Button (NyxButton contextual override) ---- */
+.supabase-auth__form .nyx-btn,
+.supabase-auth__forgot-screen .nyx-btn {
+  margin-top: var(--space-2);
+  max-width: 100%;
+  white-space: normal;     /* override nowrap — le texte cooldown est long */
+  text-align: center;
+}
+
+/* ---- Error Banner ---- */
+.supabase-auth__error {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  line-height: var(--leading-normal);
+  animation: authErrorShake var(--duration-slow) var(--ease-out);
+  /* « word-break: break-word », mot déprécié, vaut exactement ceci */
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+.supabase-auth__error::before {
+  content: '⚠';
+  flex-shrink: 0;
+  font-size: var(--text-base);
+}
+
+@keyframes authErrorShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-0.375rem);
+  }
+
+  75% {
+    transform: translateX(0.375rem);
+  }
+}
+
+/* ---- Success Banner ---- */
+.supabase-auth__success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+  background: rgba(70, 211, 105, 0.08);
+  border: 1px solid var(--color-success-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-success);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  line-height: var(--leading-normal);
+  text-align: center;
+}
+
+.supabase-auth__success::before {
+  content: '✓';
+  display: block;
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;
+  text-align: center;
+  background: rgba(70, 211, 105, 0.12);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+/* Resend email button */
+.supabase-auth__resend {
+  background: none;
+  border: 1px solid rgba(88, 166, 255, 0.2);
+  color: var(--nyx-blue-light);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.supabase-auth__resend:hover:not(:disabled) {
+  background: var(--color-info-subtle);
+  border-color: rgba(88, 166, 255, 0.35);
+}
+
+.supabase-auth__resend:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- Email Suggestion Banner ---- */
+.supabase-auth__email-suggestion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid var(--color-warning-subtle);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: var(--leading-normal);
+}
+
+.supabase-auth__email-suggestion strong {
+  color: var(--color-warning);
+  font-weight: var(--font-semibold);
+}
+
+.supabase-auth__email-suggestion-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.supabase-auth__email-suggestion-actions button {
+  background: none;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.supabase-auth__email-suggestion-actions button:first-child {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--color-warning);
+}
+
+.supabase-auth__email-suggestion-actions button:first-child:hover {
+  background: rgba(245, 158, 11, 0.25);
+}
+
+.supabase-auth__email-suggestion-actions button:last-child:hover {
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ---- Confirmation hint ---- */
+.supabase-auth__confirmation-hint {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  line-height: var(--leading-normal);
+  text-align: center;
+}
+
+/* ---- Loading Spinner ---- */
+.supabase-auth__spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 0.125rem solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--text-primary);
+  border-radius: var(--radius-full);
+  animation: authSpin 0.6s linear infinite;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+@keyframes authSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Forgot password link ---- */
+.supabase-auth__forgot {
+  background: none;
+  border: none;
+  color: var(--nyx-blue-light);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  cursor: pointer;
+  padding: 0;
+  text-align: right;
+  transition: opacity var(--duration-fast) var(--ease-out);
+  margin-top: -0.25rem;
+}
+
+.supabase-auth__forgot:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+/* ---- Forgot password screen (dedicated) ---- */
+.supabase-auth__forgot-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Banners inside forgot-screen: gap handles spacing, no extra margin */
+.supabase-auth__forgot-screen .supabase-auth__error,
+.supabase-auth__forgot-screen .supabase-auth__success {
+  margin-bottom: 0;
+}
+
+.supabase-auth__forgot-title {
+  font-size: var(--text-xl);
+  font-family: var(--font-display);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  text-align: center;
+  margin: 0;
+  line-height: var(--leading-tight);
+}
+
+.supabase-auth__forgot-text {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  line-height: var(--leading-normal);
+  margin: 0;
+  text-align: center;
+}
+
+.supabase-auth__back-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  padding: 0;
+  text-align: center;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.supabase-auth__back-link:hover {
+  color: var(--text-primary);
+}
+
+/* ---- Terms checkbox ---- */
+.supabase-auth__terms-checkbox {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-top: -0.25rem;
+}
+
+.supabase-auth__terms-checkbox input[type="checkbox"] {
+  margin-top: 0.125rem;
+  accent-color: var(--nyx-blue);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.supabase-auth__terms-link {
+  background: none;
+  border: none;
+  color: var(--nyx-blue-light);
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.supabase-auth__terms-link:hover {
+  opacity: 0.75;
+}
+
+/* ---- Legal footer ---- */
+.supabase-auth__legal-footer {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.supabase-auth__legal-footer button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.supabase-auth__legal-footer button:hover {
+  color: var(--nyx-blue-light);
+}
+
+.supabase-auth__legal-footer span {
+  color: rgba(255, 255, 255, 0.1);
+  font-size: var(--text-xs);
+}

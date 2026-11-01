@@ -1,0 +1,228 @@
+/* ============================================================================
+   BINGE POPUP - Épisode suivant avec countdown (vertical card layout)
+   ============================================================================ */
+
+.binge-popup {
+    position: absolute;
+    bottom: 6rem;
+    right: 1.5rem;
+
+    display: flex;
+    flex-direction: column;
+    width: 19rem;
+
+    background: var(--glass-bg-player);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+
+    animation: binge-popup-slide-in var(--duration-normal) var(--ease-out);
+    z-index: var(--z-player-popup);
+    pointer-events: auto; /* Réactive les clics — parent (safe-area) a pointer-events: none */
+}
+
+@keyframes binge-popup-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.75rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Cover image — full width, 16:9 ratio */
+.binge-popup-cover {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.binge-popup-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Image paysage TMDB (still) ou Xtream: remplit le cadre 16:9 directement */
+.binge-popup-cover img.is-episode-image {
+    object-fit: cover;
+}
+
+/* Poster portrait (affiche série): centré avec fond sombre pour combler les bords */
+.binge-popup-cover img.is-poster-image {
+    object-fit: contain;
+    background: var(--bg-primary, #0a0a0a);
+}
+
+.binge-popup-cover-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--nyx-violet) 0%, var(--nyx-violet-dark) 100%);
+    color: var(--text-primary);
+}
+
+.binge-popup-cover-placeholder svg {
+    width: 2rem;
+    height: 2rem;
+    opacity: 0.7;
+}
+
+/* Close button — inside, top right of cover */
+.binge-popup-close {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+
+    width: 1.6rem;
+    height: 1.6rem;
+
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-radius: 50%;
+
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-out);
+}
+
+.binge-popup-close svg {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.binge-popup-close:hover {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+/* Body — padding zone for content + footer */
+.binge-popup-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 0.85rem;
+}
+
+/* Content — episode info */
+.binge-popup-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.binge-popup-label {
+    font-size: 0.65rem;
+    color: var(--text-icon);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.binge-popup-episode {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.binge-popup-title {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Footer — countdown + play button */
+.binge-popup-footer {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Countdown ring */
+.binge-popup-countdown {
+    position: relative;
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+}
+
+.binge-popup-countdown svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.countdown-ring-bg {
+    fill: none;
+    stroke: var(--border-default);
+    stroke-width: 3;
+}
+
+.countdown-ring-fill {
+    fill: none;
+    stroke: var(--nyx-violet);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+}
+
+.countdown-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.countdown-number {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    font-family: var(--font-mono);
+}
+
+.countdown-label {
+    font-size: 0.5rem;
+    color: var(--text-icon);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Play button — full width flex grow */
+.binge-popup-play {
+    flex: 1;
+    padding: 0.55rem 0.75rem;
+
+    background: linear-gradient(135deg, var(--nyx-violet) 0%, var(--nyx-violet-dark) 100%);
+    border: none;
+    border-radius: var(--radius-md);
+
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+}
+
+.binge-popup-play:hover {
+    filter: brightness(1.15);
+    box-shadow: 0 0.25rem 0.75rem var(--focus-ring);
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Email Confirmation — Nyx Player</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="/auth/langue.js"></script>
+</head>
+
+<body class="page-centered" data-page="confirm">
+    <div class="card">
+        <div class="lang-switch auth-lang" role="group" aria-label="Language / Langue">
+            <button type="button" class="lang-switch__option" data-lang="en" lang="en">EN</button>
+            <button type="button" class="lang-switch__option" data-lang="fr" lang="fr">FR</button>
+        </div>
+        <div class="brand"><img src="../assets/logo-principal-blanc.png" alt="Nyx Player"></div>
+        <p class="subtitle" data-i18n="subtitle">Email Confirmation</p>
+
+        <!-- Loading state -->
+        <div id="state-loading" class="spinner-container">
+            <div class="spinner"></div>
+            <span class="spinner-text" data-i18n="verifying">Verifying…</span>
+        </div>
+
+        <!-- Success state -->
+        <div id="state-success" class="hidden">
+            <div class="message message--success">
+                <span data-i18n="success1">✓ Your email has been confirmed!</span><br>
+                <span data-i18n="success2">You can go back to the app.</span>
+            </div>
+        </div>
+
+        <!-- Error state -->
+        <div id="state-error" class="hidden">
+            <div class="message message--error">
+                <span id="error-text" data-i18n="errGeneric">An error occurred.</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            &copy; 2026 Nyx Player
+        </div>
+    </div>
+
+    <script src="/auth/supabase-config.js"></script>
+    <script src="/auth/session.js"></script>
+    <script>
+        /**
+         * Confirm Email — Verifies the token_hash via Supabase REST API.
+         *
+         * Flow:
+         * 1. Get token_hash and type from URL query params
+         * 2. POST /auth/v1/verify with { token_hash, type }
+         * 3. Show success or error
+         */
+
+        const L = NyxAuthLang.init(document, window);
+        // Jeton lu une fois, puis retiré de l'adresse (session.js)
+        const linkParams = NyxAuthSession.takeLinkParams(window);
+        // Adresse et clé publique : une seule source pour les 3 pages (supabase-config.js)
+        const SUPABASE_URL = window.NYX_SUPABASE.url;
+        const SUPABASE_ANON_KEY = window.NYX_SUPABASE.key;
+
+        const stateLoading = document.getElementById('state-loading');
+        const stateSuccess = document.getElementById('state-success');
+        const stateError = document.getElementById('state-error');
+        const errorText = document.getElementById('error-text');
+
+        function showState(state) {
+            stateLoading.classList.add('hidden');
+            stateSuccess.classList.add('hidden');
+            stateError.classList.add('hidden');
+            state.classList.remove('hidden');
+        }
+
+        async function verifyEmail() {
+            const tokenHash = linkParams.get('token_hash');
+            const type = linkParams.get('type') || 'signup';
+
+            if (!tokenHash) {
+                L.set(errorText, 'errMissing');
+                showState(stateError);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                    },
+                    body: JSON.stringify({ token_hash: tokenHash, type }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    showState(stateSuccess);
+                    // Session ouverte par le lien : inutile ici, fermée tout de suite
+                    await NyxAuthSession.endLinkSession(window, SUPABASE_URL, SUPABASE_ANON_KEY, data.access_token);
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    L.set(errorText, 'errExpired', data.error_description || data.msg);
+                    showState(stateError);
+                }
+            } catch (err) {
+                L.set(errorText, 'errNetwork');
+                showState(stateError);
+            }
+        }
+
+        verifyEmail();
+    </script>
+</body>
+
+</html>

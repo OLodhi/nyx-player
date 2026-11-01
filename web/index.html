@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nyx Player — Lights down. Press play.</title>
+  <meta name="description"
+    content="Nyx Player turns your IPTV subscription into a real cinema library. Live TV, movies and series, enriched by TMDB, synced across your devices. Free.">
+  <meta name="theme-color" content="#020A19">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+
+  <link rel="alternate" hreflang="fr" href="https://nyxplayer.app/accueil.html">
+  <link rel="alternate" hreflang="en" href="https://nyxplayer.app/index.html">
+  <link rel="alternate" hreflang="x-default" href="https://nyxplayer.app/index.html">
+  <link rel="preload" href="assets/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/instrument-serif-latin-400-italic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="lab.css">
+  <script>document.documentElement.classList.replace('no-js', 'js'); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('anim');</script>
+</head>
+
+<body>
+
+  <!-- ░░ Projector loader ░░ -->
+  <div class="loader" aria-hidden="true">
+    <div class="loader__center">
+      <svg class="loader__mark" viewBox="-12 -12 394 436">
+        <path class="loader__path"
+          d="M369.34,0v106.09h-106.09V0h106.09ZM0,223.96h106.71l120.98,187.09h140.33L175.6,107.36H0v116.6ZM.56,411.31h106.09v-106.09H.56v106.09Z" />
+      </svg>
+      <div class="loader__meta">
+        <span class="loader__label">Nyx Player</span>
+        <span class="loader__count"><span data-count>000</span>%</span>
+      </div>
+    </div>
+    <div class="loader__line"></div>
+  </div>
+
+  <!-- ░░ Atmosphere ░░ -->
+  <canvas class="nebula" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="progress" aria-hidden="true"></div>
+  <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
+  <div class="cursor-dot" aria-hidden="true"></div>
+
+  <!-- ░░ Nav ░░ -->
+  <header class="nav">
+    <a href="#top" class="nav__logo" aria-label="Nyx Player, back to top">
+      <img src="assets/logo-principal-blanc.svg" alt="Nyx Player" width="140" height="24">
+    </a>
+    <nav class="nav__links" aria-label="Sections">
+      <a href="#library">Library</a>
+      <a href="#features">Features</a>
+      <a href="#preview">Preview</a>
+      <a href="#faq">FAQ</a>
+      <a href="#trust">Open source</a>
+      <a href="contact.html">Support</a>
+    </nav>
+    <div class="nav__end">
+      <div class="lang-switch" role="group" aria-label="Language">
+        <span class="lang-switch__option lang-switch__option--current" aria-current="true">EN</span>
+        <a href="accueil.html" class="lang-switch__option" lang="fr" hreflang="fr" title="Lire cette page en français">FR</a>
+      </div>
+      <a class="nav__cta" data-magnetic href="#download">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3v11m0 0 4.5-4.5M12 14 7.5 9.5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill-opacity="0"/></svg>
+        <span>Download</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ░░ Hero ░░ -->
+    <section class="hero">
+      <div class="hero__inner">
+        <p class="eyebrow hero__eyebrow" data-hero>
+          <span class="live-dot" aria-hidden="true"></span>
+          v0.8.0 <i>·</i> Free <i>·</i> Open source
+        </p>
+        <h1 class="hero__title">
+          <span class="hero__line" data-split>Your IPTV experience,</span>
+          <span class="hero__line hero__line--serif"><em class="shimmer" data-hero-serif>reimagined.</em></span>
+        </h1>
+        <p class="hero__lead" data-hero>
+          A cinema-grade player for Live&nbsp;TV, Movies and Series. Your subscription, finally dressed like a
+          streaming service&nbsp;— clean, fast, and all in one place.
+        </p>
+        <div class="hero__cta" data-hero>
+          <a class="btn-download" data-magnetic data-cursor="Get it" href="#download">
+            <span class="btn-download__glow" aria-hidden="true"></span>
+            <span class="btn-download__body">
+              <svg class="btn-download__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4.5-4.5M12 14 7.5 9.5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="btn-download__text">
+                <strong>Download Nyx Player</strong>
+                <small>Windows · Android · Android TV</small>
+              </span>
+            </span>
+          </a>
+          <a class="btn-ghost" href="#preview" data-magnetic>
+            <span class="btn-ghost__play" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z" /></svg>
+            </span>
+            See it in action
+          </a>
+        </div>
+        <p class="hero__platforms" data-hero>
+          <span>Windows 10 &amp; 11</span>
+          <span>Android</span>
+          <span>Android TV</span>
+        </p>
+        <p class="hero__oss" data-hero>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg>
+          <span>Open source · GPL-3.0</span>
+          <a href="https://github.com/kunai974/nyx-player" target="_blank" rel="noopener">Read the code &rarr;</a>
+        </p>
+      </div>
+
+      <!-- The screen, lit by a projector -->
+      <div class="screen" aria-label="Nyx Player home screen">
+        <div class="screen__beam" aria-hidden="true">
+          <span class="screen__dust"></span>
+        </div>
+        <div class="screen__stage">
+          <div class="screen__tilt">
+            <div class="window">
+              <div class="window__bar" aria-hidden="true">
+                <span class="window__title"><svg viewBox="0 0 370 412"><path fill="currentColor" d="M369.34,0v106.09h-106.09V0h106.09ZM0,223.96h106.71l120.98,187.09h140.33L175.6,107.36H0v116.6ZM.56,411.31h106.09v-106.09H.56v106.09Z"/></svg>Nyx Player</span>
+                <span class="window__ctrl"><i></i><i></i><i></i></span>
+              </div>
+              <img src="assets/screen-dashboard.jpg" width="1920" height="1026"
+                alt="Nyx Player home screen: a Peaky Blinders banner above a Trending Now row of posters">
+              <div class="window__sheen" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="screen__floor" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="scroll-cue" aria-hidden="true"><span></span></div>
+    </section>
+
+    <!-- ░░ Band ░░ -->
+    <div class="band" aria-hidden="true">
+      <div class="band__track">
+        <span>Live TV</span><b>✦</b><span class="o">Movies</span><b>✦</b><span>Series</span><b>✦</b>
+        <span class="o">Resume</span><b>✦</b><span>My List</span><b>✦</b><span class="o">TV Guide</span><b>✦</b>
+        <span>Profiles</span><b>✦</b><span class="o">Cloud Sync</span><b>✦</b>
+        <span>Live TV</span><b>✦</b><span class="o">Movies</span><b>✦</b><span>Series</span><b>✦</b>
+        <span class="o">Resume</span><b>✦</b><span>My List</span><b>✦</b><span class="o">TV Guide</span><b>✦</b>
+        <span>Profiles</span><b>✦</b><span class="o">Cloud Sync</span><b>✦</b>
+      </div>
+    </div>
+
+    <!-- ░░ Before / after ░░ -->
+    <section class="story" id="library">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal><span class="idx">01</span> The difference</p>
+        <h2 class="display" data-reveal>
+          Your provider sends a list.<br>
+          <em>Nyx turns it into a library.</em>
+        </h2>
+        <p class="lead" data-reveal>
+          Thousands of raw stream names become posters, synopses, ratings and seasons — matched with TMDB and
+          arranged in rows you actually want to browse. Drag to see the difference.
+        </p>
+      </div>
+
+      <div class="compare" data-reveal style="--pos: 50%">
+        <div class="compare__side compare__side--after">
+          <div class="lib">
+            <div class="lib__head">
+              <span class="lib__tab is-on">Trending now</span>
+              <span class="lib__tab">Continue watching</span>
+              <span class="lib__tab">My List</span>
+            </div>
+            <div class="lib__grid" data-lib></div>
+          </div>
+          <span class="compare__tag compare__tag--after">Nyx Player</span>
+        </div>
+        <div class="compare__side compare__side--before" aria-hidden="true">
+          <div class="raw">
+            <div class="raw__head"><span>#</span><span>STREAM NAME</span><span>GROUP</span><span>EXT</span></div>
+            <div class="raw__rows" data-raw></div>
+          </div>
+          <span class="compare__tag compare__tag--before">A raw playlist</span>
+        </div>
+        <div class="compare__handle" role="slider" tabindex="0" aria-label="Compare a raw playlist with Nyx Player"
+          aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" data-cursor="Drag">
+          <span class="compare__knob">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6 3 12l6 6M15 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ░░ Poster wall ░░ -->
+    <section class="wall" aria-labelledby="wall-title">
+      <div class="wall__plane" aria-hidden="true">
+        <div class="wall__row" data-row="0"></div>
+        <div class="wall__row" data-row="1"></div>
+        <div class="wall__row" data-row="2"></div>
+        <div class="wall__row" data-row="3"></div>
+      </div>
+      <div class="wall__veil" aria-hidden="true"></div>
+      <div class="wall__copy">
+        <p class="eyebrow" data-reveal><span class="idx">02</span> Enriched by TMDB</p>
+        <h2 class="display display--xl" id="wall-title" data-reveal>Every title,<br><em>dressed for the premiere.</em></h2>
+        <ul class="wall__facts" data-reveal>
+          <li><strong>Posters</strong> &amp; backdrops</li>
+          <li><strong>Synopses</strong> &amp; cast</li>
+          <li><strong>Ratings</strong> &amp; genres</li>
+          <li><strong>Seasons</strong> &amp; episodes</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ░░ Features bento ░░ -->
+    <section class="features" id="features">
+      <div class="section-head">
+        <p class="eyebrow" data-reveal><span class="idx">03</span> Built for the evening</p>
+        <h2 class="display" data-reveal>Everything you watch.<br><em>Nothing in the way.</em></h2>
+      </div>
+
+      <div class="bento">
+        <!-- Live TV -->
+        <article class="card card--live" data-reveal data-tilt>
+          <div class="card__text">
+            <h3>Live TV, with a real guide</h3>
+            <p>Zap between channels in one press, see what's on now and what's next in a TV guide that reads at a glance.</p>
+          </div>
+          <div class="epg" aria-hidden="true">
+            <div class="epg__times"><span></span><span>20:00</span><span>20:30</span><span>21:00</span><span>21:30</span></div>
+            <div class="epg__body" data-epg></div>
+            <div class="epg__now"><span>Now</span></div>
+          </div>
+        </article>
+
+        <!-- Resume -->
+        <article class="card card--resume" data-reveal data-tilt data-cursor="Resume">
+          <div class="resume" aria-hidden="true">
+            <img src="assets/backdrop-invincible.jpg" alt="" loading="lazy">
+            <div class="resume__shade"></div>
+            <div class="resume__info">
+              <span class="resume__show">Invincible</span>
+              <span class="resume__ep">S2 · E4 — It's Been a While</span>
+              <div class="resume__bar"><i></i></div>
+              <span class="resume__left">23 min left</span>
+            </div>
+            <span class="resume__play"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg></span>
+          </div>
+          <div class="card__text">
+            <h3>Right where you left off</h3>
+            <p>Progress is saved to the second, on every episode and every film.</p>
+          </div>
+        </article>
+
+        <!-- Sync -->
+        <article class="card card--sync" data-reveal data-tilt>
+          <svg class="sync" viewBox="0 0 320 170" aria-hidden="true">
+            <defs>
+              <linearGradient id="syncLine" x1="0" x2="1">
+                <stop offset="0" stop-color="#5E6FEA" stop-opacity=".1" />
+                <stop offset=".5" stop-color="#9a9af0" stop-opacity=".9" />
+                <stop offset="1" stop-color="#c46a6a" stop-opacity=".1" />
+              </linearGradient>
+            </defs>
+            <path id="p1" class="sync__line" d="M70 118 C 110 40, 150 40, 160 52" />
+            <path id="p2" class="sync__line" d="M160 52 C 175 40, 220 40, 256 112" />
+            <path id="p3" class="sync__line" d="M86 132 C 140 160, 200 160, 240 134" />
+            <circle r="3.2" class="sync__dot"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#p1" /></animateMotion></circle>
+            <circle r="3.2" class="sync__dot"><animateMotion dur="3.1s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#p2" /></animateMotion></circle>
+            <circle r="3.2" class="sync__dot sync__dot--red"><animateMotion dur="3.6s" repeatCount="indefinite"><mpath href="#p3" /></animateMotion></circle>
+            <!-- laptop -->
+            <g class="sync__device" transform="translate(28 96)">
+              <rect x="0" y="0" width="76" height="46" rx="5" />
+              <path d="M-8 52h92l-6 6H-2z" />
+            </g>
+            <!-- cloud -->
+            <g class="sync__cloud" transform="translate(132 18)">
+              <path d="M18 44h30a14 14 0 0 0 0-28 20 20 0 0 0-38 6A11 11 0 0 0 18 44z" />
+            </g>
+            <!-- phone -->
+            <g class="sync__device" transform="translate(236 88)">
+              <rect x="0" y="0" width="34" height="62" rx="7" />
+              <rect class="sync__notch" x="12" y="5" width="10" height="3" rx="1.5" />
+            </g>
+          </svg>
+          <div class="card__text">
+            <h3>Synced across devices</h3>
+            <p>Your list, your progress and your preferences follow your account.</p>
+          </div>
+        </article>
+
+        <!-- Private -->
+        <article class="card card--private" data-reveal data-tilt>
+          <div class="vault" aria-hidden="true">
+            <div class="vault__row"><span>server</span><code data-scramble="http://provider.example">http://provider.example</code></div>
+            <div class="vault__row"><span>username</span><code data-scramble="your-login">your-login</code></div>
+            <div class="vault__row"><span>password</span><code data-scramble="••••••••••">••••••••••</code></div>
+            <div class="vault__lock">
+              <svg viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="4.5" y="11" width="15" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></svg>
+              Encrypted on this device
+            </div>
+          </div>
+          <div class="card__text">
+            <h3>Private by design</h3>
+            <p>Your IPTV credentials never leave your device. No ads, no data sales.</p>
+          </div>
+        </article>
+
+        <!-- Free -->
+        <article class="card card--free" data-reveal data-tilt>
+          <div class="price" aria-hidden="true">
+            <span class="price__cur">€</span><span class="price__num" data-price>12.99</span>
+          </div>
+          <div class="card__text">
+            <h3>Free. Really.</h3>
+            <p>No subscription, no in-app purchases — and no plans to change that.</p>
+          </div>
+        </article>
+
+        <!-- Devices -->
+        <article class="card card--devices" data-reveal>
+          <div class="card__text">
+            <h3>One library, three screens</h3>
+            <p>The same Nyx on your PC, on your phone and in your living room, with a layout made for each one,
+              remote control included.</p>
+            <p class="platforms__status"><span class="platforms__dot" aria-hidden="true"></span>Available now</p>
+            <ul class="platforms">
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+                <span><strong>Windows</strong><small>Windows 10 &amp; 11</small></span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.65-.38l-1.86 3.22A11.4 11.4 0 0 0 12 8.1c-1.77 0-3.43.39-4.93 1.04L5.21 5.92a.38.38 0 0 0-.65.38L6.4 9.48A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52M7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5m10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5"/></svg>
+                <span><strong>Android</strong><small>Phones</small></span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 21h8M12 17v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <span><strong>Android TV</strong><small>TVs &amp; TV boxes</small></span>
+              </li>
+            </ul>
+          </div>
+          <div class="devices" aria-hidden="true">
+            <div class="dev dev--tv">
+              <div class="dev__screen"><img src="assets/screen-dashboard.jpg" alt="" loading="lazy"><span class="dev__focus"></span></div>
+              <div class="dev__stand"></div>
+            </div>
+            <div class="dev dev--laptop">
+              <div class="dev__screen"><img src="assets/screen-watchlist.jpg" alt="" loading="lazy"><span class="dev__taskbar"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg><i></i><i></i><i></i></span></div>
+              <div class="dev__base"></div>
+            </div>
+            <div class="dev dev--phone">
+              <div class="dev__screen"><img src="assets/screen-phone-home.jpg" alt="" loading="lazy"></div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ░░ Manifesto ░░ -->
+    <section class="manifesto" aria-label="Why Nyx">
+      <p class="manifesto__text" data-words>
+        Nyx was the <em>goddess of the night.</em> We built a player worthy of her: no cluttered grids, no endless
+        lists, no ads — just your films, your series and your channels, beautifully arranged, waiting for you
+        <em>when the lights go down.</em>
+      </p>
+    </section>
+
+    <!-- ░░ Preview ░░ -->
+    <section class="preview" id="preview">
+      <div class="section-head section-head--center">
+        <p class="eyebrow" data-reveal><span class="idx">04</span> See it in action</p>
+        <h2 class="display" data-reveal>A glimpse of the <em>experience.</em></h2>
+      </div>
+
+      <div class="gallery" data-reveal>
+        <div class="gallery__tabs" role="tablist" aria-label="Screens">
+          <button role="tab" aria-selected="true" class="gallery__tab is-on" data-src="assets/screen-dashboard.jpg"
+            data-alt="Home screen with a featured banner and trending posters">
+            <span class="gallery__num">01</span> Home <i class="gallery__fill"></i>
+          </button>
+          <button role="tab" aria-selected="false" class="gallery__tab" data-src="assets/screen-watchlist.jpg"
+            data-alt="My List: a grid of saved movies and series">
+            <span class="gallery__num">02</span> My List <i class="gallery__fill"></i>
+          </button>
+          <button role="tab" aria-selected="false" class="gallery__tab" data-src="assets/screen-series.jpg"
+            data-alt="Series page for Invincible with seasons and episodes">
+            <span class="gallery__num">03</span> Series <i class="gallery__fill"></i>
+          </button>
+        </div>
+        <div class="gallery__frame window">
+          <div class="window__bar" aria-hidden="true">
+            <span class="window__title"><svg viewBox="0 0 370 412"><path fill="currentColor" d="M369.34,0v106.09h-106.09V0h106.09ZM0,223.96h106.71l120.98,187.09h140.33L175.6,107.36H0v116.6ZM.56,411.31h106.09v-106.09H.56v106.09Z"/></svg>Nyx Player</span>
+            <span class="window__ctrl"><i></i><i></i><i></i></span>
+          </div>
+          <div class="gallery__stage" role="tabpanel">
+            <img class="gallery__img is-on" src="assets/screen-dashboard.jpg" width="1920" height="1026"
+              alt="Home screen with a featured banner and trending posters">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ░░ FAQ ░░ -->
+    <section class="faq" id="faq">
+      <div class="faq__aside">
+        <p class="eyebrow" data-reveal><span class="idx">05</span> FAQ</p>
+        <h2 class="display" data-reveal>Questions,<br><em>answered.</em></h2>
+        <p class="lead" data-reveal>Something else? Write to us at
+          <a href="mailto:contact@nyxplayer.app">contact@nyxplayer.app</a> or join the
+          <a href="https://reddit.com/r/nyxplayer" target="_blank" rel="noopener">Reddit community</a>.</p>
+      </div>
+      <div class="faq__list">
+        <div class="qa" data-reveal>
+          <h3><button class="qa__q" aria-expanded="false"><span>What is Nyx Player?</span><i aria-hidden="true"></i></button></h3>
+          <div class="qa__a"><div><p>Nyx Player is a modern IPTV player designed to deliver the best possible user
+            experience. A clean interface, smooth performance, and your content — beautifully organized.</p></div></div>
+        </div>
+        <div class="qa" data-reveal>
+          <h3><button class="qa__q" aria-expanded="false"><span>Is Nyx Player free?</span><i aria-hidden="true"></i></button></h3>
+          <div class="qa__a"><div><p>Yes — Nyx Player is 100% free, and there are no plans to change that.</p></div></div>
+        </div>
+        <div class="qa" data-reveal>
+          <h3><button class="qa__q" aria-expanded="false"><span>Does Nyx Player include content?</span><i aria-hidden="true"></i></button></h3>
+          <div class="qa__a"><div><p>No. Nyx Player does not provide, host, or distribute any content whatsoever. It is
+            a player only — designed to enhance the experience of your own personal sources.</p></div></div>
+        </div>
+        <div class="qa" data-reveal>
+          <h3><button class="qa__q" aria-expanded="false"><span>What types of playlists are compatible?</span><i aria-hidden="true"></i></button></h3>
+          <div class="qa__a"><div><p>Currently, only Xtream login credentials and Xtream links are supported. More
+            formats may be added in future updates.</p></div></div>
+        </div>
+        <div class="qa" data-reveal>
+          <h3><button class="qa__q" aria-expanded="false"><span>I found a bug — how do I report it?</span><i aria-hidden="true"></i></button></h3>
+          <div class="qa__a"><div><p>You can report bugs via our <a href="https://reddit.com/r/nyxplayer" target="_blank" rel="noopener">Reddit
+            community</a> or by contacting us at <a href="mailto:contact@nyxplayer.app">contact@nyxplayer.app</a>.
+            Please include steps to reproduce the issue and your system info if possible.</p></div></div>
+        </div>
+        <div class="qa" data-reveal>
+          <h3><button class="qa__q" aria-expanded="false"><span>Is my data collected or shared?</span><i aria-hidden="true"></i></button></h3>
+          <div class="qa__a"><div><p>Your IPTV credentials are encrypted on your device and never sent to our servers.
+            Your Nyx account syncs your watchlist, playback progress, favorites, and preferences
+            between your devices. This data is private, secured, and never sold or used for advertising. See our
+            <a href="privacy.html">Privacy Policy</a> for full details.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ░░ Finale: the flashlight ░░ -->
+    <section class="finale" id="download" data-cursor="">
+      <div class="finale__dark" aria-hidden="true">
+        <img src="assets/backdrop-peaky.jpg" alt="" loading="lazy">
+      </div>
+      <div class="finale__lit" aria-hidden="true">
+        <img src="assets/backdrop-peaky.jpg" alt="" loading="lazy">
+      </div>
+      <div class="finale__copy">
+        <svg class="finale__mark" viewBox="0 0 370 412" aria-hidden="true"><path fill="currentColor" d="M369.34,0v106.09h-106.09V0h106.09ZM0,223.96h106.71l120.98,187.09h140.33L175.6,107.36H0v116.6ZM.56,411.31h106.09v-106.09H.56v106.09Z"/></svg>
+        <h2 class="finale__title" data-reveal>Lights down.<br><em>Press play.</em></h2>
+        <div class="finale__downloads" role="group" aria-label="Download Nyx Player" data-reveal>
+          <a class="btn-download" data-magnetic data-cursor="Get it" href="https://releases.nyxplayer.app/Nyx-Player_0.8.0_x64-setup.exe">
+            <span class="btn-download__glow" aria-hidden="true"></span>
+            <span class="btn-download__body">
+              <svg class="btn-download__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+              <span class="btn-download__text">
+                <strong>Windows</strong>
+                <small>Windows 10 &amp; 11 · 64-bit</small>
+              </span>
+            </span>
+          </a>
+          <a class="btn-download" data-magnetic data-cursor="Get it" href="https://releases.nyxplayer.app/nyx-player-arm64-v0.8.0.apk">
+            <span class="btn-download__glow" aria-hidden="true"></span>
+            <span class="btn-download__body">
+              <svg class="btn-download__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.65-.38l-1.86 3.22A11.4 11.4 0 0 0 12 8.1c-1.77 0-3.43.39-4.93 1.04L5.21 5.92a.38.38 0 0 0-.65.38L6.4 9.48A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52M7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5m10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5"/></svg>
+              <span class="btn-download__text">
+                <strong>Android</strong>
+                <small>Phones · APK</small>
+              </span>
+            </span>
+          </a>
+          <a class="btn-download" data-magnetic data-cursor="Get it" href="https://releases.nyxplayer.app/nyx-player-armv7-v0.8.0.apk">
+            <span class="btn-download__glow" aria-hidden="true"></span>
+            <span class="btn-download__body">
+              <svg class="btn-download__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 21h8M12 17v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <span class="btn-download__text">
+                <strong>Android TV</strong>
+                <small>TVs &amp; TV boxes · APK</small>
+              </span>
+            </span>
+          </a>
+        </div>
+        <p class="finale__version">Version 0.8.0 · November 1, 2026 · <a href="changelog.html">Release notes</a></p>
+        <p class="finale__disclaimer">Nyx Player is a video player application only and does not provide, host, or
+          distribute any content.</p>
+      </div>
+    </section>
+    <!-- ░░ Confiance : open source, installation, vérification, vie privée ░░ -->
+    <section class="trust" id="trust">
+      <div class="trust__head">
+        <p class="eyebrow" data-reveal>Open &amp; transparent</p>
+        <h2 class="display" data-reveal>Nothing to hide.<br><em>Check for yourself.</em></h2>
+        <p class="lead" data-reveal>Nyx Player is free software. Every line of code is public, and our apps are built in the open — so you never have to take our word for it.</p>
+      </div>
+      <div class="trust__grid">
+        <article class="trust__card" data-reveal><h3>Windows says &ldquo;unknown publisher&rdquo;?</h3><p>That is normal for a new, independent app: Nyx is not yet signed with a paid Windows certificate. On the blue SmartScreen window, click <strong>More info</strong>, then <strong>Run anyway</strong>. You can verify what you run: the whole source is public and open to anyone.</p></article>
+        <article class="trust__card" data-reveal><h3>Installing on Android &amp; Android TV</h3><p>Open the downloaded APK. If asked, allow installs from your browser or file manager (&ldquo;unknown sources&rdquo;) — you can switch it off again afterwards.</p></article>
+        <article class="trust__card" data-reveal><h3>Verify your download</h3><p>Each release on GitHub includes <code>SHA256SUMS.txt</code>, the SHA-256 fingerprint of every file. Compare it with your download. Every file also has a build certificate: check it with <code>gh attestation verify &lt;file&gt; --repo kunai974/nyx-player</code>.</p>
+          <a class="trust__link" href="https://github.com/kunai974/nyx-player/releases" target="_blank" rel="noopener">See the releases &rarr;</a></article>
+        <article class="trust__card" data-reveal><h3>Your data stays yours</h3><p>Your IPTV credentials are encrypted on your device and never sent to us. No ads, nothing sold.</p>
+          <a class="trust__link" href="privacy.html">Privacy Policy &rarr;</a></article>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ░░ Footer ░░ -->
+  <footer class="footer">
+    <div class="footer__top">
+      <p class="footer__pitch">The night is yours.</p>
+      <nav class="footer__links" aria-label="Legal and resources">
+        <a href="terms.html">Terms of Service</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="confidentialite.html" lang="fr" hreflang="fr">Privacy (Français)</a>
+        <a href="legal.html">Legal</a>
+        <a href="changelog.html">Changelog</a>
+        <a href="https://reddit.com/r/nyxplayer" target="_blank" rel="noopener">Reddit</a>
+        <a href="https://github.com/kunai974/nyx-player" target="_blank" rel="noopener">Source code</a>
+        <a href="https://github.com/kunai974/nyx-player/blob/main/LICENSE" target="_blank" rel="noopener">License (GPL-3.0)</a>
+        <a href="mailto:contact@nyxplayer.app">contact@nyxplayer.app</a>
+      </nav>
+    </div>
+    <div class="footer__word" aria-hidden="true">
+      <img src="assets/logo-principal-blanc.svg" alt="">
+    </div>
+    <!-- Mention exigée par les conditions de l'API TMDB : leur logo officiel, plus petit que le nôtre, et la même phrase que Paramètres > À propos. -->
+    <p class="footer__tmdb">
+      <img class="footer__tmdb-logo" src="assets/tmdb-logo-blue-short.svg" alt="TMDB" width="96" height="12">
+      <span>This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
+    </p>
+    <p class="footer__copy">&copy; 2026 Nyx Player. Free software under the GPL-3.0 licence.</p>
+  </footer>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/ScrollTrigger.min.js"></script>
+  <script src="vendor/lenis.min.js"></script>
+  <script src="lab.js"></script>
+  <script>
+    /* Met en premier le téléchargement qui correspond à l'appareil du visiteur. */
+    (function () {
+      try {
+        var ua = navigator.userAgent, key = /Android.*(TV|AFT|BRAVIA|SHIELD)|SmartTV|Tizen|Web0S/i.test(ua) ? 'tv'
+          : /Android/i.test(ua) ? 'android' : /Windows/i.test(ua) ? 'windows' : '';
+        var box = document.querySelector('.finale__downloads');
+        if (!key || !box) return;
+        var links = box.querySelectorAll('a.btn-download'), i = { windows: 0, android: 1, tv: 2 }[key], a = links[i];
+        if (!a) return;
+        var tag = document.createElement('span'); tag.className = 'btn-download__tag'; tag.textContent = 'Recommended';
+        a.querySelector('strong').appendChild(tag);
+        box.insertBefore(a, box.firstChild);
+      } catch (e) {}
+    })();
+  </script>
+</body>
+
+</html>

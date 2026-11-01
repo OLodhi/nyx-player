@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par scripts/android-brand-assets.mjs : symbole Nyx (ICOTYPE), calque avant et icône à thème -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.040404"
+        android:scaleY="0.040404"
+        android:translateX="36.041"
+        android:translateY="34.000">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M888.98,0v255.36h-255.36V0h255.36ZM0,539.05h256.84l291.2,450.31h337.75L422.67,258.4H0v280.65ZM1.35,990h255.36v-255.36H1.35v255.36Z" />
+    </group>
+</vector>

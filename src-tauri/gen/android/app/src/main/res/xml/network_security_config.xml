@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Trafic en clair (http) : autorisé par défaut, car beaucoup de fournisseurs IPTV servent leurs
+  flux et leur API en http. Interdit pour les services de Nyx, toujours joints en https : un
+  appel qui repasserait en clair (erreur de configuration, redirection) échoue au lieu de
+  circuler lisiblement sur le réseau.
+  Ce réglage vaut pour la WebView et les appels Java/Kotlin ; le lecteur libmpv et le code Rust
+  ont leur propre pile réseau et ne sont pas concernés.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+    <domain-config cleartextTrafficPermitted="false">
+        <!-- Comptes et synchro -->
+        <domain includeSubdomains="true">supabase.co</domain>
+        <!-- Fiches films et séries, images -->
+        <domain includeSubdomains="true">themoviedb.org</domain>
+        <domain includeSubdomains="true">tmdb.org</domain>
+        <!-- Site et mises à jour -->
+        <domain includeSubdomains="true">nyxplayer.app</domain>
+    </domain-config>
+</network-security-config>

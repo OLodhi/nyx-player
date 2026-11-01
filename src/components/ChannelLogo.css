@@ -1,0 +1,119 @@
+/**
+ * ChannelLogo Component Styles
+ * Displays TV channel logos with fallback placeholder
+ */
+
+.channel-logo {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    /* Plus de background ou border-radius ici, on laisse le parent gérer ou l'image fondre */
+    flex-shrink: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Sizes - gérées par le parent souvent, mais garde-fous */
+.channel-logo--small {
+    width: 2rem;
+    height: 2rem;
+}
+
+.channel-logo--medium {
+    width: 3rem;
+    height: 3rem;
+}
+
+.channel-logo--large {
+    width: 4rem;
+    height: 4rem;
+}
+
+.channel-logo--xlarge {
+    width: 8rem;
+    height: 8rem;
+}
+
+.channel-logo--xxlarge {
+    width: 100%;
+    height: 100%;
+}
+
+/* S'adapte au conteneur */
+
+/* Image */
+.channel-logo__image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Padding retiré pour maximiser la taille du logo */
+    padding: 0;
+}
+
+/* Placeholder (Initials) - Cercle parfait */
+.channel-logo__placeholder {
+    /* Taille explicite relative au container - garantit un cercle */
+    width: 60%;
+    height: 0;
+    padding-bottom: 60%;
+    /* Trick CSS pour forcer un carré (padding-bottom relatif à width) */
+    position: relative;
+    /* Style visuel */
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Les initiales sont positionnées au centre du placeholder */
+.channel-logo__initials {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+
+
+/* Initials size based on container */
+.channel-logo--small .channel-logo__initials {
+    font-size: 0.625rem;
+}
+
+.channel-logo--medium .channel-logo__initials {
+    font-size: 0.875rem;
+}
+
+.channel-logo--large .channel-logo__initials {
+    font-size: 1.125rem;
+}
+
+.channel-logo--xlarge .channel-logo__initials {
+    font-size: 2rem;
+}
+
+.channel-logo--xxlarge .channel-logo__initials {
+    font-size: 2.5rem;
+}
+
+/* Loading state */
+.channel-logo--loading {
+    animation: channelLogoPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes channelLogoPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}

@@ -1,0 +1,30 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Never paste your provider's address, username or password in an issue."
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [Windows, Android phone, Android TV / Google TV]
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Settings › About
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open Live TV\n2. Press down on the remote\n3. …"
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected and what happened
+    validations: { required: true }

@@ -1,0 +1,388 @@
+.hero-banner {
+  position: relative;
+  width: 100%;
+  height: 85vh;
+  max-height: 56.25rem;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  margin-bottom: -15vh;
+  z-index: 15;
+  /* Above dashboard-mode-switch (10) for clickable dots */
+
+  /* Allow clicks to pass through to elements below (mode-switch) */
+  pointer-events: none;
+
+  /* Ken Burns - zoom lent */
+  animation: kenBurns 25s ease-in-out infinite alternate;
+
+  /* Transition fade simple */
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+
+  /* Masque pour fondre dans le fond global */
+  mask-image: linear-gradient(to bottom,
+      black 0%,
+      black 65%,
+      rgba(0, 0, 0, 0.5) 85%,
+      transparent 100%);
+  mask-repeat: repeat;
+  -webkit-mask-image: linear-gradient(to bottom,
+      black 0%,
+      black 65%,
+      rgba(0, 0, 0, 0.5) 85%,
+      transparent 100%);
+}
+
+.hero-banner.fading {
+  opacity: 0;
+}
+
+@keyframes kenBurns {
+  0% {
+    background-size: 105%;
+    background-position: center top;
+  }
+
+  100% {
+    background-size: 115%;
+    background-position: center center;
+  }
+}
+
+/* Skeleton Loading */
+.hero-banner.skeleton {
+  background-color: #1a1a1a;
+  background-image: none;
+  /* Valeur déjà appliquée par .hero-banner, écrite pour le règlement (sans image, elle est sans effet) */
+  background-repeat: no-repeat;
+  animation: none;
+}
+
+/* Fade-in transition when hero loads (skeleton → content) */
+.hero-banner:not(.skeleton):not(.fallback) {
+  animation: heroFadeIn 0.5s ease-out;
+}
+
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.hero-banner.fallback {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  animation: none;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    linear-gradient(to bottom,
+      rgba(0, 0, 0, 0.2) 0%,
+      transparent 40%,
+      rgba(0, 0, 0, 0.4) 75%,
+      rgba(0, 0, 0, 0.8) 100%),
+    linear-gradient(to right, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 35%, transparent 65%);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  padding-left: var(--sidebar-safe-zone);
+}
+
+.hero-content {
+  width: 40%;
+  max-width: 37.5rem;
+  z-index: 2;
+  padding-top: clamp(2rem, 7vh, 5rem);
+  pointer-events: auto;
+}
+
+.hero-logo {
+  width: 100%;
+  max-width: clamp(15rem, 40vw, 25rem);
+  margin-bottom: clamp(0.5rem, 3vh, 1.5rem);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+  /* Responsive height to avoid crushing elements on small/high-dpi screens */
+  max-height: clamp(4rem, 15vh, 7.5rem);
+  object-fit: contain;
+  /* Align to bottom so if it shrinks it sits nicely above the metadata */
+  object-position: left bottom;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 5vw, 3rem); /* Was var(--text-5xl) */
+  font-weight: 800;
+  margin-bottom: clamp(0.5rem, 2vh, 0.75rem);
+  line-height: var(--leading-tight);
+  text-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 50%, #b0b0b0 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+
+  /* Use max-height instead of fixed height so it can shrink */
+  max-height: calc(3rem * 1.2 * 2);
+
+
+  /* Allow descender letters (g, y, p, q) to show */
+  padding-bottom: var(--space-1);
+
+  /* Truncate long titles with ellipsis */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hero-btn-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.hero-btn-icon.info-i {
+  font-family: serif;
+  font-style: italic;
+  font-weight: var(--font-bold);
+  margin-right: -0.125rem;
+}
+
+.hero-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: clamp(0.75rem, 2vh, 1.75rem);
+  flex-wrap: wrap;
+}
+
+.match-score,
+.year,
+.duration,
+.quality-badge {
+  padding: 0.3rem 0.8rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: var(--font-semibold);
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: none;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  height: 1.8rem;
+}
+
+.match-score {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.2);
+}
+
+.quality-badge {
+  font-weight: var(--font-bold);
+  letter-spacing: 0.08em;
+  font-size: var(--text-xs);
+  padding: 0 0.6rem;
+}
+
+.hero-overview {
+  font-size: clamp(0.875rem, 1.2vw, 1.2rem);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  margin-bottom: clamp(0.75rem, 2vh, 2rem);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 90%;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.btn-hero-play,
+.btn-hero-info {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.5rem, 1vh, 0.85rem) clamp(1rem, 2vw, 2.2rem);
+  font-size: clamp(0.85rem, 1.1vw, 1.1rem);
+  font-weight: var(--font-semibold);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.3s var(--ease-out), color 0.3s var(--ease-out), border-color 0.3s var(--ease-out), transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+  backdrop-filter: blur(16px);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.info-svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.btn-hero-play {
+  background-color: rgba(255, 255, 255, 0.9);
+  color: black;
+  border: none;
+}
+
+.btn-hero-play:hover {
+  background-color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+}
+
+.btn-hero-info {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.btn-hero-info:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Hero watchlist — uses WatchlistButton component, minimal overrides only */
+.hero-buttons .btn-hero-watchlist {
+  /* Tame the glow in hero context (close to other buttons) */
+  box-shadow: none;
+}
+
+/* Skeleton Styles */
+.skeleton-text {
+  background-color: #333;
+  border-radius: var(--radius-sm);
+  background-image: linear-gradient(90deg, #333 0px, #444 40px, #333 80px);
+  background-repeat: repeat;
+  background-size: 600px;
+  animation: pulse 1.5s infinite linear;
+}
+
+.skeleton-text.title {
+  height: 4rem;
+  width: 70%;
+  margin-bottom: var(--space-4);
+}
+
+.skeleton-text.meta {
+  height: 1.5rem;
+  width: 40%;
+  margin-bottom: var(--space-6);
+}
+
+.skeleton-text.overview {
+  height: 5rem;
+  width: 100%;
+  margin-bottom: var(--space-8);
+}
+
+.skeleton-btn {
+  width: 9.375rem;
+  height: 3.125rem;
+  background-color: #333;
+  border-radius: var(--radius-sm);
+  animation: pulse 1.5s infinite linear;
+}
+
+@keyframes pulse {
+  0% {
+    background-position: -100px;
+  }
+
+  100% {
+    background-position: 200px;
+  }
+}
+
+/* Hero Navigation Dots */
+.hero-dots {
+  position: absolute;
+  bottom: 6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  z-index: 20;
+  pointer-events: auto;
+  /* Restore interactivity for navigation dots */
+}
+
+.hero-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.hero-dot:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: scale(1.2);
+}
+
+.hero-dot.active {
+  background: white;
+  transform: scale(1.3);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .hero-banner {
+    height: 60vh;
+  }
+
+  .hero-content {
+    width: 100%;
+    padding: 4rem var(--space-4) 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-buttons {
+    justify-content: center;
+  }
+
+  .hero-title {
+    font-size: var(--text-4xl);
+  }
+
+  .hero-overlay {
+    padding-left: 0;
+    background: linear-gradient(to bottom,
+        rgba(20, 20, 20, 0.2) 0%,
+        rgba(20, 20, 20, 0.6) 50%,
+        rgba(20, 20, 20, 1) 100%);
+  }
+}

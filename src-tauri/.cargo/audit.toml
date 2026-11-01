@@ -1,0 +1,16 @@
+# Audit configuration for Nyx Player
+# Documentation des vulnérabilités ignorées avec justification
+
+[advisories]
+ignore = [
+    # RUSTSEC-2024-0429: Unsoundness dans glib::VariantStrIter 
+    # - Dépendance transitive verrouillée par webkit2gtk (Linux GUI toolkit)
+    # - Non applicable: Nyx Player cible Windows (WebView2), pas GTK/Linux
+    # - Le fix nécessite glib >= 0.20.0, mais wry/tauri verrouillent glib 0.18.x
+    # - Sera résolu automatiquement quand Tauri mettra à jour ses dépendances GTK
+    "RUSTSEC-2024-0429",
+]
+
+# Unmaintained warnings — toutes sont des dépendances transitives de Tauri
+# qu'on ne peut pas contrôler. Documentées ici pour transparence.
+informational_warnings = ["unmaintained"]

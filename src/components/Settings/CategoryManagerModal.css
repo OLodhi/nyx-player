@@ -1,0 +1,278 @@
+/**
+ * CategoryManagerModal — Styles
+ *
+ * Réutilise confirm-modal-backdrop (fadeIn, z-index).
+ * Unités : rem, %, vh — pas de px fixes.
+ * Tokens : DESIGN_TOKENS.md
+ */
+
+/* ============================================================================
+   MODAL CONTAINER
+   ============================================================================ */
+.category-manager-modal {
+    background: var(--surface-modal);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    max-width: 36rem;
+    width: 92%;
+    max-height: 80vh;
+    animation: slideUp var(--duration-fast) var(--ease-out);
+    overflow: hidden;
+}
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+.catmgr-header {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-5) var(--space-6) var(--space-3);
+    flex-shrink: 0;
+}
+
+.catmgr-title {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.catmgr-icon {
+    font-size: var(--text-xl);
+}
+
+.catmgr-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: var(--text-xl);
+    cursor: pointer;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    transition: all var(--duration-fast) var(--ease-out);
+    line-height: 1;
+}
+
+.catmgr-close:hover {
+    color: var(--text-primary);
+    background: var(--hover-overlay);
+}
+
+/* ============================================================================
+   TABS
+   ============================================================================ */
+.catmgr-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.375rem;
+    padding: var(--space-3) var(--space-6) 0;
+    flex-shrink: 0;
+}
+
+.catmgr-tab {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.375rem;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    white-space: nowrap;
+}
+
+.catmgr-tab:hover {
+    background: var(--hover-overlay);
+    color: var(--text-primary);
+}
+
+.catmgr-tab.active {
+    background: var(--active-overlay);
+    border-color: var(--nyx-blue-light);
+    color: var(--text-primary);
+}
+
+.catmgr-tab-icon {
+    font-size: var(--text-base);
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.catmgr-tab-svg {
+    width: 1rem;
+    height: 1rem;
+    filter: brightness(0) invert(0.7);
+}
+
+.catmgr-tab.active .catmgr-tab-svg {
+    filter: brightness(0) invert(1);
+}
+
+.catmgr-tab-badge {
+    background: var(--color-error-subtle);
+    color: var(--color-error);
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--radius-pill);
+    line-height: 1.3;
+}
+
+/* ============================================================================
+   SEARCH
+   ============================================================================ */
+.catmgr-search {
+    position: relative;
+    padding: var(--space-3) var(--space-6) 0;
+    flex-shrink: 0;
+}
+
+.catmgr-search-input {
+    width: 100%;
+    padding: 0.55rem 2rem 0.55rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    background: var(--hover-overlay);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    outline: none;
+    transition: border-color var(--duration-fast) var(--ease-out);
+    box-sizing: border-box;
+}
+
+.catmgr-search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.catmgr-search-input:focus-visible {
+    border-color: var(--nyx-blue-light);
+}
+
+.catmgr-search-clear {
+    position: absolute;
+    right: 1.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    padding: var(--space-1);
+    margin-top: 0.375rem;
+}
+
+.catmgr-search-clear:hover {
+    color: var(--text-primary);
+}
+
+/* ============================================================================
+   BATCH ACTIONS
+   ============================================================================ */
+.catmgr-batch {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.375rem;
+    padding: var(--space-2) var(--space-6);
+    flex-shrink: 0;
+}
+
+/* .catmgr-batch-btn — SUPPRIMÉ : remplacé par NyxButton xs */
+
+/* ============================================================================
+   CATEGORY LIST
+   ============================================================================ */
+.catmgr-list {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+    padding: var(--space-1) var(--space-6);
+    min-height: 12rem;
+    max-height: 40vh;
+    /* Scrollbar : classe .scrollbar-thin ajoutée dans le TSX (CSS_PATTERNS #6) */
+}
+
+.catmgr-empty {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-align: center;
+    padding: var(--space-8) 0;
+}
+
+.catmgr-item {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-2);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-out);
+    user-select: none;
+}
+
+.catmgr-item:hover {
+    background: var(--hover-overlay);
+}
+
+.catmgr-item.hidden-category {
+    opacity: 0.5;
+}
+
+.catmgr-item input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--nyx-blue-light);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.catmgr-item-name {
+    flex: 1;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.catmgr-item-count {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* ============================================================================
+   FOOTER
+   ============================================================================ */
+.catmgr-footer {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-6) var(--space-5);
+    border-top: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+}
+
+.catmgr-summary {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+/* .catmgr-validate-btn — SUPPRIMÉ : remplacé par NyxButton small */

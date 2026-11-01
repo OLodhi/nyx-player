@@ -1,0 +1,61 @@
+/* IptvMode.css - Styles for IPTV Classic mode container */
+
+/* Same structure as .dashboard-content for consistent scroll behavior */
+.iptv-mode {
+  position: relative;
+  z-index: 2;
+  padding-top: 10vh;
+  min-height: 500px;
+  background: transparent;
+  pointer-events: none;
+  /* Allow clicks to pass through to Hero Banner */
+}
+
+.iptv-mode > * {
+  pointer-events: auto;
+  /* Restore interactivity for carousels */
+}
+
+/* Hauteur réservée d'une rangée tant qu'elle n'est pas montée (LazyCategory) :
+   doit correspondre à la hauteur réelle, sinon un vide apparaît sous chaque carrousel.
+   Même valeur que .virtual-dashboard-row (mode Suggestions), surchargée sur mobile. */
+.lazy-category {
+  min-height: 25rem;
+}
+
+/* Category Section */
+.iptv-category-section {
+  margin-bottom: var(--space-8);
+}
+
+/* Category Header with "Voir tout" button */
+.iptv-category-header {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sidebar-safe-zone, var(--space-4));
+  margin-bottom: var(--space-2);
+}
+
+.iptv-category-title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Hide ContentCarousel title since we have our own header */
+.iptv-category-section .carousel-title {
+  display: none;
+}
+
+.iptv-mode-empty {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--text-lg);
+}

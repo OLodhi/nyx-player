@@ -1,0 +1,107 @@
+/* =========================================
+   WATCHLIST BUTTON — Composant réutilisable
+   Tokenisé Phase 2
+   ========================================= */
+
+/* ================= BASE ================= */
+.watchlist-btn {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: var(--radius-full);
+  background-color: var(--hover-overlay);
+  backdrop-filter: blur(1rem);
+  -webkit-backdrop-filter: blur(1rem);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  cursor: pointer;
+  overflow: hidden;
+  transition: background-color var(--duration-normal) var(--ease-out), border-color var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
+  /* Pas de contour au clic ; la mise en évidence clavier/télécommande vient de :focus-visible */
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ================= SIZES ================= */
+
+/* Small — Cards (CategoryDetail, Carousel, Watchlist) */
+.watchlist-btn--sm {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.watchlist-btn--sm .watchlist-btn__icon {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* Medium — Detail pages (Movie, Series) */
+.watchlist-btn--md {
+  width: 3.5rem;
+  height: 3.5rem;
+  box-shadow: 0 0.25rem 0.9375rem rgba(0, 0, 0, 0.2);
+}
+
+.watchlist-btn--md .watchlist-btn__icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ================= ICONS ================= */
+.watchlist-btn__icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
+}
+
+/* Plus icon — default visible */
+.watchlist-btn__icon--plus {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1) rotate(0);
+}
+
+/* Check icon — hidden by default */
+.watchlist-btn__icon--check {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5) rotate(-45deg);
+}
+
+/* ================= ADDED STATE ================= */
+
+/* When added: hide plus, show check */
+.watchlist-btn--added .watchlist-btn__icon--plus {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5) rotate(45deg);
+}
+
+.watchlist-btn--added .watchlist-btn__icon--check {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1) rotate(0);
+}
+
+/* Added state — glassmorphism glow */
+.watchlist-btn--added {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 1.25rem rgba(255, 255, 255, 0.15);
+}
+
+/* ================= HOVER ================= */
+.watchlist-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-default);
+  transform: scale(1.1);
+}
+
+.watchlist-btn--md:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.watchlist-btn--added:hover {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 1.5625rem rgba(255, 255, 255, 0.2);
+}

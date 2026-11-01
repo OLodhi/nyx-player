@@ -1,0 +1,152 @@
+/* =========================================
+   LIVE TV PAGE - Grid-only layout
+   (Sidebar is now TvCategoriesSidebar in App.tsx)
+   ========================================= */
+
+.live-tv-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+
+    /* Espace pour les sidebars (utilise variables de App.css) */
+    padding-left: var(--tv-content-offset);
+    padding-right: 0;
+    padding-top: var(--sidebar-m);
+
+    /* Animation d'entrée */
+    animation: pageFadeIn var(--duration-slow) var(--ease-out) both;
+}
+
+/* (Ancienne règle de suppression de scrollbar retirée pour laisser place au token global) */
+
+/* ================= HEADER ================= */
+.live-tv-page__header {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+    flex-shrink: 0;
+}
+
+.live-tv-page__title {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-bold);
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+    margin: 0;
+
+    /* Gradient text (pattern 3 — page header) */
+    background: linear-gradient(180deg, var(--text-primary) 30%, var(--text-muted) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.live-tv-page__count {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--text-icon);
+}
+
+/* ================= CONTENT (Grid Container) ================= */
+.live-tv-page__content {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+    overflow-x: hidden;
+    padding-bottom: var(--space-8);
+}
+
+/* Mode Guide TV — le GuideTvGrid gère son propre scroll */
+.live-tv-page__content--guide {
+    overflow: hidden;
+    padding-bottom: 0;
+}
+
+/* ================= LOADING STATE ================= */
+.live-tv-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    gap: var(--space-4);
+}
+
+.live-tv-loading__spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 0.1875rem solid var(--border-default);
+    border-top-color: var(--text-secondary);
+    border-radius: var(--radius-full);
+    animation: liveTvSpin 0.8s linear infinite;
+}
+
+@keyframes liveTvSpin {
+    to { transform: rotate(360deg); }
+}
+
+.live-tv-loading__text {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* ================= ERROR STATE ================= */
+.live-tv-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    gap: var(--space-4);
+    text-align: center;
+}
+
+.live-tv-error__icon {
+    font-size: 2.5rem;
+    color: var(--color-error);
+    opacity: 0.7;
+}
+
+.live-tv-error__message {
+    font-size: var(--text-base);
+    color: var(--color-error);
+    margin: 0;
+    max-width: 25rem;
+}
+
+/* ================= EMPTY STATE ================= */
+.live-tv-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60vh;
+    text-align: center;
+    color: var(--text-muted);
+    animation: pageFadeIn var(--duration-slow) var(--ease-out) both;
+}
+
+.live-tv-empty__icon {
+    font-size: 4rem;
+    margin-bottom: var(--space-4);
+    opacity: 0.5;
+}
+
+.live-tv-empty__title {
+    font-size: var(--text-xl);
+    font-weight: var(--font-semibold);
+    font-family: var(--font-display);
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.live-tv-empty__description {
+    font-size: var(--text-sm);
+    margin: 0 0 var(--space-6) 0;
+    max-width: 24rem;
+    line-height: var(--leading-relaxed);
+}

@@ -1,0 +1,27 @@
+/* =============================================================================
+ * TvExitNotice — « Appuyez encore sur Retour pour quitter » (télécommande)
+ * Fond fumé, sans flou : le Chromecast peine sur les filtres
+ * ============================================================================= */
+
+.tv-exit-notice:empty {
+  display: none;
+}
+
+.tv-exit-notice {
+  position: fixed;
+  bottom: var(--space-8);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  max-width: 90%;
+  padding: var(--space-3) var(--space-6);
+  background: var(--surface-modal);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  text-align: center;
+  pointer-events: none;
+}

@@ -1,0 +1,316 @@
+/* ============================================================================
+ * GlobalSearchPage.css — Phase 2 (Design Tokens via var())
+ *
+ * Tokens déclarés dans App.css :root — utilisés ici via var().
+ * Dead code supprimé : .section-tabs, .search-tab, .horizontal-movie-card,
+ *   .carousel-header, .see-all-btn (~210 lignes nettoyées).
+ * ========================================================================= */
+
+/* ── Page container ── */
+.global-search-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  color: var(--text-primary);
+  padding: 0;
+  overflow-x: clip;
+  overflow-y: hidden;
+  animation: pageFadeIn var(--duration-slow) var(--ease-out) both;
+}
+
+/* @keyframes pageFadeIn — défini globalement dans App.css (Pattern #4) */
+
+/* ── Header with search input ── */
+.search-header {
+  padding: var(--space-6) var(--space-8) var(--space-2) var(--sidebar-safe-zone);
+  position: relative;
+  z-index: var(--z-sticky);
+  background: linear-gradient(to bottom, var(--surface-base) 20%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.search-input-wrapper {
+  position: relative;
+  margin-bottom: var(--space-6);
+  width: 100%;
+  max-width: 25rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-5);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.search-icon img {
+  width: 100%;
+  height: 100%;
+  filter: brightness(0) invert(0.6);
+}
+
+.global-search-input {
+  width: 100%;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  padding: var(--space-3) var(--space-3) var(--space-3) 3.5rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-base);
+  font-family: var(--font-body);
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+  outline: none;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: var(--glass-blur);
+}
+
+.global-search-input:focus-visible {
+  background: var(--surface-base);
+  border-color: var(--nyx-blue-light);
+  box-shadow: 0 0 0 var(--space-1) var(--color-info-subtle);
+}
+
+.global-search-input::placeholder {
+  color: var(--text-disabled);
+}
+
+/* ── Content area ── */
+.search-content-area {
+  flex: 1;
+  overflow-x: clip;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  /* Fade scroll top */
+  mask-image: linear-gradient(to bottom, transparent 0%, black var(--space-8), black 100%);
+  mask-repeat: repeat;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black var(--space-8), black 100%);
+}
+
+/* ── Empty / No results / Error states ── */
+.no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  /* Mêmes retraits que l'en-tête : le message reste centré sous le champ, à droite de la barre latérale */
+  padding: 0 var(--space-8) 0 var(--sidebar-safe-zone);
+  color: var(--text-muted);
+  font-size: var(--text-lg);
+  gap: var(--space-4);
+}
+
+.no-results .no-results__icon {
+  width: 3rem;
+  height: 3rem;
+  opacity: 0.4;
+  filter: brightness(0) invert(0.55);
+}
+
+.no-results .no-results__error-icon {
+  font-size: var(--text-5xl);
+  opacity: 0.5;
+}
+
+.no-results p {
+  margin: 0;
+}
+
+/* ── Results view with carousels ── */
+.all-results-view {
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  overflow-x: clip;
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-8);
+  height: 100%;
+}
+
+/* ContentCarousel overrides for search context */
+.all-results-view .content-carousel-container {
+  margin-bottom: var(--space-2);
+}
+
+.all-results-view .carousel-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-1);
+  padding-left: var(--sidebar-safe-zone);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.all-results-view .carousel-title .carousel-title__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  opacity: 0.8;
+  filter: brightness(0) invert(1);
+}
+
+.all-results-view .content-carousel {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-6);
+  padding-left: var(--sidebar-safe-zone);
+  padding-right: 0;
+  gap: var(--space-6);
+}
+
+.all-results-view .carousel-card {
+  width: 12.5rem;
+}
+
+/* ── TV Carousel Section ── */
+.tv-carousel-section {
+  margin-bottom: var(--space-8);
+}
+
+.tv-carousel-section .carousel-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  padding-left: var(--sidebar-safe-zone);
+  margin-bottom: var(--space-1);
+  padding-bottom: var(--space-1);
+}
+
+.tv-carousel-section .carousel-title .carousel-title__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  opacity: 0.8;
+  filter: brightness(0) invert(1);
+}
+
+.tv-carousel-section .carousel-count {
+  font-family: var(--font-body);
+  font-weight: var(--font-regular);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.tv-carousel-track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-4);
+  overflow-x: auto;
+  overscroll-behavior: auto;
+  overflow-y: hidden;
+  padding: var(--space-2) 0;
+  padding-left: var(--sidebar-safe-zone);
+  padding-right: 0;
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+
+.tv-carousel-track.dragging {
+  scroll-behavior: auto;
+  user-select: none;
+}
+
+.tv-carousel-track .search-tv-card-wrapper {
+  flex-shrink: 0;
+}
+
+/* ChannelCard sizing in search context */
+.all-results-view .search-tv-card-wrapper {
+  flex-shrink: 0;
+  width: 17.5rem;
+  height: 13.75rem;
+}
+
+.all-results-view .search-tv-card-wrapper .channel-card {
+  border-radius: var(--radius-lg);
+}
+
+.all-results-view .tv-carousel-section {
+  margin-bottom: var(--space-4);
+}
+
+.all-results-view .tv-carousel-track {
+  gap: var(--space-6);
+  padding-bottom: var(--space-2);
+}
+
+/* ── Responsive: Laptop 1366px ── */
+@media (max-width: 1366px) {
+  .search-input-wrapper {
+    max-width: 22rem;
+  }
+
+  .all-results-view .carousel-title {
+    font-size: var(--text-xl);
+  }
+
+  .tv-carousel-section .carousel-title {
+    font-size: var(--text-xl);
+  }
+
+  .all-results-view .carousel-card {
+    width: 11rem;
+  }
+
+  .all-results-view .search-tv-card-wrapper {
+    width: 15rem;
+    height: 12rem;
+  }
+
+  .all-results-view .content-carousel {
+    gap: var(--space-4);
+  }
+
+  .all-results-view .tv-carousel-track {
+    gap: var(--space-4);
+  }
+}
+
+/* ── Responsive: Ultrawide 2560px ── */
+@media (min-width: 2560px) {
+  .search-input-wrapper {
+    max-width: 30rem;
+  }
+
+  .all-results-view .carousel-card {
+    width: 14rem;
+  }
+
+  .all-results-view .search-tv-card-wrapper {
+    width: 20rem;
+    height: 16rem;
+  }
+
+  .all-results-view .content-carousel {
+    gap: var(--space-8);
+  }
+
+  .all-results-view .tv-carousel-track {
+    gap: var(--space-8);
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": ["audit/**/*.{mjs,cjs,js}", "scripts/**/*.{mjs,cjs,js}", "web/lab.js"],
+  "ignore": [
+    "src-tauri/target/**",
+    "supabase/functions/**",
+    "web/auth/*.js",
+    "web/vendor/**"
+  ],
+  "ignoreIssues": {
+    "src/utils/sentryScrub.ts": ["duplicates"]
+  },
+  "ignoreExportsUsedInFile": true
+}

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politique de confidentialité — Nyx Player</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="alternate" hreflang="fr" href="https://nyxplayer.app/confidentialite.html">
+    <link rel="alternate" hreflang="en" href="https://nyxplayer.app/privacy.html">
+    <link rel="alternate" hreflang="x-default" href="https://nyxplayer.app/privacy.html">
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="/_vercel/insights/script.js"></script>
+</head>
+
+<body class="page-landing">
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="navbar__logo">
+            <img src="assets/logo-principal-blanc.svg" alt="Nyx Player">
+        </a>
+        <div class="navbar__links">
+            <a href="assistance.html" class="navbar__link">Assistance</a>
+            <div class="lang-switch" role="group" aria-label="Langue">
+                <a href="privacy.html" class="lang-switch__option" lang="en" hreflang="en" title="Read this page in English">EN</a>
+                <span class="lang-switch__option lang-switch__option--current" aria-current="true">FR</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="legal-page">
+        <h1 class="legal-page__title">Politique de confidentialité</h1>
+
+        <nav class="legal-nav">
+            <a href="conditions.html">Conditions</a>
+            <a href="confidentialite.html" class="active">Confidentialité</a>
+            <a href="mentions-legales.html">Mentions légales</a>
+        </nav>
+
+        <p class="legal-updated">Dernière mise à jour : 12 octobre 2026</p>
+
+        <div class="legal-content">
+            <h2>1. Qui sommes-nous</h2>
+            <p>
+                Nyx Player (l'« Application ») est un lecteur vidéo pour services IPTV, disponible sous
+                Windows, sur téléphone Android et sur Android TV. C'est un projet personnel édité par
+                <strong>William Payet</strong>, particulier établi en France (voir les
+                <a href="mentions-legales.html">mentions légales</a>), qui est le responsable du traitement et que
+                vous pouvez joindre à
+                <a href="mailto:contact@nyxplayer.app">contact@nyxplayer.app</a>.
+            </p>
+            <p>
+                Nyx Player ne fournit aucune chaîne, aucun film ni aucune série. Vous le reliez au
+                service IPTV de votre choix (votre « fournisseur IPTV »), qui est un tiers indépendant.
+            </p>
+
+            <h2>2. Ce qui reste sur votre appareil</h2>
+            <p>La plupart de vos données ne quittent jamais votre appareil :</p>
+            <ul>
+                <li><strong>Identifiants IPTV</strong> (adresse du serveur, nom d'utilisateur, mot de
+                    passe) : enregistrés chiffrés sur votre appareil, dans le Gestionnaire
+                    d'identification de Windows sous Windows, et avec une clé non exportable du
+                    Keystore Android (AES-256-GCM) sous Android. <strong>Ils ne sont jamais envoyés à
+                    nos serveurs.</strong></li>
+                <li><strong>Base locale</strong> : le catalogue de votre fournisseur (chaînes, films,
+                    séries), le guide TV si vous l'activez, votre liste, vos reprises de lecture, vos
+                    favoris et vos réglages, dans une base SQLite sur votre appareil (une par compte).</li>
+                <li><strong>Sauvegardes Android</strong> : l'application Android exclut ses données des
+                    sauvegardes Google et des transferts d'un appareil à l'autre.</li>
+            </ul>
+
+            <h2>3. Les données que nous collectons</h2>
+            <p>
+                Nyx Player ne s'utilise qu'avec un compte. Votre adresse e-mail et un mot de passe sont
+                nécessaires pour le créer ; sans eux, l'Application ne peut pas être utilisée. Les
+                données suivantes sont enregistrées dans notre base en ligne pour synchroniser vos
+                appareils :
+            </p>
+            <ul>
+                <li><strong>Compte</strong> : adresse e-mail et mot de passe (le mot de passe est
+                    conservé sous forme hachée par notre prestataire d'authentification ; nous ne le
+                    voyons jamais)</li>
+                <li><strong>Profil</strong> : nom et couleur du profil</li>
+                <li><strong>Ma liste</strong> : les titres que vous avez ajoutés (identifiant TMDB,
+                    type, identifiant dans le catalogue de votre fournisseur, date d'ajout)</li>
+                <li><strong>Reprises de lecture</strong> : pour les contenus commencés, titre, adresse
+                    de l'affiche quand elle vient de TMDB, identifiant TMDB, identifiants dans le catalogue de votre fournisseur (film, série,
+                    épisode suivant), saison et épisode, position, durée, format du fichier et date</li>
+                <li><strong>Live TV</strong> : chaînes favorites et catégories épinglées</li>
+                <li><strong>Catégories masquées</strong> : les catégories de films, de séries ou de
+                    chaînes que vous avez choisi de masquer</li>
+                <li><strong>Réglages</strong> : les réglages de l'Application, par exemple langue,
+                    page d'accueil, affichage (rangées et genres choisis, taille des sous-titres),
+                    options de lecture et du guide TV, résolveur DNS choisi</li>
+                <li><strong>Empreinte du fournisseur</strong> : une empreinte (hachage SHA-256) de
+                    l'adresse du serveur de votre fournisseur IPTV, qui sert à détecter un changement de
+                    fournisseur. Elle est aussi enregistrée avec vos reprises de lecture, vos chaînes
+                    favorites et vos catégories masquées, pour savoir à quel fournisseur chacune se
+                    rapporte. L'adresse elle-même n'est pas envoyée, mais une adresse connue peut
+                    être rapprochée de cette empreinte.</li>
+                <li><strong>Données d'utilisation</strong> : version de l'application, système
+                    d'exploitation et date du dernier lancement, mises à jour à chaque démarrage de
+                    l'Application quand vous êtes connecté (statistiques internes uniquement)</li>
+                <li><strong>Données techniques</strong> : adresse IP, informations sur l'appareil ou
+                    le navigateur, adresse e-mail, identifiant du compte et requêtes effectuées (par
+                    exemple les titres cherchés via notre serveur TMDB), enregistrées par notre service
+                    d'authentification (avec chaque session connectée) et dans les journaux de nos
+                    serveurs (sécurité et prévention des abus)</li>
+            </ul>
+            <p>
+                <strong>Nous ne collectons ni vos identifiants IPTV, ni l'historique des chaînes que
+                    vous regardez en direct, ni votre position, vos contacts, un identifiant
+                    publicitaire ou des données biométriques. L'Application ne contient aucune publicité
+                    ni aucun traceur publicitaire.</strong>
+                L'adresse du serveur de votre fournisseur n'est pas collectée : les affiches de votre
+                fournisseur restent sur votre appareil, et cette adresse est retirée des rapports de
+                plantage (voir la section 4). Les versions précédentes de l'Application envoyaient
+                aussi l'adresse des affiches de votre fournisseur ; elle est remplacée à la
+                synchronisation suivante de la reprise concernée.
+            </p>
+
+            <h2>4. Rapports de plantage et signalements de problème</h2>
+            <p>
+                La version Windows de l'Application (et toute autre version construite avec les
+                rapports de plantage) envoie des rapports de plantage à <strong>Sentry</strong>
+                (Functional Software, Inc.) pour nous permettre de corriger les erreurs. Un rapport
+                contient l'erreur, le contexte technique (système d'exploitation, moteur d'affichage,
+                langue et fuseau horaire) et les derniers événements techniques qui y ont mené (100 au
+                plus : écrans et actions dans l'application, requêtes réseau ; une requête vers nos
+                services, par exemple vers TMDB, peut indiquer le titre consulté). Avant l'envoi,
+                l'Application retire de tout le rapport les identifiants de connexion (nom
+                d'utilisateur, mot de passe), l'adresse du serveur de votre fournisseur et le chemin
+                de ses adresses (numéro du flux), les paramètres des adresses, les jetons,
+                l'identifiant de votre compte, les adresses e-mail et les adresses IPv4 ; elle demande
+                aussi à Sentry de ne pas enregistrer votre adresse IP. Les rapports ne sont pas
+                rattachés à votre compte.
+            </p>
+            <p>
+                Ces versions envoient aussi à Sentry, avec le même contexte et le même nettoyage, de
+                courts messages de diagnostic quand la connexion à votre compte rencontre un problème
+                (par exemple une session expirée ou refusée par le serveur), avec le code d'erreur et
+                l'ancienneté de la session.
+            </p>
+            <p>
+                Si vous utilisez le formulaire « Signaler un problème » (Paramètres → À propos), le texte
+                que vous écrivez, la version de l'application et le même contexte technique qu'un
+                rapport de plantage sont envoyés à Sentry. N'y mettez ni données personnelles ni votre
+                adresse IPTV.
+            </p>
+
+            <h2>5. Pourquoi nous les utilisons et sur quelle base</h2>
+            <ul>
+                <li><strong>Fournir le service</strong> (compte, synchronisation entre vos appareils,
+                    réglages) : exécution du contrat que vous acceptez en créant votre compte
+                    (<a href="conditions.html">conditions d'utilisation</a>)</li>
+                <li><strong>Sécurité et correction des erreurs</strong> (rapports de plantage,
+                    journaux techniques, prévention des abus) : notre intérêt légitime à garder
+                    l'Application fiable et sûre</li>
+                <li><strong>Statistiques d'utilisation</strong> (versions et plateformes actives) :
+                    notre intérêt légitime à savoir quelles versions sont encore utilisées</li>
+                <li><strong>Audience et affichage du site</strong> (voir la section 14) : notre intérêt
+                    légitime à faire fonctionner et à améliorer le site</li>
+            </ul>
+            <p>
+                <strong>Vos données ne sont jamais vendues, jamais utilisées à des fins publicitaires
+                    ni pour du profilage. Aucune décision vous concernant n'est prise de façon
+                    automatisée.</strong>
+            </p>
+
+            <h2>6. Où vos données sont hébergées</h2>
+            <p>
+                Les données en ligne sont conservées par <strong>Supabase</strong> (base de données
+                PostgreSQL et authentification) sur des serveurs d'Amazon Web Services situés aux
+                <strong>États-Unis</strong> (région us-east-1, Virginie du Nord).
+            </p>
+
+            <h2>7. Nos sous-traitants</h2>
+            <p>Les prestataires suivants traitent des données pour notre compte :</p>
+            <ul>
+                <li><strong>Supabase Inc.</strong> : authentification, base de données en ligne,
+                    fonctions serveur (États-Unis)</li>
+                <li><strong>Resend Inc.</strong> : envoi des e-mails du compte (confirmation,
+                    réinitialisation du mot de passe, changement d'adresse) (États-Unis)</li>
+                <li><strong>Functional Software, Inc. (Sentry)</strong> : rapports de plantage et
+                    signalements de problème (États-Unis)</li>
+                <li><strong>Vercel Inc.</strong> : hébergement du site nyxplayer.app, des pages de
+                    compte et des informations de mise à jour Windows, et statistiques anonymes du site
+                    (États-Unis)</li>
+                <li><strong>Cloudflare, Inc.</strong> : hébergement des fichiers de mise à jour
+                    Windows (États-Unis)</li>
+            </ul>
+
+            <h2>8. Autres services auxquels l'Application se connecte</h2>
+            <p>
+                Pour fonctionner, l'Application se connecte directement aux services ci-dessous. Comme
+                n'importe quel site web, ils voient votre adresse IP et la requête effectuée ; nous ne
+                leur transmettons pas les données de votre compte.
+            </p>
+            <ul>
+                <li><strong>Votre fournisseur IPTV</strong> : il reçoit vos identifiants et vos
+                    demandes de lecture, et l'Application charge les images de son catalogue (logos,
+                    affiches), qui peuvent être hébergées par des tiers choisis par votre fournisseur.
+                    C'est le principe du service : sa propre politique de confidentialité
+                    s'applique.</li>
+                <li><strong>The Movie Database (TMDB)</strong> : les descriptions et les notes passent
+                    par notre serveur (TMDB reçoit les titres de votre catalogue à rechercher, mais ni
+                    votre identité ni votre adresse IP ; notre serveur garde les résultats dans un cache
+                    commun, qui n'est pas lié à votre compte) ; les affiches sont chargées directement
+                    depuis TMDB.</li>
+                <li><strong>YouTube</strong> : vignettes des bandes-annonces ; une bande-annonce
+                    s'ouvre dans votre navigateur.</li>
+                <li><strong>GitHub</strong> : logos des chaînes (projet tv-logo).</li>
+                <li><strong>epgshare01.online</strong> : le guide TV, seulement si vous l'activez.</li>
+                <li><strong>Cloudflare ou Quad9</strong> : DNS sécurisé (DNS over HTTPS), qui sert à
+                    trouver l'adresse du serveur de votre fournisseur et celle du guide TV. Cloudflare
+                    est utilisé par défaut ; vous pouvez choisir Quad9 ou le DNS de votre système dans
+                    Paramètres → Général → Réseau. Si le résolveur choisi ne répond pas, l'autre est
+                    essayé, puis le DNS de votre système. La lecture vidéo utilise toujours le DNS de
+                    votre système.</li>
+                <li><strong>nyxplayer.app et releases.nyxplayer.app</strong> : recherche et
+                    téléchargement des mises à jour sous Windows.</li>
+            </ul>
+
+            <h2>9. Sécurité</h2>
+            <ul>
+                <li>Les échanges avec nos services et prestataires (Supabase, Sentry, nyxplayer.app,
+                    releases.nyxplayer.app) et avec TMDB sont chiffrés (HTTPS).</li>
+                <li>Chaque compte ne peut lire et modifier que ses propres données (sécurité au niveau
+                    des lignes, « Row Level Security », sur toutes les tables en ligne).</li>
+                <li>Les identifiants IPTV sont chiffrés sur votre appareil (voir la section 2).</li>
+            </ul>
+            <p>
+                <strong>Important :</strong> beaucoup de fournisseurs IPTV utilisent des connexions non
+                chiffrées (<code>http://</code>). Dans ce cas, vos identifiants et les flux circulent en
+                clair entre votre appareil et votre fournisseur. Cela dépend de votre fournisseur, pas
+                de Nyx Player.
+            </p>
+
+            <h2>10. Durée de conservation</h2>
+            <ul>
+                <li>Les <strong>comptes non confirmés</strong> par e-mail sont supprimés au bout de
+                    48 heures.</li>
+                <li>Les <strong>données du compte</strong> sont conservées tant que votre compte
+                    existe.</li>
+                <li>Les <strong>sessions de connexion</strong> (avec l'adresse IP et les informations
+                    sur l'appareil enregistrées à la connexion) sont conservées jusqu'à votre
+                    déconnexion ou la suppression de votre compte, et au plus 90 jours sans
+                    utilisation : un appareil resté inutilisé aussi longtemps vous redemande alors de
+                    vous connecter.</li>
+                <li><strong>Supprimer votre compte</strong> (Paramètres → Compte → Supprimer mon
+                    compte) efface définitivement votre compte et toutes ses données en ligne, ainsi que
+                    les données de ce compte sur l'appareil utilisé. Les journaux de sécurité du service
+                    d'authentification peuvent subsister après la suppression, au plus 90 jours.</li>
+                <li><strong>Se déconnecter</strong> n'efface rien sur l'appareil : votre base locale et
+                    vos identifiants y restent pour que vous puissiez vous reconnecter rapidement. Pour
+                    les effacer pour le compte connecté, utilisez Paramètres → Données &amp; Cache →
+                    Réinitialisation complète (qui peut aussi supprimer en ligne votre liste, vos
+                    reprises, vos favoris et vos réglages). Sous Android, désinstaller l'Application
+                    efface aussi tout. Sous Windows, la désinstallation peut laisser des identifiants et
+                    des données sur l'ordinateur : faites d'abord une réinitialisation complète.</li>
+                <li>Les <strong>rapports de plantage et journaux des serveurs</strong> sont conservés
+                    pendant une durée limitée fixée par le prestataire concerné (Sentry, Supabase),
+                    puis supprimés automatiquement. Le journal de sécurité du service
+                    d'authentification est supprimé au bout de 90 jours.</li>
+            </ul>
+
+            <h2>11. Transferts hors de l'Union européenne</h2>
+            <p>
+                Nos données en ligne sont hébergées aux États-Unis, et plusieurs prestataires cités
+                plus haut sont établis aux États-Unis ou au Royaume-Uni. Ces transferts s'appuient sur
+                les garanties proposées par ces prestataires : les clauses contractuelles types de la
+                Commission européenne et, lorsque le prestataire est certifié, le cadre de protection
+                des données UE–États-Unis (Data Privacy Framework). Le Royaume-Uni bénéficie d'une
+                décision d'adéquation de la Commission européenne. Vous pouvez obtenir une copie de ces
+                garanties en écrivant à <a href="mailto:contact@nyxplayer.app">contact@nyxplayer.app</a>.
+            </p>
+
+            <h2>12. Vos droits</h2>
+            <p>En vertu du Règlement général sur la protection des données (RGPD), vous pouvez :</p>
+            <ul>
+                <li><strong>accéder</strong> à vos données et en recevoir une copie ;</li>
+                <li><strong>rectifier</strong> des données inexactes ;</li>
+                <li><strong>effacer</strong> vos données : vous pouvez supprimer votre compte
+                    directement depuis l'Application (Paramètres → Compte → Supprimer mon compte) ;</li>
+                <li>demander la <strong>portabilité</strong> de vos données, dans un format structuré
+                    (JSON), sur demande par e-mail ;</li>
+                <li>vous <strong>opposer</strong> aux traitements fondés sur notre intérêt légitime,
+                    et en demander la <strong>limitation</strong>.</li>
+            </ul>
+            <p>
+                Pour exercer ces droits, écrivez à
+                <strong><a href="mailto:contact@nyxplayer.app">contact@nyxplayer.app</a></strong>.
+                Nous répondons dans un délai d'un mois.
+            </p>
+
+            <h2>13. Âge minimum</h2>
+            <p>
+                Nyx Player est réservé aux personnes âgées d'au moins <strong>15 ans</strong>. Si vous avez
+                moins de 15 ans, ne créez pas de compte. Si nous apprenons qu'un compte a été créé par une
+                personne de moins de 15 ans, nous le supprimons avec les données qui y sont liées. Un parent
+                qui pense que son enfant a créé un compte peut nous écrire à
+                <a href="mailto:contact@nyxplayer.app">contact@nyxplayer.app</a>.
+            </p>
+
+            <h2>14. Cookies et site web</h2>
+            <p>
+                L'Application ne dépose aucun cookie ; ses réglages sont enregistrés sur votre appareil.
+                Le site nyxplayer.app n'utilise aucun cookie publicitaire. Il mesure son audience avec
+                <strong>Vercel Web Analytics</strong>, qui collecte des statistiques anonymes et
+                agrégées (pages vues, pays, type de navigateur) sans cookie et sans vous suivre sur
+                d'autres sites. Ses polices de caractères sont hébergées sur le site lui-même :
+                aucun service de polices externe n'est contacté.
+            </p>
+
+            <h2>15. Modifications et contact</h2>
+            <p>
+                Nous mettrons cette page à jour quand l'Application changera sa façon de traiter les
+                données ; la date en haut de page indique la dernière version. Pour toute question sur
+                vos données :
+                <strong><a href="mailto:contact@nyxplayer.app">contact@nyxplayer.app</a></strong>.
+            </p>
+            <p>
+                Si notre réponse ne vous satisfait pas, vous pouvez adresser une réclamation à la
+                <a href="https://www.cnil.fr/" target="_blank" rel="noopener">CNIL</a>.
+            </p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+        <div class="landing-footer__links">
+            <a href="conditions.html">Conditions d’utilisation</a>
+            <a href="confidentialite.html">Politique de confidentialité</a>
+            <a href="mentions-legales.html">Mentions légales</a>
+            <a href="changelog.html" hreflang="en">Nouveautés (en anglais)</a>
+            <a href="https://reddit.com/r/nyxplayer" target="_blank" rel="noopener">Reddit</a>
+        </div>
+        <p class="landing-footer__copy">&copy; 2026 Nyx Player. Code libre sous licence GPL-3.0-or-later.</p>
+        <a href="mailto:contact@nyxplayer.app" class="landing-footer__contact">contact@nyxplayer.app</a>
+    </footer>
+
+</body>
+
+</html>

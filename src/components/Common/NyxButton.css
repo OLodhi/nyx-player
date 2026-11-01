@@ -1,0 +1,170 @@
+/* ============================================================================
+ * NyxButton.css — Kit UI v2
+ *
+ * Système de boutons unifié Nyx Player.
+ * Tokens : DESIGN_TOKENS.md — Brand : BRAND_SYSTEM.md §3
+ * ========================================================================= */
+
+/* ---- Base ---- */
+.nyx-btn {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 0.0625rem solid transparent; /* reset — secondary overrides avec gradient */
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: var(--font-medium);
+  line-height: var(--leading-tight);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  user-select: none;
+  position: relative;
+  width: fit-content; /* ne jamais s'étaler — fullWidth override si besoin */
+  align-self: center; /* empêche le stretch dans les flex-column parents */
+  transition: background var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1)),
+              box-shadow var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1)),
+              border-color var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1)),
+              transform var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1)),
+              opacity var(--duration-fast, 150ms) var(--ease-out, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* ---- Tailles ---- */
+
+.nyx-btn--md {
+  font-size: 1.25rem; /* --text-btn (20px) */
+  padding: 0.625rem 2.8125rem; /* ~10px vertical, 45px horizontal — strict */
+  border-radius: 0.5rem; /* --radius-md */
+}
+
+.nyx-btn--sm {
+  font-size: 1rem; /* 16px */
+  padding: 0.5rem 1.5rem; /* 24px horizontal — compact pour boutons utilitaires */
+  border-radius: 0.5rem; /* --radius-md */
+}
+
+.nyx-btn--xs {
+  font-size: 0.75rem; /* 12px */
+  padding: 0.375rem 0.75rem; /* compact pour batch actions */
+  border-radius: 0.375rem; /* --radius-sm */
+}
+
+/* ============================================================================
+ * PRIMARY (fill) — background plein
+ * ========================================================================= */
+
+/* ---- Blue ---- */
+.nyx-btn--primary.nyx-btn--blue {
+  background: linear-gradient(135deg, #2828a3 0%, rgba(40, 40, 163, 0.75) 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(40, 40, 163, 0.3); /* --shadow-md tinted */
+}
+
+.nyx-btn--primary.nyx-btn--blue:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3838c3 0%, rgba(56, 56, 195, 0.85) 100%);
+}
+
+/* ---- Blue Light ---- */
+.nyx-btn--primary.nyx-btn--blue-light {
+  background: linear-gradient(135deg, #5e6fea 0%, rgba(94, 111, 234, 0.75) 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(94, 111, 234, 0.3);
+}
+
+.nyx-btn--primary.nyx-btn--blue-light:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7080f5 0%, rgba(112, 128, 245, 0.85) 100%);
+}
+
+/* ---- Red ---- */
+.nyx-btn--primary.nyx-btn--red {
+  background: linear-gradient(135deg, #681717 0%, rgba(104, 23, 23, 0.75) 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(104, 23, 23, 0.3);
+}
+
+.nyx-btn--primary.nyx-btn--red:hover:not(:disabled) {
+  background: linear-gradient(135deg, #882222 0%, rgba(136, 34, 34, 0.85) 100%);
+}
+
+/* ============================================================================
+ * SECONDARY (outline) — contour en dégradé
+ *
+ * Technique : background double couche (padding-box + border-box)
+ * → le gradient visible "à travers" la border transparente
+ * ========================================================================= */
+
+/* ---- Blue ---- */
+.nyx-btn--secondary.nyx-btn--blue {
+  border-radius: 2rem; /* --radius-pill */
+  background:
+    linear-gradient(rgba(8, 12, 28, 0.75), rgba(8, 12, 28, 0.75)) padding-box,
+    linear-gradient(90deg, #2828a3 0%, #681717 100%) border-box;
+  backdrop-filter: blur(0.75rem);
+  -webkit-backdrop-filter: blur(0.75rem);
+  color: #ffffff;
+}
+
+.nyx-btn--secondary.nyx-btn--blue:hover:not(:disabled) {
+  background:
+    linear-gradient(rgba(40, 40, 163, 0.2), rgba(40, 40, 163, 0.2)) padding-box,
+    linear-gradient(90deg, #3838c3 0%, #882222 100%) border-box;
+  box-shadow: 0 0.25rem 1rem rgba(40, 40, 163, 0.25);
+}
+
+/* ============================================================================
+ * ÉTATS
+ * ========================================================================= */
+
+/* Focus visible */
+.nyx-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.1875rem var(--focus-ring);
+}
+
+/* Disabled */
+.nyx-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+/* Occupé mais toujours atteignable à la télécommande (un bouton disabled perd le focus) */
+.nyx-btn[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Active (clic) */
+.nyx-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+
+
+/* ---- Icônes ---- */
+.nyx-btn__icon {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nyx-btn__icon--left {
+  margin-right: -0.125rem; /* tighten gap slightly */
+}
+
+.nyx-btn__icon--right {
+  margin-left: -0.125rem;
+}
+
+/* ---- Label ---- */
+.nyx-btn__label {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+}

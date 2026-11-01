@@ -1,0 +1,427 @@
+# Publication d'une version, fabriquée par GitHub à la vue de tous.
+#
+# Déclenchée par une étiquette de version (v0.8.0…) envoyée sur le dépôt public, et seulement là.
+# Compile l'installeur Windows et les deux APK Android depuis le code de l'étiquette, les signe,
+# vérifie les signatures (bonne clé, bonne app, bonne version), délivre pour chaque fichier un
+# certificat de fabrication (attestation de provenance, vérifiable par
+# `gh attestation verify <fichier> --repo kunai974/nyx-player`), écrit les fichiers de mise à jour
+# (latest.json pour Windows, android.json pour Android) et prépare une release BROUILLON : rien n'est
+# publié ici. Le mainteneur dépose ensuite les mêmes fichiers sur releases.nyxplayer.app, puis publie
+# les fichiers de mise à jour par une PR, puis la release.
+#
+# Clés : dans l'environnement GitHub « publication » (secrets chiffrés), qui exige l'accord du
+# mainteneur à chaque passage et n'accepte que les étiquettes v*. Les compilations (dépendances npm et
+# Rust comprises) tournent dans des tâches SANS environnement ni secret. La signature se fait dans
+# d'autres tâches, sur des machines neuves : rien du code compilé ni de ses dépendances n'y tourne,
+# seulement l'outil de signature (version exacte, empreintes fixées dans .github/publication) ou
+# apksigner, et scripts/publication-ci.mjs (Node seul, sans dépendance). Aucun cache : une PR ne peut
+# rien glisser dans une compilation de publication.
+name: Publication
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+# Rien par défaut ; chaque tâche dit ce dont elle a besoin.
+permissions: {}
+
+# Deux étiquettes envoyées coup sur coup ne se marchent pas dessus, et aucune n'annule l'autre.
+concurrency:
+  group: publication-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verifier:
+    name: Étiquette et version
+    # Atelier privé : jamais (pas de clés, pas de minutes).
+    if: github.repository == 'kunai974/nyx-player'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 20
+          package-manager-cache: false
+
+      # Une étiquette posée sur un commit qui n'est pas passé par main (PR relue, vérifications vertes)
+      # ne publie rien.
+      - name: Étiquette sur main
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo "::error::L'étiquette $GITHUB_REF_NAME n'est pas sur main : rien n'est publié."
+            exit 1
+          }
+
+      - name: Version, notes, variables
+        id: version
+        env:
+          ETIQUETTE: ${{ github.ref_name }}
+        run: |
+          node scripts/publication-ci.mjs variables
+          version="$(node scripts/publication-ci.mjs version "$ETIQUETTE")"
+          node scripts/publication-ci.mjs notes "$version" > /dev/null
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  compiler-windows:
+    name: Compilation Windows (sans clé)
+    needs: verifier
+    runs-on: windows-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ needs.verifier.outputs.version }}
+      # Valeurs publiques (déjà présentes dans l'app publiée) : variables du dépôt (pas de secret ici).
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+      VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+    outputs:
+      sha256: ${{ steps.empreinte.outputs.sha256 }}
+    steps:
+      - name: Fins de ligne comme sous Git pour Windows
+        run: git config --global core.autocrlf true
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 20
+          package-manager-cache: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+
+      - name: Réglages de compilation
+        shell: bash
+        run: |
+          node scripts/publication-ci.mjs variables
+          for v in VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY; do
+            [ -n "${!v}" ] || { echo "::error::Variable $v absente des variables du dépôt."; exit 1; }
+          done
+          [ -n "$VITE_SENTRY_DSN" ] || echo "::warning::VITE_SENTRY_DSN absent : version sans remontée d'erreurs."
+
+      - run: pnpm install --frozen-lockfile
+
+      # Lecteur embarqué, empreinte vérifiée : la compilation le refuse s'il n'est pas le vrai programme.
+      - name: Binaire mpv
+        run: node scripts/binaires-natifs.mjs windows
+
+      # Sans fichiers de mise à jour : l'installeur est signé dans la tâche « signer-windows ».
+      - name: Compilation
+        shell: bash
+        run: |
+          echo '{"bundle":{"createUpdaterArtifacts":false}}' > "$RUNNER_TEMP/sans-signature.json"
+          pnpm tauri build --ci --bundles nsis --config "$RUNNER_TEMP/sans-signature.json"
+          mkdir -p "$RUNNER_TEMP/sortie"
+          installeur="src-tauri/target/release/bundle/nsis/Nyx Player_${VERSION}_x64-setup.exe"
+          [ -f "$installeur" ] || { echo "::error::Installeur introuvable : $installeur"; exit 1; }
+          cp "$installeur" "$RUNNER_TEMP/sortie/"
+
+      - name: Empreinte
+        id: empreinte
+        shell: bash
+        run: echo "sha256=$(sha256sum "$RUNNER_TEMP/sortie/Nyx Player_${VERSION}_x64-setup.exe" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: windows-non-signe
+          path: ${{ runner.temp }}/sortie/Nyx Player_${{ needs.verifier.outputs.version }}_x64-setup.exe
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+
+  compiler-android:
+    name: Compilation Android (sans clé)
+    needs: verifier
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ needs.verifier.outputs.version }}
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+      VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+    outputs:
+      sha256: ${{ steps.empreinte.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 20
+          package-manager-cache: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          targets: aarch64-linux-android,armv7-linux-androideabi
+
+      - name: Réglages de compilation
+        run: |
+          node scripts/publication-ci.mjs variables
+          for v in VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY; do
+            [ -n "${!v}" ] || { echo "::error::Variable $v absente des variables du dépôt."; exit 1; }
+          done
+          [ -n "$VITE_SENTRY_DSN" ] || echo "::warning::VITE_SENTRY_DSN absent : version sans remontée d'erreurs."
+          echo "NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> "$GITHUB_ENV"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Bibliothèque libmpv
+        run: node scripts/binaires-natifs.mjs android
+
+      # Sans NYX_ANDROID_KEYSTORE, Gradle laisse les APK non signés : ils sont signés dans « signer-android ».
+      - name: Compilation
+        run: |
+          pnpm tauri android build --ci --apk --split-per-abi --target aarch64 --target armv7
+          mkdir -p "$RUNNER_TEMP/sortie"
+          for paire in arm64:arm64 arm:armv7; do
+            dossier="${paire%%:*}"; nom="${paire##*:}"
+            brut="src-tauri/gen/android/app/build/outputs/apk/$dossier/release/app-$dossier-release-unsigned.apk"
+            [ -f "$brut" ] || { echo "::error::APK introuvable : $brut"; exit 1; }
+            cp "$brut" "$RUNNER_TEMP/sortie/nyx-player-$nom-v$VERSION-non-signe.apk"
+          done
+
+      - name: Empreintes
+        id: empreinte
+        run: |
+          cd "$RUNNER_TEMP/sortie"
+          echo "sha256=$(sha256sum nyx-player-arm64-v"$VERSION"-non-signe.apk nyx-player-armv7-v"$VERSION"-non-signe.apk | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: android-non-signe
+          path: |
+            ${{ runner.temp }}/sortie/nyx-player-arm64-v${{ needs.verifier.outputs.version }}-non-signe.apk
+            ${{ runner.temp }}/sortie/nyx-player-armv7-v${{ needs.verifier.outputs.version }}-non-signe.apk
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+
+  signer-windows:
+    name: Signature Windows
+    # Après les DEUX compilations : aucune tâche non fiable ne tourne plus pendant une signature.
+    needs: [verifier, compiler-windows, compiler-android]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: publication
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ needs.verifier.outputs.version }}
+      SHA256: ${{ needs.compiler-windows.outputs.sha256 }}
+    outputs:
+      sha256: ${{ steps.signe.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 20
+          package-manager-cache: false
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: windows-non-signe
+          path: ${{ runner.temp }}/fichiers
+
+      # Seul l'outil de signature, en version exacte, empreintes vérifiées par npm, sans script d'installation.
+      - name: Outil de signature
+        working-directory: .github/publication
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Signature
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          installeur="$RUNNER_TEMP/fichiers/Nyx Player_${VERSION}_x64-setup.exe"
+          [ -n "$TAURI_SIGNING_PRIVATE_KEY" ] && [ -n "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ] || {
+            echo "::error::Secret de la clé des mises à jour Windows absent ou vide."; exit 1; }
+          echo "$SHA256  $installeur" | sha256sum -c --quiet
+          .github/publication/node_modules/.bin/tauri signer sign "$installeur"
+
+      - name: Contrôle de la signature
+        id: signe
+        run: |
+          set -euo pipefail
+          installeur="$RUNNER_TEMP/fichiers/Nyx Player_${VERSION}_x64-setup.exe"
+          node scripts/publication-ci.mjs signature-windows "$installeur.sig" "$VERSION"
+          mkdir -p "$RUNNER_TEMP/sortie"
+          cp "$installeur" "$RUNNER_TEMP/sortie/Nyx-Player_${VERSION}_x64-setup.exe"
+          cp "$installeur.sig" "$RUNNER_TEMP/sortie/Nyx-Player_${VERSION}_x64-setup.exe.sig"
+          # Empreinte des fichiers signés, que « publier » recontrôle : un artefact remplacé entre-temps est refusé
+          cd "$RUNNER_TEMP/sortie"
+          echo "sha256=$(sha256sum "Nyx-Player_${VERSION}_x64-setup.exe" "Nyx-Player_${VERSION}_x64-setup.exe.sig" | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: windows-signe
+          path: |
+            ${{ runner.temp }}/sortie/Nyx-Player_${{ needs.verifier.outputs.version }}_x64-setup.exe
+            ${{ runner.temp }}/sortie/Nyx-Player_${{ needs.verifier.outputs.version }}_x64-setup.exe.sig
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+
+  signer-android:
+    name: Signature Android
+    needs: [verifier, compiler-windows, compiler-android]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: publication
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ needs.verifier.outputs.version }}
+      SHA256: ${{ needs.compiler-android.outputs.sha256 }}
+    outputs:
+      sha256: ${{ steps.signe.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 20
+          package-manager-cache: false
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: android-non-signe
+          path: ${{ runner.temp }}/fichiers
+
+      # Les mots de passe passent par l'environnement (« env: »), jamais par la ligne de commande ; le
+      # fichier de la clé est effacé à la fin, même en cas d'échec.
+      - name: Signature
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD || secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/fichiers"
+          [ "$(sha256sum nyx-player-arm64-v"$VERSION"-non-signe.apk nyx-player-armv7-v"$VERSION"-non-signe.apk | sha256sum | cut -d' ' -f1)" = "$SHA256" ] || {
+            echo "::error::Les APK reçus ne sont pas ceux de la compilation."; exit 1; }
+          tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | grep -E '^[0-9]+(\.[0-9]+)+$' | sort -V | tail -n 1)"
+          ks="$RUNNER_TEMP/publication.jks"
+          trap 'rm -f "$ks"' EXIT
+          [ -n "$KEYSTORE_B64" ] && [ -n "$KS_PASS" ] || { echo "::error::Secret de la clé des APK absent ou vide."; exit 1; }
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$ks"
+          mkdir -p "$RUNNER_TEMP/sortie"
+          for nom in arm64 armv7; do
+            # Bibliothèques natives alignées sur 16 Ko, comme Gradle (appareils à pages de 16 Ko)
+            "$tools/zipalign" -f -P 16 4 "nyx-player-$nom-v$VERSION-non-signe.apk" "aligne-$nom.apk"
+            "$tools/apksigner" sign --ks "$ks" --ks-key-alias nyx --ks-pass env:KS_PASS --key-pass env:KEY_PASS \
+              --v4-signing-enabled false --out "$RUNNER_TEMP/sortie/nyx-player-$nom-v$VERSION.apk" "aligne-$nom.apk"
+          done
+
+      - name: Contrôle des APK
+        id: signe
+        run: |
+          for apk in "$RUNNER_TEMP"/sortie/*.apk; do node scripts/publication-ci.mjs apk "$apk"; done
+          cd "$RUNNER_TEMP/sortie"
+          echo "sha256=$(sha256sum "nyx-player-arm64-v$VERSION.apk" "nyx-player-armv7-v$VERSION.apk" | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: android-signe
+          path: |
+            ${{ runner.temp }}/sortie/nyx-player-arm64-v${{ needs.verifier.outputs.version }}.apk
+            ${{ runner.temp }}/sortie/nyx-player-armv7-v${{ needs.verifier.outputs.version }}.apk
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+
+  publier:
+    name: Certificats et release brouillon
+    needs: [verifier, signer-windows, signer-android]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write      # créer la release brouillon
+      id-token: write      # signer les certificats de fabrication
+      attestations: write  # les enregistrer
+    env:
+      VERSION: ${{ needs.verifier.outputs.version }}
+      SHA256_WINDOWS: ${{ needs.signer-windows.outputs.sha256 }}
+      SHA256_ANDROID: ${{ needs.signer-android.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 20
+          package-manager-cache: false
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: windows-signe
+          path: publies
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: android-signe
+          path: publies
+
+      # Ce sont bien les fichiers sortis des tâches de signature, et les APK sont toujours les bons.
+      - name: Fichiers signés reçus
+        run: |
+          set -euo pipefail
+          cd publies
+          [ "$(sha256sum "Nyx-Player_${VERSION}_x64-setup.exe" "Nyx-Player_${VERSION}_x64-setup.exe.sig" | sha256sum | cut -d' ' -f1)" = "$SHA256_WINDOWS" ] || {
+            echo "::error::Installeur reçu différent de celui signé."; exit 1; }
+          [ "$(sha256sum "nyx-player-arm64-v$VERSION.apk" "nyx-player-armv7-v$VERSION.apk" | sha256sum | cut -d' ' -f1)" = "$SHA256_ANDROID" ] || {
+            echo "::error::APK reçus différents de ceux signés."; exit 1; }
+          cd ..
+          for apk in publies/*.apk; do node scripts/publication-ci.mjs apk "$apk"; done
+
+      # Écrit latest.json, android.json et SHA256SUMS.txt ; refuse tout fichier en trop ou manquant.
+      - name: Fichiers de mise à jour et empreintes
+        run: node scripts/publication-ci.mjs manifestes publies "$VERSION"
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            publies/Nyx-Player_*_x64-setup.exe
+            publies/Nyx-Player_*_x64-setup.exe.sig
+            publies/*.apk
+            publies/latest.json
+            publies/android.json
+            publies/SHA256SUMS.txt
+
+      - name: Release brouillon
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ETIQUETTE: ${{ github.ref_name }}
+        run: |
+          node scripts/publication-ci.mjs corps "$VERSION" > "$RUNNER_TEMP/corps.md"
+          gh release create "$ETIQUETTE" --repo "$GITHUB_REPOSITORY" --draft --verify-tag \
+            --title "Nyx Player $VERSION" --notes-file "$RUNNER_TEMP/corps.md" \
+            "publies/Nyx-Player_${VERSION}_x64-setup.exe" "publies/Nyx-Player_${VERSION}_x64-setup.exe.sig" \
+            "publies/nyx-player-arm64-v${VERSION}.apk" "publies/nyx-player-armv7-v${VERSION}.apk" \
+            publies/latest.json publies/android.json publies/SHA256SUMS.txt
+          {
+            echo "## Release brouillon v$VERSION prête"
+            echo
+            echo "Rien n'est publié. Suite : déposer l'installeur et les deux APK sur releases.nyxplayer.app,"
+            echo "puis une PR avec latest.json et android.json (pièces de la release) dans web/updates."
+            echo
+            echo '```'
+            cat publies/SHA256SUMS.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

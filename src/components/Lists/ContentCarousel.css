@@ -1,0 +1,671 @@
+.content-carousel-container {
+  margin-bottom: var(--space-6);
+  position: relative;
+  z-index: 5;
+  max-width: 100%;
+  /* Performance: Skip rendering of off-screen carousels */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 460px;
+  /* Approximate height for layout */
+}
+
+.content-carousel-container:hover {
+  z-index: 100;
+  /* High z-index to ensure hover card stays on top of everything */
+}
+
+.carousel-title {
+  font-size: 1.5rem;
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-2);
+  color: var(--text-primary);
+  padding-left: var(--sidebar-safe-zone);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 6;
+}
+
+.content-carousel {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-5);
+  overflow-x: scroll;
+  overscroll-behavior: auto;
+  overflow-y: hidden;
+  padding: var(--space-6) 4vw 2.5rem var(--sidebar-safe-zone);
+  cursor: grab;
+  scroll-behavior: auto;
+  scrollbar-width: none;
+}
+
+
+.content-carousel.grabbing {
+  cursor: grabbing;
+}
+
+/* Card Styling - Responsive width */
+.carousel-card {
+  flex: 0 0 auto;
+  width: clamp(9.5rem, 13vw, 15.625rem);
+  aspect-ratio: 2/3;
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  transform-origin: top center;
+  /* KEY: expand downward, not in all directions */
+  transition:
+    transform 0.4s var(--ease-bounce),
+    box-shadow 0.4s ease,
+    z-index 0s linear 0.1s;
+  background-color: rgba(255, 255, 255, 0.05);
+  /* PERFORMANCE: Isolate rendering - no external layout/paint impact */
+  contain: content;
+  /* Plus de calque graphique forcé sur chaque carte (translate3d + will-change) : sur l'accueil TV,
+     ≈ 100 calques pour autant de cartes, plus 70 calques créés en cascade par chevauchement, que la
+     carte graphique recomposait à chaque mouvement. Le
+     navigateur crée le calque de lui-même pendant l'agrandissement d'une carte. Aucun effet visible. */
+}
+
+/* Hover Effect - Stage 1 (immediate) */
+.carousel-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  transition-delay: 0s;
+}
+
+.card-image-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Top gradient overlay for button visibility on light posters */
+.card-image-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, transparent 100%);
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Show top gradient only on prolonged hover (show-details) or info mode */
+.carousel-card.show-details .card-image-wrapper::before,
+.carousel-card.show-info .card-image-wrapper::before {
+  opacity: 1;
+}
+
+.carousel-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s;
+}
+
+/* Placeholder for cards without images */
+.card-placeholder-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: linear-gradient(145deg, #1e2329 0%, #161b22 100%);
+  box-sizing: border-box;
+}
+
+.card-placeholder-title span {
+  color: #e6edf3;
+  font-size: 0.95rem;
+  font-weight: var(--font-semibold);
+  text-align: center;
+  line-height: 1.4;
+  /* « word-break: break-word », mot déprécié, vaut exactement ceci */
+  word-break: normal;
+  overflow-wrap: anywhere;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+/* ======================================== 
+   BOTTOM BAR - Unified Title + Buttons
+   ======================================== */
+.card-bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0));
+  padding: var(--space-12) var(--space-3) var(--space-3);
+  color: white;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+/* Show bottom bar on hover or info mode */
+.carousel-card.show-details .card-bottom-bar,
+.carousel-card.show-info .card-bottom-bar {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Title Row: Title + Info button on same line */
+.title-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Title container */
+.card-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.85rem;
+  font-weight: var(--font-medium);
+}
+
+/* Fade effect on edges ONLY for marquee titles */
+.carousel-card.needs-marquee .card-title {
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-repeat: repeat;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+/* Marquee container for long titles */
+.card-title .title-text {
+  display: inline-block;
+  white-space: nowrap;
+  padding-right: var(--space-12);
+}
+
+/* Marquee container - flex for side-by-side duplicates */
+.marquee-container {
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* Seconde copie du titre (boucle sans couture) : seulement quand il défile */
+.card-title .title-text--copy {
+  display: none;
+}
+
+.carousel-card.needs-marquee .card-title .title-text--copy {
+  display: inline-block;
+}
+
+/* Animate marquee when title overflows in info mode OR show-details */
+.carousel-card.show-info.needs-marquee .card-title .title-text,
+.carousel-card.show-details.needs-marquee .card-title .title-text {
+  animation: marquee 8s linear infinite;
+}
+
+/* Boucle sans couture : chaque copie avance de sa propre largeur (marge de la boucle comprise), la seconde prend
+   exactement la place de la première. Une seconde définition à -50 %, plus bas dans ce fichier, l'emportait : le
+   titre repartait du début à mi-chemin. */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Progress Bar */
+.card-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--primary-color, #e50914);
+  /* Default Netflix red-ish */
+  box-shadow: 0 0 5px rgba(229, 9, 20, 0.5);
+}
+
+/* Play Button - Glassmorphism (for "Continue Watching") */
+.card-play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 5rem;
+  height: 5rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  z-index: 5;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.card-play-button .play-icon {
+  font-size: var(--space-8);
+  color: white;
+  margin-left: var(--space-1);
+  /* Optical centering for play triangle */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.carousel-card:hover .card-play-button {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.1);
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Skeleton Loading */
+.carousel-card.skeleton {
+  cursor: default;
+  background: linear-gradient(90deg, #1f1f1f 25%, #2a2a2a 50%, #1f1f1f 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.carousel-card.skeleton:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Skeleton title bar (replaces carousel title during loading) */
+.carousel-title.skeleton-title {
+  height: 1.5rem;
+  width: 12rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, #1f1f1f 25%, #2a2a2a 50%, #1f1f1f 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  padding-left: 0;
+  margin-left: var(--sidebar-safe-zone);
+  margin-bottom: var(--space-2);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Fade-in transition when skeleton → real content */
+.carousel-card:not(.skeleton) {
+  animation: carouselFadeIn var(--duration-slow) ease-out backwards;
+}
+
+@keyframes carouselFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-4));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Text Overlay (e.g. ★ 8.5) */
+.card-overlay-text {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 0.2rem var(--space-2);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: var(--font-semibold);
+}
+
+/* Titre de Ma liste introuvable chez le fournisseur actuel : affiche grisée (comme la page Ma liste) */
+.carousel-card--unavailable .card-image-wrapper img {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+/* Media Type Badge (refined corner borders) */
+.card-media-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  /* Above all card layers: bottom-bar(20), watchlist-btn(25) */
+  pointer-events: none;
+  border-radius: var(--radius-lg);
+}
+
+/* Common styling for refined corners */
+.card-media-badge::before,
+.card-media-badge::after {
+  content: '';
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-width: 2px;
+  border-style: solid;
+  border-color: transparent;
+  pointer-events: none;
+}
+
+/* Top-Left Corner */
+.card-media-badge::before {
+  top: 0;
+  left: 0;
+  border-top-left-radius: var(--radius-lg);
+  border-right: none;
+  border-bottom: none;
+}
+
+/* Bottom-Right Corner */
+.card-media-badge::after {
+  bottom: 0;
+  right: 0;
+  border-bottom-right-radius: var(--radius-lg);
+  border-left: none;
+  border-top: none;
+}
+
+/* Movie: Red */
+.card-media-badge.movie::before {
+  border-top-color: var(--primary-color);
+  border-left-color: var(--primary-color);
+}
+
+.card-media-badge.movie::after {
+  border-bottom-color: var(--primary-color);
+  border-right-color: var(--primary-color);
+}
+
+/* Series: Blue */
+.card-media-badge.series::before {
+  border-top-color: var(--series-color);
+  border-left-color: var(--series-color);
+}
+
+.card-media-badge.series::after {
+  border-bottom-color: var(--series-color);
+  border-right-color: var(--series-color);
+}
+
+/* Info Overlay Mode */
+/* Info Overlay Mode */
+.card-info-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  /* Flou posé seulement quand le voile est affiché (.active) : caché, il occupait quand même un calque
+     graphique sur chaque carte. */
+  opacity: 0;
+  visibility: hidden;
+  /* Remove from render tree when hidden */
+  pointer-events: none;
+  transition:
+    opacity var(--duration-slow) ease-in-out,
+    visibility 0s var(--duration-slow);
+  /* Delay visibility change */
+  z-index: 15;
+}
+
+.card-info-overlay.active {
+  backdrop-filter: blur(8px);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity var(--duration-slow) ease-in-out,
+    visibility 0s 0s;
+  /* Immediate visibility on show */
+}
+
+/* Synopsis container - absolute positioning for guaranteed bounds */
+.card-info-content {
+  position: absolute;
+  top: 2.5rem;
+  bottom: 2.5rem;
+  left: var(--space-3);
+  right: var(--space-3);
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  /* Fade effect at edges */
+  mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+  mask-repeat: repeat;
+  -webkit-mask-image: linear-gradient(to bottom,
+      transparent 0%,
+      black 10%,
+      black 90%,
+      transparent 100%);
+}
+
+
+.card-synopsis {
+  font-size: 0.8rem;
+  line-height: var(--leading-normal);
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  overflow-wrap: break-word;
+  text-align: center;
+  /* Vertical centring for short text */
+  min-height: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Info overlay content - let absolute top/bottom control height */
+.card-info-overlay .card-info-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Buttons visible after 1.5s delay (show-details) or when info is open */
+.carousel-card.show-details .card-action-btn,
+.carousel-card.show-info .card-action-btn {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+
+.card-action-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+  opacity: 0;
+  transform: scale(0.8);
+  position: relative;
+  color: white;
+}
+
+
+/* Stylized Icons for Info and Close (No circle background) */
+.card-action-btn.info-btn {
+  font-size: var(--text-xl);
+  background: none;
+  border: none;
+  backdrop-filter: none;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+}
+
+.card-action-btn.info-btn:hover {
+  transform: scale(1.2) rotate(-5deg);
+  color: white;
+}
+
+/* Icon Switching Transitions */
+.info-icon,
+.close-icon {
+  position: absolute;
+  transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+
+
+/* i/X swap */
+.info-btn .info-icon {
+  font-family: serif;
+  font-style: italic;
+  font-weight: var(--font-semibold);
+}
+
+.info-btn .close-icon {
+  opacity: 0;
+  transform: scale(0.5) rotate(-90deg);
+  font-family: inherit;
+  font-style: normal;
+  font-size: 1.1rem;
+}
+
+.info-btn.active .info-icon {
+  opacity: 0;
+  transform: scale(0.5) rotate(90deg);
+}
+
+.info-btn.active .close-icon {
+  opacity: 1;
+  transform: scale(1) rotate(0);
+}
+
+/* Info button in title-row */
+.title-row .card-action-btn.info-btn {
+  font-weight: var(--font-semibold);
+  font-family: sans-serif;
+}
+
+/* Card State: Show Info */
+.carousel-card.show-info {
+  z-index: 50;
+  /* Ensure on top */
+}
+
+/* Hide Title when Info Open */
+.carousel-card.show-info .card-title-overlay {
+  opacity: 0;
+}
+
+/* ========================================
+   ACTION BUTTON CARDS (See All, etc.)
+   Simple button styling, no hover behaviors
+   ======================================== */
+.carousel-card.action-button {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border: 1px solid var(--border-glass);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.carousel-card.action-button:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.02);
+}
+
+/* Center the title text in the placeholder */
+.carousel-card.action-button .card-placeholder-title {
+  background: transparent;
+}
+
+.carousel-card.action-button .card-placeholder-title span {
+  font-size: 1.1rem;
+  font-weight: var(--font-medium);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Hide all overlays and bottom bar for action buttons */
+.carousel-card.action-button .card-bottom-bar,
+.carousel-card.action-button .card-info-overlay,
+.carousel-card.action-button .card-action-btn {
+  display: none !important;
+}
+
+
+/* ========================================
+   WATCHLIST BUTTON — Positionnement uniquement (styles dans WatchlistButton.css)
+   ======================================== */
+.card-watchlist-btn {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 25;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Caché (transparent), le bouton gardait son flou : un calque graphique par carte, ≈ 50 sur l'accueil
+   TV, recomposés à chaque mouvement. Flou posé seulement quand
+   le bouton est affiché (survol, carte ouverte) ; jamais sur TV, où il prend un voile sombre (tv.css). */
+.carousel-card > .card-watchlist-btn {
+  backdrop-filter: none;
+}
+
+/* Show on hover */
+.carousel-card:hover>.card-watchlist-btn,
+.carousel-card.show-details>.card-watchlist-btn,
+.carousel-card.show-info>.card-watchlist-btn {
+  opacity: 1;
+  transform: scale(1);
+  backdrop-filter: blur(1rem);
+}
+/* Placeholder height of a lazily mounted dashboard row (VirtualDashboardRow) — prevents scroll jumps */
+.virtual-dashboard-row {
+  min-height: 25rem;
+}
+
+/* Cadre gris d'une rangée en chargement (rail TV, railRow.ts) : immobile, sans reflet animé */
+.carousel-placeholder-frame {
+  background: #1f1f1f;
+  border-radius: var(--radius-lg); /* comme .carousel-card : le coin ne change pas au montage */
+}

@@ -1,0 +1,287 @@
+/**
+ * GuideTvGrid Styles — Guide TV Timeline
+ *
+ * Layout : Flexbox/Grid, unités 100% rem.
+ * Exception position: absolute pour les blocs programmes uniquement
+ * (positionnement de contenu, pas de layout structurel).
+ *
+ * Variables locales documentées, tokens du design system réutilisés.
+ */
+
+/* ============================================================================
+   CONTAINER PRINCIPAL
+   ============================================================================ */
+
+.guide-tv-grid {
+  /* Hauteur d'une rangée (chaîne) : aussi celle des cales qui remplacent les rangées non dessinées
+     (GuideTvGrid.tsx). La surcouche téléphone la change avec la hauteur des rangées. */
+  --guide-row-height: 4rem;
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  font-family: var(--font-body);
+}
+
+/* ============================================================================
+   HEADER (STICKY TOP) — timeline horaire
+   ============================================================================ */
+
+.guide-tv-grid__header {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  border-bottom: 0.0625rem solid var(--border-subtle);
+  background: var(--surface-raised);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  z-index: var(--z-sticky);
+}
+
+/* Coin vide en haut à gauche (aligné avec la colonne logos) */
+.guide-tv-grid__header-corner {
+  flex-shrink: 0;
+  width: 10rem;
+  min-width: 10rem;
+  border-right: 0.0625rem solid var(--border-subtle);
+}
+
+/* Conteneur scrollable des heures (synchronisé avec le scroll body) */
+.guide-tv-grid__header-timeline {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Inner : contient les labels horaires, largeur = totalMinutes * REM_PER_MINUTE */
+.guide-tv-grid__hours {
+  display: flex;
+  flex-wrap: nowrap;
+  height: 2.5rem;
+  align-items: center;
+}
+
+/* Label individuel (toutes les heures) */
+.guide-tv-grid__hour-label {
+  flex-shrink: 0;
+  width: 15rem; /* 60min * 0.25rem = 15rem par heure */
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  padding-left: var(--space-2);
+  border-left: 0.0625rem solid var(--border-subtle);
+  user-select: none;
+}
+
+/* ============================================================================
+   BODY — scroll horizontal + vertical
+   ============================================================================ */
+
+.guide-tv-grid__body {
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: auto;
+  min-height: 0;
+  scrollbar-width: auto;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Conteneur interne (largeur = totalMinutes * REM_PER_MINUTE) */
+.guide-tv-grid__body-inner {
+  display: flex;
+  flex-wrap: nowrap;
+  min-width: max-content;
+}
+
+/* ============================================================================
+   COLONNE CHAÎNES (STICKY LEFT)
+   ============================================================================ */
+
+.guide-tv-grid__channels {
+  flex-shrink: 0;
+  width: 10rem;
+  min-width: 10rem;
+  position: sticky;
+  left: 0;
+  z-index: calc(var(--z-sticky) - 1);
+  background: var(--surface-base);
+}
+
+/* Cellule chaîne individuelle */
+.guide-tv-grid__channel-cell {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--guide-row-height);
+  padding: 0 var(--space-3);
+  border-bottom: 0.0625rem solid var(--border-subtle);
+  border-right: 0.0625rem solid var(--border-subtle);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+  overflow: hidden;
+  contain: layout style;
+}
+
+.guide-tv-grid__channel-cell:hover {
+  background: var(--hover-overlay);
+}
+
+.guide-tv-grid__channel-logo {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.guide-tv-grid__channel-name {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================================
+   ROWS (PROGRAMMES)
+   ============================================================================ */
+
+.guide-tv-grid__rows {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Row par chaîne — relative pour les blocs absolute */
+.guide-tv-grid__row {
+  position: relative;
+  /* Monter ou changer une rangée ne refait pas la mise en page de toute la grille (pas de contain: paint,
+     le contour de focus des programmes déborde de la rangée) */
+  contain: layout style;
+  height: var(--guide-row-height);
+  border-bottom: 0.0625rem solid var(--border-subtle);
+}
+
+/* Bloc programme individuel */
+.guide-program {
+  position: absolute;
+  top: 0.25rem;
+  height: calc(4rem - 0.5rem);
+  background: var(--surface-raised);
+  border: 0.0625rem solid var(--border-default);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 var(--space-2);
+  overflow: hidden;
+  cursor: default;
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+
+.guide-program:hover {
+  background: var(--hover-overlay);
+  border-color: var(--border-strong);
+}
+
+/* Programme en cours — focus visuel */
+.guide-program--live {
+  border-left: 0.1875rem solid #8b5cf6;
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.guide-program--live:hover {
+  background: rgba(139, 92, 246, 0.14);
+}
+
+/* Titre du programme */
+.guide-program__title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: var(--leading-tight);
+}
+
+/* Horaires du programme */
+.guide-program__time {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: var(--leading-normal);
+}
+
+/* ============================================================================
+   SÉPARATEUR DE DATE (passage de minuit)
+   ============================================================================ */
+
+.guide-tv-grid__date-separator {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 0.125rem;
+  background: var(--border-glass);
+  z-index: 1;
+}
+
+.guide-tv-grid__date-label {
+  position: absolute;
+  top: 0.25rem;
+  transform: translateX(-50%);
+  background: var(--surface-raised);
+  border: 0.0625rem solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: var(--font-semibold);
+  white-space: nowrap;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   MARQUEUR DE TEMPS (Now — ligne verticale rouge)
+   ============================================================================ */
+
+.guide-time-marker {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 0.125rem;
+  background: var(--color-error);
+  z-index: 3;
+  pointer-events: none;
+  box-shadow: 0 0 0.5rem rgba(239, 68, 68, 0.4);
+}
+
+/* ============================================================================
+   ÉTATS : LOADING / ERROR / EMPTY
+   ============================================================================ */
+
+.guide-tv-grid__loading,
+.guide-tv-grid__error {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  padding: var(--space-8);
+}
+
+.guide-tv-grid__error {
+  color: var(--color-error);
+}

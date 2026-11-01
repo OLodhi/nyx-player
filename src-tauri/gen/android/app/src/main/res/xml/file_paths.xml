@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Seul usage : l'APK d'une mise à jour, remis à l'installateur d'Android (AppUpdater.kt) -->
+  <cache-path name="updates" path="updates/" />
+</paths>

@@ -1,0 +1,65 @@
+/* DashboardModeSwitch.css - Mode switcher pills */
+
+.dashboard-mode-switch {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--sidebar-safe-zone, var(--space-4));
+  background: transparent;
+  position: relative;
+  z-index: 20;
+  /* Above hero-banner (15) to ensure clickability */
+
+  /* Container MUST be transparent to clicks to allow dots (z-15) behind it to work */
+  pointer-events: none;
+
+  /* Space from Hero buttons — responsive to prevent overlap at high text scale */
+  margin-top: clamp(0.5rem, 2vh, 2rem);
+}
+
+.mode-pill {
+  padding: 0.625rem var(--space-5);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9375rem;
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+  /* Fixed width to prevent layout shift on selection */
+  min-width: 7rem;
+  text-align: center;
+
+  /* Restore interactivity for the buttons themselves */
+  pointer-events: auto;
+}
+
+.mode-pill-icon {
+  width: 1rem;
+  height: 1rem;
+  vertical-align: -0.15em;
+  margin-right: var(--space-2);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.mode-pill:hover .mode-pill-icon,
+.mode-pill.active .mode-pill-icon {
+  opacity: 1;
+}
+
+.mode-pill:hover {
+  background: var(--active-overlay);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-primary);
+}
+
+.mode-pill.active {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: var(--text-primary);
+  /* Keep same font-weight to avoid width change */
+  font-weight: var(--font-medium);
+}

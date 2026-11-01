@@ -1,0 +1,95 @@
+# Vérification de la partie Rust (src-tauri) : compilation et tests unitaires, sous Linux.
+# Ne tourne que si le code Rust (ou ce fichier) change dans la PR, pour ne pas ralentir les envois web,
+# ou si `web/updates/latest.json` change : un test Rust (app_update.rs) vérifie que sa signature est
+# faite pour la version annoncée (une PR de retour arrière ne touche que ce fichier).
+# Dépôt public `kunai974/nyx-player` (minutes gratuites) : à chaque PR et à chaque envoi sur `main`,
+# sans étiquette. La condition `github.repository` le reconnaît : les mêmes fichiers servent aux deux
+# dépôts, et l'atelier privé garde ses règles d'économie ci-dessous
+# (scripts/test/workflows-economie.test.mjs les vérifie).
+# Dépôt privé (atelier) : jamais tout seul sur une branche de travail (économie des minutes GitHub, circuit
+# `integration` → `develop`).
+#   - PR vers `main` (publication) : automatique ;
+#   - toute autre PR : seulement avec l'étiquette `ci-github` (à poser sur la PR `integration` → `develop`
+#     quand on choisit GitHub plutôt que la CI complète sur le PC) ;
+#   - bouton « Run workflow » (visible une fois ce fichier arrivé sur `main`).
+# Même commande qu'en local : `cargo test --locked` dans src-tauri.
+# Le code Kotlin du plugin Android n'est pas compilé ici : il faut la chaîne Android complète.
+name: Rust
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - 'src-tauri/**'
+      - 'web/updates/latest.json'
+      - '.github/workflows/rust.yml'
+  # Dépôt public seulement : la condition « if » de la tâche écarte les envois sur l'atelier privé.
+  push:
+    branches: [main]
+    paths:
+      - 'src-tauri/**'
+      - 'web/updates/latest.json'
+      - '.github/workflows/rust.yml'
+  workflow_dispatch:
+
+# Une autre étiquette posée sur la PR ne doit pas annuler un passage en cours : groupe à part.
+concurrency:
+  group: rust-${{ github.ref }}${{ (github.event.action == 'labeled' && github.event.label.name != 'ci-github') && format('-{0}', github.run_id) || '' }}
+  # Sur main (dépôt public), chaque fusion garde son passage complet : seules les PR s'annulent.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    name: Compilation et tests Rust
+    if: >-
+      (github.repository == 'kunai974/nyx-player' && github.event.action != 'labeled') ||
+      (github.event_name != 'pull_request' && github.event_name != 'push') ||
+      (github.event.action == 'labeled' && github.event.label.name == 'ci-github') ||
+      (github.event_name == 'pull_request' && github.event.action != 'labeled' &&
+        (github.base_ref == 'main' || contains(github.event.pull_request.labels.*.name, 'ci-github')))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      # Bibliothèques système exigées par Tauri 2 sous Linux (WebView, GTK).
+      - name: Bibliothèques système
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev libsoup-3.0-dev libssl-dev libdbus-1-dev pkg-config
+
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          # Épinglée par empreinte, l'action ne lit plus la chaîne dans son nom : la donner ici
+          toolchain: stable
+          components: clippy
+
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          workspaces: src-tauri
+
+      # Par précaution : generate_context!() lit le dossier web en build de production ; les tests ne s'en servent pas.
+      - name: Dossier web vide
+        run: mkdir -p dist
+
+      # Tauri vérifie que les ressources déclarées existent (mpv.exe, lecteur Windows). Hors de git
+      # dans le dépôt public : téléchargé depuis la release des dépendances natives, empreinte vérifiée.
+      - name: Binaire mpv
+        run: if [ ! -e resources/mpv/mpv.exe ]; then node scripts/binaires-natifs.mjs windows; fi
+
+      - name: Tests
+        working-directory: src-tauri
+        run: cargo test --locked
+
+      # Conseils de qualité Rust. En simple avertissement pour l'instant : le code existant
+      # n'a jamais été passé à clippy, ses remarques s'affichent sans bloquer l'envoi.
+      - name: Clippy (avertissement)
+        working-directory: src-tauri
+        continue-on-error: true
+        run: cargo clippy --locked --all-targets

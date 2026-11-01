@@ -1,0 +1,147 @@
+/* =============================================================================
+ * UpdateNotification — Non-blocking update banner
+ * Position: fixed bottom, z-index above content but below modals
+ * ============================================================================= */
+
+.update-notification {
+    position: fixed;
+    bottom: var(--space-6);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: min(90%, 36rem);
+    animation: update-slide-in var(--duration-normal) var(--ease-out) 0.5s both;
+}
+
+.update-notification__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    background: rgba(10, 12, 28, 0.92);
+    backdrop-filter: blur(1rem);
+    -webkit-backdrop-filter: blur(1rem);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+/* --- Info row --- */
+
+.update-notification__info {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.update-notification__icon {
+    font-size: var(--text-lg);
+    flex-shrink: 0;
+}
+
+.update-notification__svg-icon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(65%) sepia(52%) saturate(456%) hue-rotate(90deg) brightness(95%) contrast(92%);
+}
+
+.update-notification__svg-icon--error {
+    filter: brightness(0) saturate(100%) invert(45%) sepia(90%) saturate(1500%) hue-rotate(340deg) brightness(95%) contrast(95%);
+}
+
+.update-notification__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+}
+
+.update-notification__text strong {
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+}
+
+.update-notification__version {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+}
+
+.update-notification__error-detail {
+    color: var(--color-error);
+    font-size: var(--text-xs);
+    margin-top: var(--space-1);
+}
+
+/* --- Actions --- */
+
+.update-notification__actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-3);
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.update-notification__dismiss {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    cursor: pointer;
+    padding: var(--space-1) var(--space-2);
+    transition: color var(--duration-fast) var(--ease-out);
+}
+
+.update-notification__dismiss:hover {
+    color: var(--text-primary);
+}
+
+.update-notification__changelog-link {
+    background: none;
+    border: none;
+    color: var(--nyx-violet);
+    font-size: var(--text-xs);
+    cursor: pointer;
+    padding: var(--space-1) var(--space-2);
+    transition: color var(--duration-fast) var(--ease-out);
+}
+
+.update-notification__changelog-link:hover {
+    color: var(--nyx-violet-light);
+    text-decoration: underline;
+}
+
+/* --- Progress bar (matches IPTV refresh style) --- */
+
+.update-notification__progress {
+    width: 100%;
+    height: 0.375rem;
+    background: var(--border-default);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.update-notification__progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--nyx-blue) 0%, var(--nyx-red) 100%);
+    border-radius: var(--radius-sm);
+    transition: width var(--duration-normal) var(--ease-out);
+}
+
+/* --- Slide-in animation --- */
+
+@keyframes update-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(1.5rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}

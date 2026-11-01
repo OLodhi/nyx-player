@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Généré par scripts/android-brand-assets.mjs. Bannière du lanceur Android TV (320 × 180 dp), pour
+  les écrans d'accueil qui affichent les applis en tuiles : dégradé du logo de l'app (étiré en 16:9)
+  et logo principal blanc, vectoriel pour rester net sur toutes les TV. Google TV affiche l'icône ronde.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <bitmap
+            android:src="@mipmap/ic_launcher_background"
+            android:gravity="fill" />
+    </item>
+    <item
+        android:gravity="center"
+        android:width="232dp"
+        android:height="40.4dp"
+        android:drawable="@drawable/nyx_wordmark" />
+</layer-list>

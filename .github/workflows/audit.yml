@@ -1,0 +1,108 @@
+# Failles connues dans les dépendances : `pnpm audit` pour l'app web, `cargo audit` pour le
+# Rust. Pour l'instant en simple AVERTISSEMENT : le contrôle reste vert et la liste s'affiche dans le
+# résumé de l'exécution (onglet « Actions », puis l'exécution « Audit des dépendances »), avec un
+# avertissement jaune sur la PR. Des failles sont déjà connues (alerte `ws` de supabase-js, piles TLS du
+# Rust) : leur correction passe par les mises à jour de dépendances, une par PR. Quand elles seront réglées, on pourra rendre ce contrôle bloquant.
+# Aucun secret, aucune écriture : lecture seule du dépôt.
+# Dépôt public `kunai974/nyx-player` (minutes gratuites) : à chaque PR et chaque lundi,
+# sans étiquette. La condition `github.repository` le reconnaît : les mêmes fichiers servent aux deux
+# dépôts, et l'atelier privé garde ses règles d'économie ci-dessous
+# (scripts/test/workflows-economie.test.mjs les vérifie).
+# Dépôt privé (atelier) : jamais tout seul sur une branche de travail (économie des minutes GitHub, circuit
+# `integration` → `develop`).
+#   - PR vers `main` (publication) : automatique ;
+#   - toute autre PR : seulement avec l'étiquette `ci-github` (à poser sur la PR `integration` → `develop`
+#     quand on choisit GitHub plutôt que la CI complète sur le PC) ;
+#   - bouton « Run workflow » (visible une fois ce fichier arrivé sur `main`).
+# Plus le passage du lundi, qui ne tourne que sur la branche par défaut (`main`).
+name: Audit des dépendances
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  # Chaque lundi : une faille publiée entre deux envois est quand même signalée
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+# Une autre étiquette posée sur la PR ne doit pas annuler un passage en cours : groupe à part.
+concurrency:
+  group: audit-${{ github.ref }}${{ (github.event.action == 'labeled' && github.event.label.name != 'ci-github') && format('-{0}', github.run_id) || '' }}
+  # Sur main (dépôt public), chaque fusion garde son passage complet : seules les PR s'annulent.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  pnpm-audit:
+    name: Failles connues (app web)
+    if: >-
+      (github.repository == 'kunai974/nyx-player' && github.event.action != 'labeled') ||
+      (github.event_name != 'pull_request' && github.event_name != 'push') ||
+      (github.event.action == 'labeled' && github.event.label.name == 'ci-github') ||
+      (github.event_name == 'pull_request' && github.event.action != 'labeled' &&
+        (github.base_ref == 'main' || contains(github.event.pull_request.labels.*.name, 'ci-github')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      # Pas de cache : aucune installation ici, le cache automatique de setup-node (champ
+      # packageManager) échouait faute de dossier pnpm à sauvegarder.
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 20
+          package-manager-cache: false
+
+      # Dépendances de l'app livrée seulement (pas les outils de développement) ; pas d'installation
+      # nécessaire, l'audit lit pnpm-lock.yaml.
+      # Le texte des avis vient de l'extérieur : affiché entre ::stop-commands:: pour que GitHub ne
+      # l'interprète jamais comme une commande de workflow.
+      - name: pnpm audit --prod
+        run: |
+          if pnpm audit --prod > audit.txt 2>&1; then
+            echo "Aucune faille connue dans les dépendances de l'app web." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning title=Failles connues (app web)::Des failles connues sont signalées, détail dans le résumé de l'exécution"
+            { echo '## Failles connues (app web)'; echo '```'; tr -d '\r`' < audit.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          token="$(date +%s%N)"
+          echo "::stop-commands::${token}"
+          tr -d '\r' < audit.txt
+          echo "::${token}::"
+
+  cargo-audit:
+    name: Failles connues (Rust)
+    if: >-
+      (github.repository == 'kunai974/nyx-player' && github.event.action != 'labeled') ||
+      (github.event_name != 'pull_request' && github.event_name != 'push') ||
+      (github.event.action == 'labeled' && github.event.label.name == 'ci-github') ||
+      (github.event_name == 'pull_request' && github.event.action != 'labeled' &&
+        (github.base_ref == 'main' || contains(github.event.pull_request.labels.*.name, 'ci-github')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      # Outil déjà compilé : quelques secondes au lieu de plusieurs minutes de compilation
+      - uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2
+        with:
+          tool: cargo-audit
+
+      - name: cargo audit
+        working-directory: src-tauri
+        run: |
+          if cargo audit > audit.txt 2>&1; then
+            echo "Aucune faille connue dans les dépendances Rust." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning title=Failles connues (Rust)::$(grep -c '^ID:' audit.txt) avis (failles et paquets abandonnés), détail dans le résumé de l'exécution"
+            { echo '## Failles connues (Rust)'; echo '```'; tr -d '\r`' < audit.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          token="$(date +%s%N)"
+          echo "::stop-commands::${token}"
+          tr -d '\r' < audit.txt
+          echo "::${token}::"

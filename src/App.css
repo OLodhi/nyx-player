@@ -1,0 +1,1234 @@
+/* UNIVERSAL BOX SIZING RESET - CRITICAL FOR LAYOUT STABILITY */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* =========================================
+   NYX PLAYER BRANDING (Fonts)
+   Fonts embarquées via @fontsource dans main.tsx
+   ========================================= */
+
+:root {
+  /* Nyx Player Brand Colors */
+  --nyx-blue: #2828a3;
+  --nyx-red: #681717;
+  --nyx-dark: #020a19;
+
+  /* Typos */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --bg-color: #020a19;
+  --bg-main: #020a19;
+  --bg-gradient:
+    radial-gradient(ellipse 70% 140% at 0% 30%, rgba(104, 23, 23, 0.32) 0%, rgba(104, 23, 23, 0.10) 40%, transparent 70%),
+    radial-gradient(ellipse 140% 70% at 70% 100%, rgba(40, 40, 163, 0.30) 0%, rgba(40, 40, 163, 0.09) 40%, transparent 70%),
+    radial-gradient(ellipse 90% 90% at 0% 100%, rgba(74, 16, 96, 0.25) 0%, rgba(74, 16, 96, 0.07) 35%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 45%, rgba(2, 10, 25, 0.85) 0%, transparent 75%),
+    #020a19; /* Mesh: red↓left + blue←bottom → violet@BL, dark center — subtle */
+  --text-color: #c9d1d9;
+  --text-primary: #ffffff;
+  --accent-color: #58a6ff;
+  --primary-color: #e50914;
+  --series-color: #0077b6;
+  --success-color: #46d369;
+  --toolbar-bg: rgba(22, 27, 34, 0.4);
+  --card-bg: rgba(33, 38, 45, 0.3);
+  --glass-bg: rgba(15, 15, 15, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Sidebar Overlay Variables — px: structural UI, immune to text scale */
+  --sidebar-w: 88px;
+  --sidebar-m: 24px;
+  --sidebar-safe-zone: calc(var(--sidebar-w) + (var(--sidebar-m) * 2));
+
+  /* TV Sidebar Variables — px/vw: structural UI, immune to text scale */
+  --tv-sidebar-w: clamp(220px, 16vw, 300px);
+  --tv-sidebar-left: calc(var(--sidebar-w) + var(--sidebar-m) + 16px);
+  --tv-content-offset: calc(var(--tv-sidebar-left) + var(--tv-sidebar-w) + var(--sidebar-m));
+
+  /* =========================================
+     DESIGN TOKENS (cf. DESIGN_TOKENS.md)
+     ========================================= */
+
+  /* ── Brand étendu ── */
+  --nyx-blue-light: #5e6fea;
+  --nyx-red-dark:   #330000;
+  --nyx-purple:     #350033;
+  --nyx-violet:     #4a4ad0;                           /* Violet brand — issu du gradient "reimagined" landing */
+  --nyx-violet-dark: #8080e0;                          /* Violet clair — pôle light du gradient */
+  --nyx-violet-subtle: rgba(74, 74, 208, 0.06);         /* Form bg, sections légères violet */
+  --nyx-violet-border: rgba(74, 74, 208, 0.15);         /* Form border violet */
+
+  /* ── Fonds ── */
+  --surface-base:    var(--nyx-dark);
+  --surface-raised:  rgba(15, 15, 20, 0.45);
+  --surface-overlay: rgba(0, 0, 0, 0.6);
+  --surface-modal:   rgba(25, 28, 45, 0.8);             /* Modals — slate bleuté semi-opaque */
+  --surface-whisper: rgba(255, 255, 255, 0.03);  /* Surfaces ultra-légères (tab containers, section bg) */
+
+  /* ── Bordures ── */
+  --border-subtle:   rgba(255, 255, 255, 0.06);
+  --border-default:  rgba(255, 255, 255, 0.10);
+  --border-glass:    rgba(255, 255, 255, 0.15);         /* Glass borders — pills, dropdowns, boutons glass */
+  --border-strong:   rgba(255, 255, 255, 0.20);
+
+  /* ── Texte ── (--text-primary : défini plus haut) */
+  --text-secondary:  #c9d1d9;
+  --text-muted:      #8b949e;
+  --text-disabled:   rgba(255, 255, 255, 0.3);
+  --text-icon:       rgba(255, 255, 255, 0.4);   /* Icônes & éléments interactifs secondaires */
+
+  /* ── Statut / Feedback ── */
+  --color-success:        #46d369;
+  --color-error:          #ef4444;
+  --color-warning:        #f59e0b;
+  --color-info:           #58a6ff;
+  --color-success-subtle: rgba(70, 211, 105, 0.15);
+  --color-error-subtle:   rgba(239, 68, 68, 0.15);
+  --color-warning-subtle: rgba(245, 158, 11, 0.15);
+  --color-info-subtle:    rgba(88, 166, 255, 0.15);
+  --color-error-bg:       rgba(239, 68, 68, 0.08);  /* Form error bg (plus subtil que -subtle) */
+  --color-success-bg:     rgba(70, 211, 105, 0.08);  /* Form success bg (symétrique de error-bg) */
+
+  /* ── Interaction ── */
+  --focus-ring:      rgba(40, 40, 163, 0.4);
+  --focus-border:    rgba(40, 40, 163, 0.6);      /* Bordure focus inputs */
+  --nyx-blue-subtle: rgba(40, 40, 163, 0.2);      /* Active state tabs/éléments brand */
+  --nyx-blue-hover:  rgba(40, 40, 163, 0.3);      /* Hover state éléments brand actifs */
+  --hover-overlay:   rgba(255, 255, 255, 0.06);
+  --active-overlay:  rgba(255, 255, 255, 0.10);
+
+  /* ── Typographie — tailles ── */
+  --text-5xl:    3.5rem;
+  --text-4xl:    2.5rem;
+  --text-2xl:    1.75rem;
+  --text-xl:     1.25rem;
+  --text-lg:     1.125rem;
+  --text-base:   1rem;
+  --text-md:     0.875rem;                              /* 14px — corps secondaire, labels, options */
+  --text-sm:     0.8125rem;
+  --text-xs:     0.75rem;
+  --text-btn:    1.25rem;
+  --text-btn-sm: 1.125rem;
+
+  /* ── Typographie — graisses ── */
+  --font-regular:  400;
+  --font-medium:   500;
+  --font-semibold: 600;
+  --font-bold:     700;
+
+  /* ── Typographie — line-heights ── */
+  --leading-tight:   1.2;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.6;
+
+  /* ── Espacement (grille 4px = 0.25rem) ── */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-7:  1.75rem;
+  --space-8:  2rem;
+  --space-9:  2.25rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* ── Border-radius ── */
+  --radius-xs:   0.125rem;
+  --radius-sm:   0.25rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+  --radius-2xl:  1.5rem;
+  --radius-full: 50%;
+  --radius-pill: 2rem;
+
+  /* ── Ombres & élévation ── */
+  --shadow-sm:       0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md:       0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg:       0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-xl:       0 12px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow:     0 0 20px rgba(40, 40, 163, 0.4);
+  --shadow-glow-red: 0 0 20px rgba(229, 9, 20, 0.4);
+
+  /* ── Transitions ── */
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   400ms;
+  --duration-slower: 600ms;
+  --ease-out:    cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring: cubic-bezier(0.4, 0, 0.2, 1.2);
+
+  /* ── Glass / Glassmorphism ── */
+  --glass-bg-light:   rgba(15, 15, 20, 0.25);
+  --glass-bg-medium:  rgba(15, 15, 20, 0.45);
+  --glass-bg-heavy:   rgba(15, 15, 20, 0.7);
+  --glass-bg-player:  rgba(0, 0, 0, 0.85);              /* Player menus/popups — plus opaque que heavy */
+  --glass-blur:        blur(12px) saturate(160%);
+  --glass-blur-strong: blur(24px) saturate(180%);
+
+  /* ── Z-Index ── */
+  --z-base:         1;
+  --z-dropdown:     100;
+  --z-sticky:       200;
+  --z-player:       201;                                 /* Player overlay — above detail pages */
+  --z-player-popup: 1000;                                /* BingePopup + GeekStats — above player */
+  --z-sidebar:      1000;
+  --z-modal:        1100;
+
+  /* Mise en évidence du focus — clavier (Windows) et télécommande (Android TV).
+     Même code couleur partout : un liseré bleu de marque + halo, jamais de contour système. */
+  --focus-ring-color: var(--nyx-blue-light);
+  --focus-ring-width: 0.1875rem;
+  --focus-ring-offset: 0.125rem;
+  --focus-ring-glow: 0 0 0 0.35rem rgba(94, 111, 234, 0.25);
+  --z-overlay:      1200;
+  --z-toast:        1300;
+  --z-devpanel:     9999;
+
+  /* ── Player Layout ── */
+  --player-controls-height: 7rem;                        /* Hauteur bottom-bar (padding + progress + boutons) */
+
+  /* ── Typographie — familles spécialisées ── */
+  --font-mono: 'Roboto Mono', 'Consolas', monospace;     /* Stats, time display, données numériques */
+
+  /* ── Scrollbar (Tokens) ── */
+  --scrollbar-track:       transparent;
+  --scrollbar-thumb:       rgba(255, 255, 255, 0.65); /* Opacité de repos à 65% pour matcher l'Overlay natif */
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 1);    /* Non utilisé nativement, mais cohérent si on déroge un jour */
+}
+
+/* Responsive Root Font Size - Desktop First */
+html {
+  font-size: 16px;
+  /* Base: 1920x1080 (FHD) */
+  /* Pas de surbrillance bleue au toucher (Android l'ajoute par défaut sur tout élément cliquable) */
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 1366px) {
+  html {
+    font-size: 14px;
+  }
+
+  /* Laptops */
+}
+
+@media (min-width: 2560px) {
+  html {
+    font-size: 17px;
+  }
+
+  /* 1440p+ */
+}
+
+/* ============================================================================
+   REUSABLE PATTERNS — CSS_PATTERNS.md validated tokens
+   Ref: docs/CSS_PATTERNS.md (patterns 4, 5, 6 et 9)
+   ============================================================================ */
+
+/* ── Pattern #4 — Page Fade-In ── */
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Pattern #5 — Glass Card ── */
+.glass-card {
+  background: var(--surface-raised);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Pattern #6 — Scrollbar Custom (Native Overlay) ── */
+.scrollbar-thin {
+  /* Retour à la gestion OS Native pour garantir le "Fond Transparent" (Overlay) */
+  scrollbar-width: auto; 
+  /* "auto" est saoulant car il a un état de hover géré par Windows 11,
+     mais c'est LE SEUL MOYEN d'avoir une scrollbar qui "flotte" au-dessus du contenu
+     sans créer une violente marge noire (layout shift) à droite. */
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* ── Pattern #9 — Skeleton Shimmer ── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-block {
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.03) 30%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+/* CRITICAL: Ensure full height propagation for AutoSizer */
+/* Also set transparent background for MPV embedding */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-gradient) fixed !important;
+}
+
+/* Une application, pas une page web : pas de sélection de texte quand on clique vite, double-clique
+   ou appuie longuement sur une commande (la surbrillance au toucher est retirée sur html, plus haut).
+   Les champs de saisie restent sélectionnables. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  font-family: var(--font-body);
+  color: var(--text-color);
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  /* Ensure query layer context */
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  background: transparent !important;
+  /* Allow body nebula to show through */
+  position: relative;
+  z-index: 1;
+  /* Content sits above the nebula */
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+}
+
+/* Ensure query layer context */
+
+/* Hide background in Player Mode for MPV Transparency */
+body.player-active {
+  background: transparent !important;
+}
+
+
+.container {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: transparent;
+  position: relative;
+}
+
+/* Player Mode: Make background transparent for MPV video */
+.container.player-active {
+  background: transparent !important;
+}
+
+/* Make html/body/root transparent when player is active (for MPV to show through) */
+html.player-active,
+body.player-active,
+html.player-active #root,
+body.player-active #root {
+  background: transparent !important;
+}
+
+/* =========================================
+   TRANSITION OVERLAY - FadeIn/FadeOut Player
+   ========================================= */
+.transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  /* Above sidebars (z-index 1000) */
+  background-color: #000;
+
+  /* État par défaut : invisible */
+  opacity: 0;
+  pointer-events: none;
+
+  /* Transition fluide fadeIn/fadeOut */
+  transition: opacity var(--duration-slow) var(--ease-out);
+}
+
+.transition-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =========================================
+   MAIN UI - Container avec transition fluide
+   ========================================= */
+.main-ui {
+  display: contents;
+  /* Ne crée pas de box, juste un wrapper logique */
+  animation: mainUiFadeIn var(--duration-slow) var(--ease-out);
+}
+
+/* État caché (player actif) - Transition fluide */
+.main-ui.is-hidden {
+  display: contents;
+  pointer-events: none;
+}
+
+/* Masquer les enfants quand main-ui est hidden (player actif) */
+/* Triple assurance : visibility + opacity + backdrop-filter off */
+/* Nécessaire car backdrop-filter: blur() sur des éléments position: fixed */
+/* peut causer des artefacts visuels avec seulement visibility: hidden */
+.main-ui.is-hidden>* {
+  visibility: hidden;
+  opacity: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Animation d'entrée (retour du player) */
+@keyframes mainUiFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* No transition on direct children — visibility: hidden must apply instantly */
+
+main {
+  flex: 1;
+  padding: 0;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  overflow-x: clip;
+  /* Allow visual overflow (for carousels under sidebar) */
+  overflow-y: hidden;
+  min-height: 0;
+  /* Ne jamais dépasser la fenêtre. Sans cette ligne, un moteur qui ne traite pas main comme une
+     boîte de défilement (WebView2 récent, overflow-x: clip non converti en hidden) lui donne la
+     largeur de la plus longue rangée : bannière d'accueil géante, pointillés hors écran. */
+  min-width: 0;
+  position: relative;
+}
+
+/* CRITICAL FIX: This container MUST have explicit dimensions for AutoSizer */
+.list-content {
+  flex: 1;
+  width: 100%;
+  /* Remove height: 100% - use flex: 1 instead */
+  min-height: 0;
+  /* CRITICAL for flex containers */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sidebar Premium Floating Overlay Glass Design */
+/* Physical dimensions in px — sidebar is structural UI, must not inflate with text scale */
+.sidebar {
+  box-sizing: border-box;
+  width: 88px; /* Was 5.5rem */
+  position: fixed;
+  left: var(--sidebar-m);
+  bottom: var(--sidebar-m);
+  /* stylelint-disable-next-line defensive-css/require-dynamic-viewport-height -- vh = dvh en WebView, dvh inconnu avant Chrome 108 */
+  height: calc(100vh - (var(--sidebar-m) * 2));
+  background: rgba(15, 15, 20, 0.25);
+  backdrop-filter: blur(6px) saturate(160%);
+  -webkit-backdrop-filter: blur(6px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 40px; /* Was 2.5rem */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0; /* Was 1.5rem */
+  flex-shrink: 0;
+  z-index: 1000;
+  overflow: hidden; /* Prevent icons from leaking out */
+  transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              border-top-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              border-left-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              border-bottom-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar:hover {
+  background: rgba(20, 20, 25, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
+  border-right-color: rgba(255, 255, 255, 0.05); /* Prevent bleed into SettingsSidebar backdrop-filter */
+}
+
+/* Focus Mode: Hide sidebar on TV tab */
+.sidebar--hidden {
+  display: none;
+}
+
+.sidebar-logo {
+  padding: 0 0 1rem 0;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.logo-image {
+  width: 40px; /* Was 2.5rem */
+  height: 40px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 0.5rem rgba(255, 255, 255, 0.15));
+  transition: filter var(--duration-normal) var(--ease-out);
+}
+
+.sidebar:hover .logo-image {
+  filter: drop-shadow(0 0 0.5rem rgba(255, 255, 255, 0.15));
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px; /* Was 1.25rem */
+  width: 100%;
+  min-height: 0;
+}
+
+.nav-item {
+  width: 56px; /* Was 3.5rem */
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 50%;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  position: relative;
+  outline: none !important;
+  flex-shrink: 0;
+}
+
+.nav-item:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.1);
+}
+
+.nav-item.active {
+  color: #fff;
+  background: transparent;
+  /* transform: scale(1.1); active shouldn't scale too much if glow is there */
+}
+
+/* Icon Container for Glow positioning */
+.nav-icon-container {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.nav-icon {
+  width: 24px; /* Was 1.5rem */
+  height: 24px;
+  z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  transition: all 0.3s ease;
+}
+
+.nav-item.active .nav-icon {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.25));
+}
+
+/* The Glow Behind Active Item */
+.active-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px; /* Was 2.5rem */
+  height: 40px;
+  background: radial-gradient(circle, rgba(229, 9, 20, 1) 0%, rgba(180, 7, 16, 0.4) 100%);
+  border-radius: 50%;
+  z-index: 1;
+  filter: blur(8px);
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+.sidebar-footer {
+  padding-top: 1rem;
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  padding-bottom: 0.5rem;
+}
+
+.logout-button {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.logout-button:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444 !important;
+}
+
+/* =========================================
+   SIDEBAR BADGE - IPTV Status Indicator
+   ========================================= */
+.sidebar-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  z-index: 10;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+.sidebar-badge--error {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.sidebar-badge--warning {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+@keyframes badgePulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+
+
+h1 {
+  margin: 0 0 1rem 0;
+  color: var(--accent-color);
+}
+
+h3 {
+  margin: 0 0 0.5rem 0;
+}
+
+p {
+  margin: 0;
+  line-height: 1.5;
+  color: #8b949e;
+}
+
+/* Login Styles */
+.login-container {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  /* stylelint-disable-next-line defensive-css/require-dynamic-viewport-height -- vh = dvh en WebView, dvh inconnu avant Chrome 108 */
+  height: 100vh;
+  background-color: transparent;
+  position: relative;
+}
+
+/* Globe language toggle — pré-login pages (localStorage only) */
+.lang-toggle {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: rgba(255, 255, 255, 0.08);
+  border: 0.0625rem solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.375rem var(--space-3);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+  z-index: var(--z-dropdown);
+}
+
+.lang-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+.login-box {
+  background: var(--surface-raised);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  width: 100%;
+  max-width: 26rem;
+  box-shadow: var(--shadow-xl);
+  animation: authCardSlideIn var(--duration-slow) var(--ease-out);
+}
+
+.login-box form {
+  text-align: center; /* centre le NyxButton inline-flex */
+}
+
+.login-logo-container {
+  text-align: center;
+  margin-bottom: var(--space-7);
+}
+
+.login-brand-logo {
+  height: 9rem;
+  width: auto;
+  margin: 0 auto;
+  display: block;
+  filter: drop-shadow(0 0 1rem rgba(255, 255, 255, 0.15));
+}
+
+/* ---- Error Banner (uniform with SupabaseAuth) ---- */
+.login-error {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+  background: var(--color-error-bg);
+  border: 0.0625rem solid var(--color-error-subtle);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  line-height: var(--leading-normal);
+  animation: loginErrorShake var(--duration-slow) var(--ease-out);
+  /* « word-break: break-word », mot déprécié, vaut exactement ceci */
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+.login-error::before {
+  content: '⚠';
+  flex-shrink: 0;
+  font-size: var(--text-base);
+}
+
+@keyframes loginErrorShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-0.375rem); }
+  75% { transform: translateX(0.375rem); }
+}
+
+.tab-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-6);
+  background: var(--surface-whisper);
+  border-radius: var(--radius-md);
+  padding: var(--space-1);
+}
+
+.tab-buttons button {
+  flex: 1;
+  padding: var(--space-2);
+  background-color: transparent;
+  border: none;
+  color: var(--text-muted);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  font-weight: var(--font-medium);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.tab-buttons button:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-buttons button.active {
+  color: var(--text-primary);
+  background: var(--nyx-blue-subtle);
+  box-shadow: 0 0 0.75rem rgba(40, 40, 163, 0.15);
+  border-color: transparent;
+}
+
+.form-group {
+  margin-bottom: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-group label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0;
+  font-family: var(--font-body);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--nyx-dark);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  box-sizing: border-box;
+  font-size: var(--text-base);
+  font-family: var(--font-body);
+  line-height: var(--leading-normal);
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.form-group input:focus-visible,
+.form-group textarea:focus-visible {
+  outline: none;
+  border-color: var(--focus-border);
+  box-shadow: 0 0 0 0.1875rem rgba(40, 40, 163, 0.15);
+}
+
+/* Password input wrapper (input + eye toggle) */
+.login-input-wrapper {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.login-input-wrapper input {
+  padding-right: 2.75rem;
+}
+
+.login-eye-toggle {
+  position: absolute;
+  right: var(--space-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-lg);
+  line-height: 1;
+  padding: var(--space-1);
+  color: var(--text-icon);
+  opacity: 0.7;
+  transition: opacity var(--duration-fast) var(--ease-out);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-eye-toggle:hover {
+  opacity: 1;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* M3U textarea (extracted from inline styles) */
+.form-group textarea {
+  resize: none;
+}
+
+.login-m3u-note {
+  font-size: var(--text-xs);
+  margin-top: var(--space-2);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  line-height: var(--leading-normal);
+}
+
+/* ---- Login Submit (NyxButton contextual override) ---- */
+.login-box form .nyx-btn {
+  margin-top: var(--space-2);
+}
+
+/* Bouton "← Retour aux profils" — au-dessus du logout link */
+.login-back-btn {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-6);
+  padding: var(--space-2);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  cursor: pointer;
+  text-align: center;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.login-back-btn:hover {
+  color: var(--text-primary);
+}
+
+.login-back-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Bouton "Se déconnecter du compte" Supabase — style lien discret */
+.supabase-logout-link {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-6);
+  padding: var(--space-2);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  text-align: center;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.supabase-logout-link:hover {
+  color: var(--color-error);
+}
+
+.supabase-logout-link:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+
+/* =========================================
+   FOCUS — uniforme dans toute l'application
+   ========================================= */
+
+/* stylelint-disable-next-line defensive-css/require-focus-visible -- remise à zéro voulue : pas de contour
+   au clic ni au toucher, le contour clavier et télécommande vient de :focus-visible juste dessous */
+:focus {
+  outline: none;
+}
+
+/* Pas de border-radius ici : le contour suit déjà la forme de l'élément, et l'imposer rendait
+   carrés les boutons ronds et les pastilles au focus clavier (partout au D-pad sur TV) */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* =========================================
+   LOADING SCREEN — Supabase Init Splash
+   ========================================= */
+.loading-screen__logo {
+  height: 5rem;
+  width: auto;
+  margin: 0 auto 2rem;
+  display: block;
+  filter: drop-shadow(0 0 1rem rgba(255, 255, 255, 0.2));
+  animation: loadingPulse 2s infinite ease-in-out;
+}
+
+@keyframes loadingPulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.progress-container {
+  margin-top: var(--space-7);
+}
+
+.progress-bar-bg {
+  height: 0.5rem;
+  background-color: var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: var(--space-3);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--nyx-blue) 0%, var(--nyx-red) 100%);
+  border-radius: var(--radius-sm);
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+.progress-text {
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.progress-subtext {
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: var(--space-1);
+}
+
+
+
+
+
+/* Play icon — used by CarouselCard */
+.play-icon {
+  font-size: 3rem;
+  color: white;
+}
+
+
+
+/* Scrollbar — gérée par fluentOverlay (tauri.conf.json) + .scrollbar-thin (standard CSS) */
+
+/* Global page transition overlay — covers ALL content during page switch */
+.tab-transition-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-gradient) fixed;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms var(--ease-out);
+}
+
+.tab-transition-overlay.active {
+  opacity: 1;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-wrap: nowrap;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  /* No overflow here, let children handle it if height: 100% is used */
+}
+
+/* Back button — used by detail pages */
+.back-button {
+  background-color: transparent;
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+
+
+/* Transition animations for entering/exiting video mode */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInZoom {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+/* =========================================
+   APP ORCHESTRATOR — Inline styles migrated
+   ========================================= */
+
+/* Loading saved data screen — merged from duplicate */
+.loading-screen {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-gradient) fixed;
+}
+
+.loading-screen__content {
+  text-align: center;
+}
+
+.loading-screen__text {
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  font-family: var(--font-body);
+  margin: 0;
+  animation: loadingPulse 1.5s ease-in-out infinite;
+}
+
+/* Bandeau « base de l'appareil abîmée » sur l'erreur de chargement des profils : sans largeur propre, il
+   prenait toute celle de l'écran, collé aux bords (rognés par les télés), texte centré. Même largeur
+   que sur le choix du profil, avec une marge sur les côtés ; texte aligné à gauche comme ailleurs. */
+.profile-error-db-notice {
+  width: calc(100% - 2 * var(--space-4));
+  max-width: 36rem;
+  margin: var(--space-4) auto;
+  text-align: start;
+}
+
+.loading-screen__hint {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  margin-top: var(--space-2);
+  opacity: 0.7;
+}
+
+/* Login wrapper (column layout) */
+.login-wrapper {
+  flex-direction: column;
+}
+
+/* Detail pages overlay */
+.detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 101;
+  background-color: #000;
+  transition: transform 0.4s ease;
+  transform: scale(1);
+}
+
+.detail-overlay--transitioning {
+  transform: scale(1.1);
+}
+
+/* Player mode transparent overlay */
+.player-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  background-color: transparent;
+  pointer-events: none;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Background layer */
+.background-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+/* ============================================================================
+   SESSION ERROR BANNER — Inline replacement for alert() natifs (Phase 1.6 G)
+   ============================================================================ */
+.session-error-banner {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background-color: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  border-radius: 0.5rem;
+  color: #fca5a5;
+  font-size: 0.875rem;
+  margin: 0.75rem 1rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.session-error-banner__dismiss {
+  background: none;
+  border: none;
+  color: #fca5a5;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.session-error-banner__dismiss:hover {
+  opacity: 1;
+}

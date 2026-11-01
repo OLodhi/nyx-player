@@ -1,0 +1,182 @@
+/* =========================================
+   SETTINGS SIDEBAR - Navigation paramètres
+   Style Glass Panel (clone TvCategoriesSidebar)
+   ========================================= */
+
+.settings-sidebar {
+    /* Positionnement : même pattern que TV sidebar */
+    position: fixed;
+    left: var(--tv-sidebar-left);
+    top: var(--sidebar-m);
+    bottom: var(--sidebar-m);
+    width: var(--tv-sidebar-w);
+
+    /* Style Glass (identique sidebar TV) */
+    background: rgba(15, 15, 20, 0.4);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.5rem;
+
+    /* Layout interne */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    z-index: 999;
+
+    /* Animation d'entrée */
+    animation: settingsSidebarSlideIn 0.3s ease-out;
+}
+
+@keyframes settingsSidebarSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-1rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ================= HEADER ================= */
+.settings-sidebar__header {
+    padding: 1.5rem 1.25rem 1rem;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
+}
+
+.settings-sidebar__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+/* ================= NAV CONTAINER ================= */
+.settings-sidebar__nav {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+    overflow-x: hidden;
+    padding: 0.75rem;
+
+    /* Scrollbar fine */
+    /* Scrollbar gérée via classe utilitaire .scrollbar-thin depuis App.css */
+
+    /* Masque fade en bas */
+    mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+    mask-repeat: repeat;
+    -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+}
+
+/* ================= NAV ITEM ================= */
+.settings-nav-item {
+    width: 100%;
+    padding: 0.85rem 0.9rem;
+    margin-bottom: 0.4rem;
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 0.6rem;
+
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.75rem;
+
+    color: rgba(255, 255, 255, 0.55);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.35;
+
+    /* Transition fluide pour le hover */
+    transition: background-color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), color 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+}
+
+.settings-nav-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.95);
+    transform: translateX(4px);
+}
+
+/* Active State */
+.settings-nav-item.active {
+    background: linear-gradient(90deg,
+            rgba(229, 9, 20, 0.15) 0%,
+            rgba(229, 9, 20, 0.05) 100%);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(229, 9, 20, 0.15);
+}
+
+/* Glow indicator (barre à gauche) */
+.settings-nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: #e50914;
+    border-radius: 0 3px 3px 0;
+    box-shadow: 0 0 12px rgba(229, 9, 20, 0.8);
+}
+
+/* ================= ITEM PARTS ================= */
+.settings-nav-item__icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.settings-nav-item__label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ================= BADGE (IPTV STATUS) ================= */
+.settings-nav-item__badge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-left: auto;
+    animation: settingsBadgePulse 2s ease-in-out infinite;
+}
+
+.settings-nav-item__badge--error {
+    background: #ef4444;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.settings-nav-item__badge--warning {
+    background: #f59e0b;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+@keyframes settingsBadgePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.2);
+    }
+}

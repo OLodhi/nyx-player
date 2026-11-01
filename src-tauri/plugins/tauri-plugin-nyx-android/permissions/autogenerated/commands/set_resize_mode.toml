@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-set-resize-mode"
+description = "Enables the set_resize_mode command without any pre-configured scope."
+commands.allow = ["set_resize_mode"]
+
+[[permission]]
+identifier = "deny-set-resize-mode"
+description = "Denies the set_resize_mode command without any pre-configured scope."
+commands.deny = ["set_resize_mode"]

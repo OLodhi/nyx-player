@@ -1,0 +1,11 @@
+{
+  "placeholder_global": "Search movies, series, channels...",
+  "placeholder_default": "Search...",
+  "start_typing": "Start typing to search...",
+  "no_results": "No results found for \"{{query}}\"",
+  "movies_title": "Movies ({{count}})",
+  "series_title": "Series ({{count}})",
+  "tv_title": "TV ({{count}})",
+  "sources_count": "{{count}} sources",
+  "items_count": "{{count}} items"
+}

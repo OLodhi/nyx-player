@@ -1,0 +1,15 @@
+/* Variantes de fluidité de Nyx Mesure (src/dev/perfVariants.ts). Chargé seulement dans la version de
+   mesure ; chaque règle ne vaut que si la variante est activée depuis l'écran des profils. */
+
+/* Tous les flous d'arrière-plan sauf la barre latérale (voile sans flou dans tv.css ; exclue pour mesurer le reste) */
+/* stylelint-disable declaration-no-important -- variante de mesure : doit l'emporter sur chaque flou */
+:root.nyx-tv.nyx-perf-no-blur *:not(.sidebar) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* stylelint-enable declaration-no-important */
+
+/* Témoin de la case grise nue (poster-old-img) : l'image sans adresse reste montrée, comme dans la version B. */
+:root.nyx-tv.nyx-perf-poster-old-img .rail-slot .carousel-card img:not([src]) {
+  visibility: visible;
+}

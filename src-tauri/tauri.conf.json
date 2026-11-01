@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Nyx Player",
+  "version": "0.8.0",
+  "identifier": "com.nyxplayer.app",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' http: https: data: blob: nyxposter:; connect-src 'self' ipc: http://ipc.localhost http://tauri.localhost https://tauri.localhost http: https:; media-src 'self' blob: http: https:; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'",
+      "dangerousDisableAssetCspModification": ["style-src"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "resources": {
+      "../resources/mpv/mpv.exe": "mpv/mpv.exe"
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERCNzhENTM4QzMzNzMzNDAKUldSQU16ZkRPTlY0MjhCMEFRdHB5Uzg1QkdlcHoyYUViUHZlcWd1TjVWQWo2Wm9Lc1B1djR0ZHEK",
+      "endpoints": [
+        "https://nyxplayer.app/updates/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}

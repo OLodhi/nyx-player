@@ -1,0 +1,682 @@
+/* PlayerControls - YouTube-style video controls */
+
+/* Main container overlay - Blocks clicks from reaching pages behind */
+.player-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-player);
+  /* Above detail pages (101) */
+  pointer-events: auto;
+  /* Block clicks from reaching pages behind player */
+  overflow: hidden; /* Prevent absolute offscreen elements from expanding body width */
+}
+
+/* Safe area that dynamically shrinks and shifts when ChannelSwitcher opens */
+.player-ui-safe-area {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--switcher-offset, 0px);
+  z-index: 60;
+  pointer-events: none; /* Let clicks pass to body except for interactive children */
+  transition: left var(--duration-normal) var(--ease-out);
+}
+
+/* Controls layer - Handles fade in/out visibility */
+.player-controls-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: opacity var(--duration-normal) var(--ease-out), visibility var(--duration-normal) var(--ease-out);
+  pointer-events: none;
+  /* Default to passing through */
+}
+
+/* Enable clicks on actual controls */
+.player-top-bar,
+.player-bottom-bar {
+  pointer-events: auto;
+}
+
+.player-controls-layer.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.player-controls-layer.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* When Smart Lock is active, disable all interactions */
+.player-controls-layer.locked {
+  pointer-events: none !important;
+}
+
+/* Loading spinner - Independent of controls visibility */
+.player-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  pointer-events: none;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.player-loading-spinner {
+  width: 3.125rem;
+  height: 3.125rem;
+  border: 0.1875rem solid var(--border-default);
+  border-top-color: var(--nyx-blue-light);
+  border-radius: 50%;
+  animation: spin 0.8s ease-in-out infinite;
+  box-shadow: 0 0 15px var(--color-info-subtle);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Play/Pause flash indicator (center of screen, YouTube-style) */
+.player-action-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  pointer-events: none;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--text-primary);
+  animation: action-flash 0.5s var(--ease-out) forwards;
+}
+
+.player-action-flash svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+@keyframes action-flash {
+  0% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+/* Top bar */
+.player-top-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(to bottom, var(--surface-overlay), transparent);
+}
+
+.player-title {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 3.25rem;
+  /* Space for the Smart Lock button */
+}
+
+.player-close-btn {
+  background: var(--active-overlay);
+  border: none;
+  color: var(--text-primary);
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.player-close-btn:hover {
+  background: var(--border-strong);
+}
+
+/* Bottom bar */
+.player-bottom-bar {
+  padding: 0 1.25rem 1rem;
+  background: linear-gradient(to top, var(--surface-overlay), transparent);
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.player-bottom-bar--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Progress bar */
+.player-progress-container {
+  height: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.player-progress-bg {
+  width: 100%;
+  height: 0.25rem;
+  background: var(--text-disabled);
+  border-radius: var(--radius-sm);
+  position: relative;
+  transition: height var(--duration-fast);
+}
+
+.player-progress-container:hover .player-progress-bg {
+  height: 0.375rem;
+}
+
+.player-progress-fill {
+  position: absolute;
+  height: 100%;
+  background: var(--primary-color);
+  border-radius: var(--radius-sm);
+}
+
+.player-progress-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.75rem;
+  height: 0.75rem;
+  background: var(--primary-color);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity var(--duration-fast);
+}
+
+.player-progress-container:hover .player-progress-handle {
+  opacity: 1;
+}
+
+/* Controls row */
+.player-controls-row {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.player-controls-left,
+.player-controls-center,
+.player-controls-right {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.player-controls-left {
+  justify-content: flex-start;
+}
+
+.player-controls-center {
+  justify-content: center;
+}
+
+.player-controls-right {
+  justify-content: flex-end;
+}
+
+/* Buttons */
+.player-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  width: 2.5rem;
+  height: 2.5rem;
+  cursor: pointer;
+  font-size: 1.25rem;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.player-btn svg {
+  pointer-events: none;
+}
+
+.player-btn:hover {
+  background: var(--active-overlay);
+}
+
+/* Bouton Spécial: Épisodes (Pill Button) */
+.episode-trigger-btn {
+  width: auto;
+  padding: 0 1rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #fff;
+  gap: 0.5rem;
+}
+
+.episode-trigger-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.episode-trigger-btn.active {
+  background: #fff;
+  color: #000;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+/* Volume */
+.player-volume-container {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  position: relative;
+  height: 2.5rem;
+}
+
+.player-volume-slider {
+  width: 0;
+  overflow: hidden;
+  /* background removed to fix visual bug */
+  border-radius: 0.25rem;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  transition:
+    width var(--duration-fast) var(--ease-out),
+    padding var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+  padding: 0;
+  opacity: 0;
+  margin-left: 0;
+}
+
+.player-volume-slider.visible {
+  width: 6.25rem;
+  padding: 0 0.75rem;
+  opacity: 1;
+  margin-left: 0.5rem;
+}
+
+.player-volume-slider input[type='range'] {
+  width: 5rem;
+  height: 0.25rem;
+  background: transparent;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  margin: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.player-volume-slider input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  background: var(--text-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.player-volume-slider input[type='range']::-moz-range-thumb {
+  width: 0.875rem;
+  height: 0.875rem;
+  background: var(--text-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.volume-slider-track {
+  width: 5rem;
+  height: 0.25rem;
+  background: var(--text-disabled);
+  border-radius: var(--radius-sm);
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.volume-slider-fill {
+  height: 100%;
+  background: var(--text-primary);
+  border-radius: var(--radius-sm);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.volume-slider-input {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  /* Keep input invisible but clickable, custom UI below handles visuals */
+  cursor: pointer;
+  z-index: 3;
+}
+
+/* Time display */
+.player-time {
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-family: var(--font-mono);
+  margin-left: 0.5rem;
+}
+
+
+/* Speed Menu */
+.player-speed-container {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.player-speed-btn-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  width: auto;
+  min-width: 2.5rem;
+  padding: 0 0.5rem;
+  font-family: var(--font-body);
+  /* Monospace for stable width */
+}
+
+.player-speed-menu {
+  position: absolute;
+  bottom: 3.125rem;
+  right: -0.625rem;
+  /* Align slightly to right */
+  background: var(--glass-bg-player);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.5);
+  min-width: 5rem;
+  display: flex;
+  flex-direction: column-reverse;
+  /* 2.0x at top */
+}
+
+.speed-item {
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  text-align: center;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.speed-item:hover {
+  background: var(--active-overlay);
+}
+
+.speed-item.active {
+  color: var(--nyx-blue-light);
+  font-weight: 700;
+  background: var(--color-info-subtle);
+}
+
+/* Audio & Subtitles Popup (Netflix Style) */
+.player-audio-sub-container {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.player-audio-sub-popup {
+  position: absolute;
+  bottom: 3.125rem;
+  right: 0;
+  background: var(--glass-bg-player);
+  border-radius: 0.5rem;
+  padding: 0;
+  box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border-default);
+  width: 37.5rem;
+  /* Wide popup for 2 columns */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.popup-content-row {
+  display: flex;
+  flex-wrap: nowrap;
+  height: 18.75rem;
+  /* Fixed height for scrollable areas */
+}
+
+.popup-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-default);
+}
+
+.popup-column:last-child {
+  border-right: none;
+}
+
+.popup-header {
+  padding: 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  background: var(--surface-whisper);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.popup-list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  padding: 0.5rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-disabled) transparent;
+}
+
+
+.popup-item {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.popup-item:hover {
+  background: var(--active-overlay);
+  color: var(--text-primary);
+}
+
+.popup-item.active {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.popup-item svg {
+  /* CheckIcon */
+  width: 1rem;
+  height: 1rem;
+  min-width: 1rem;
+  color: var(--text-primary);
+}
+
+/* Footer Slider */
+.popup-footer {
+  padding: 1rem 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--border-default);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.footer-label {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  width: 7.5rem;
+}
+
+.scale-slider-container {
+  flex: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.scale-slider {
+  flex: 1;
+  height: 0.25rem;
+  background: var(--border-strong);
+  border-radius: var(--radius-sm);
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.scale-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  background: var(--text-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform var(--duration-fast);
+}
+
+.scale-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.scale-value {
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+/* ============================================
+   Smart Lock (Top-Left Fixed)
+   ============================================ */
+
+.player-smart-lock-fixed {
+  position: absolute;
+  top: 1rem;
+  left: 1.25rem;
+  z-index: 101;
+  /* Above controls layer */
+  pointer-events: auto;
+  transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out);
+}
+
+.player-smart-lock-fixed.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+
+.player-smart-lock-fixed.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.player-lock-btn-fixed {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  backdrop-filter: var(--glass-blur);
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.player-lock-btn-fixed svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Hover State (Both locked/unlocked) */
+.player-lock-btn-fixed:hover {
+  background: var(--border-glass);
+  color: var(--text-primary);
+  border-color: var(--text-icon);
+  transform: scale(1.05);
+}
+
+/* Locked State - Just change opacity/color slightly if needed, but keep neutral */
+.player-lock-btn-fixed.locked {
+  background: var(--surface-overlay);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: var(--text-disabled);
+  opacity: 0.5;
+  /* User request: 50% opacity when locked */
+}
+
+.player-lock-btn-fixed.locked:hover {
+  opacity: 1;
+  /* User request: 100% opacity on hover */
+}

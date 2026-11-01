@@ -1,0 +1,14 @@
+*.exe filter=lfs diff=lfs merge=lfs -text
+
+# Garde-fous de Claude : toujours en LF, même extraits sous Windows (core.autocrlf). En CRLF, la ligne
+# « #!/usr/bin/env node » fait échouer leur chargement par Vitest (SyntaxError) et donc leurs tests.
+.claude/hooks/*.mjs text eol=lf
+
+# Outils d'audit et scripts Node : même raison (un test rouge sur le PC seulement,
+# un script commençant par « #! » était extrait en CRLF).
+# La ligne « #! » a été retirée des scripts toujours lancés par « node … » ; elle ne reste que sur
+# l'outil d'audit (commande « vigie » du paquet). Gardé par scripts/test/fins-de-ligne-shebang.test.mjs.
+# Attention : une règle ajoutée ici ne réécrit pas un fichier déjà extrait (il reste en CRLF dans les
+# copies existantes) ; elle ne protège que les fichiers extraits après elle.
+audit/**/*.mjs text eol=lf
+scripts/**/*.mjs text eol=lf

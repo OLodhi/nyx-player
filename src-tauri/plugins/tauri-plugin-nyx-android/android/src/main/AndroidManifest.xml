@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Mise à jour depuis l'app (AppUpdater) : ouvrir l'installateur sur l'APK téléchargé. L'app
+         n'est pas sur le Play Store ; Android demande à l'utilisateur d'autoriser Nyx la première fois. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Android 11+ : voir les installateurs d'APK pour viser celui du système (AppUpdater) -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="content" android:mimeType="application/vnd.android.package-archive" />
+        </intent>
+    </queries>
+</manifest>

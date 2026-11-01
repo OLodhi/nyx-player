@@ -1,0 +1,177 @@
+/* ============================================================================
+ * NyxDropdown.css — Kit UI v2
+ *
+ * Dropdown custom animé avec glassmorphism.
+ * Le panel est rendu via React Portal (position: fixed sur document.body).
+ * Tokens : DESIGN_TOKENS.md — Brand : BRAND_SYSTEM.md §3
+ * ========================================================================= */
+
+/* ---- Container ---- */
+.nyx-dropdown {
+  position: relative;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  min-width: 10rem;
+}
+
+/* ---- Trigger button ---- */
+.nyx-dropdown__trigger {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-whisper);
+  border: 0.0625rem solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.nyx-dropdown__trigger:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--hover-overlay);
+}
+
+.nyx-dropdown--open .nyx-dropdown__trigger {
+  border-color: var(--nyx-blue-light);
+}
+
+.nyx-dropdown__trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.1875rem var(--focus-ring);
+}
+
+/* ---- Value text ---- */
+.nyx-dropdown__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Chevron ---- */
+.nyx-dropdown__chevron {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 200ms var(--ease-out);
+}
+
+.nyx-dropdown--open .nyx-dropdown__chevron {
+  transform: rotate(180deg);
+}
+
+/* ---- Panel (dropdown menu — rendu via Portal) ---- */
+.nyx-dropdown__panel {
+  /* position: fixed est appliqué via inline style */
+  z-index: 9999;
+  /* Quasi opaque : en verre à 65 %, les boutons recouverts (Lecture, Ma liste) transparaissaient en
+     halo flou, pris pour une ombre de la surbrillance */
+  background: rgba(24, 24, 30, 0.96);
+  backdrop-filter: blur(1.5rem) saturate(1.2);
+  -webkit-backdrop-filter: blur(1.5rem) saturate(1.2);
+  border: 0.0625rem solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) 0;
+  max-height: 15rem;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+  box-shadow:
+    0 0.375rem 1rem rgba(0, 0, 0, 0.3),
+    inset 0 0.0625rem 0 rgba(255, 255, 255, 0.08);
+
+  /* Animation — hidden by default */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-0.375rem);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out),
+    visibility 200ms;
+  pointer-events: none;
+}
+
+/* État ouvert — classe ajoutée directement sur le panel (portal) */
+.nyx-dropdown__panel--open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ---- Item ---- */
+.nyx-dropdown__item {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+  user-select: none;
+}
+
+.nyx-dropdown__item:hover,
+.nyx-dropdown__item--focused {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+/* Choix actif : texte blanc sur un léger fond bleu, la coche reste bleue. Le texte bleu (#5e6fea) ne
+   faisait que 3,6:1 de contraste sur le panneau. */
+.nyx-dropdown__item--active {
+  color: var(--text-primary);
+  background: var(--nyx-blue-subtle);
+}
+
+.nyx-dropdown__item--active:hover,
+.nyx-dropdown__item--active.nyx-dropdown__item--focused {
+  color: var(--text-primary);
+  background: var(--nyx-blue-hover);
+}
+
+/* ---- Check indicator ---- */
+.nyx-dropdown__item-check {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--nyx-blue-light);
+}
+
+/* ---- Item label ---- */
+.nyx-dropdown__item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Disabled state ---- */
+.nyx-dropdown--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.nyx-dropdown--disabled .nyx-dropdown__trigger {
+  cursor: not-allowed;
+}

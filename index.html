@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" style="background: #020a19;">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Nyx Player</title>
+  <!-- Critical CSS: rem base + loading-screen styles available before bundle CSS -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-size: 16px; }
+    @media (max-width: 1366px) { html { font-size: 14px; } }
+    @media (min-width: 2560px) { html { font-size: 17px; } }
+    /* Critical CSS for React loading-screens (visible during transitions) */
+    @keyframes loadingPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    .loading-screen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .loading-screen__logo {
+      height: 5rem;
+      width: auto;
+      margin: 0 auto 2rem;
+      display: block;
+      filter: drop-shadow(0 0 1rem rgba(255, 255, 255, 0.2));
+      animation: loadingPulse 2s infinite ease-in-out;
+    }
+    .loading-screen__content { text-align: center; }
+    .loading-screen__text {
+      color: #8b949e;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      animation: loadingPulse 1.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<!-- Delayed-show strategy: window starts invisible (tauri.conf.json visible:false).
+     React mounts in the background, and main.tsx calls window.show() only when
+     the first stable screen is ready. No HTML loader needed. -->
+<body style="margin: 0; background: #020a19;">
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

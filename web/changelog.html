@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Changelog — Nyx Player</title>
+  <meta name="description" content="See what's new in Nyx Player. Full changelog with all updates, fixes, and improvements.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Changelog — Nyx Player">
+  <meta property="og:description" content="Full changelog with all updates, fixes, and improvements for Nyx Player.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nyxplayer.app/changelog.html">
+  <link rel="canonical" href="https://nyxplayer.app/changelog.html">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+
+<body class="page-landing">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="navbar__logo">
+      <img src="assets/logo-principal-blanc.svg" alt="Nyx Player">
+    </a>
+    <div class="navbar__links">
+      <a href="/#faq" class="navbar__link">FAQ</a>
+      <a href="contact.html" class="navbar__link">Support</a>
+      <div class="lang-switch" role="group" aria-label="Language">
+        <span class="lang-switch__option lang-switch__option--current" aria-current="true">EN</span>
+        <span class="lang-switch__option lang-switch__option--unavailable" lang="fr" title="Version française bientôt disponible">FR<span class="visually-hidden"> (version française bientôt disponible)</span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Changelog -->
+  <section class="changelog">
+    <h1 class="changelog__title">Changelog</h1>
+    <p class="changelog__subtitle">All updates, fixes, and improvements to Nyx Player.</p>
+
+    <!-- v0.8.0 -->
+    <article class="changelog-entry">
+      <div class="changelog-entry__header">
+        <span class="changelog-entry__version">v0.8.0</span>
+        <span class="changelog-entry__badge changelog-entry__badge--latest">Latest</span>
+        <time class="changelog-entry__date" datetime="2026-11-01">November 1, 2026</time>
+      </div>
+      <div class="changelog-entry__body">
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--added">Features</h3>
+          <ul class="changelog-entry__list">
+            <li><strong>Android and Android TV</strong> — Nyx Player now runs on Android phones, Android TV and Chromecast with Google TV, with the same account and sync as on Windows.</li>
+            <li><strong>Remote-friendly TV interface</strong> — Full remote navigation, a safe zone for TVs that crop the edges, 5-column "See all" pages and fast channel zapping.</li>
+            <li><strong>Automatic source refresh</strong> — Your IPTV sources refresh on their own every 12 hours.</li>
+            <li><strong>Channels-only providers</strong> — Providers that only offer live channels are now supported.</li>
+          </ul>
+        </div>
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--improved">Improved</h3>
+          <ul class="changelog-entry__list">
+            <li><strong>TV Guide</strong> — Only visible channels and hours are drawn, scrolling is smoother, and your selection is kept when the guide reloads.</li>
+            <li><strong>Home screen</strong> — Smoother banner and rows, lighter startup.</li>
+            <li><strong>Playback</strong> — Bounded retries, a clear "Playback interrupted" screen, subtitle and audio choices that carry over to the next episode, and HTTPS certificates are now verified.</li>
+            <li><strong>Security and privacy</strong> — IPTV credentials no longer appear in error reports, less data is sent, and known network-library vulnerabilities are fixed.</li>
+            <li><strong>Website</strong> — New home page in English and French, updated legal pages.</li>
+          </ul>
+        </div>
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--fixed">Fixed</h3>
+          <ul class="changelog-entry__list">
+            <li><strong>Sync</strong> — Deleted items no longer come back, failed uploads are retried, and My List no longer loses titles when your provider changes.</li>
+            <li><strong>Session</strong> — You stay signed in after the app stops and when the network comes back.</li>
+            <li><strong>Sound</strong> — On Windows, sound is no longer stuck muted after a mute in a previous playback.</li>
+            <li><strong>Account deletion</strong> — A deleted account is detected on your other devices.</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- v0.7.6 -->
+    <article class="changelog-entry">
+      <div class="changelog-entry__header">
+        <span class="changelog-entry__version">v0.7.6</span>
+        <time class="changelog-entry__date" datetime="2026-04-10">April 10, 2026</time>
+      </div>
+      <div class="changelog-entry__body">
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--fixed">Fixed</h3>
+          <ul class="changelog-entry__list">
+            <li><strong>Large Screen Layout</strong> — Fixed UI clipping and overlap on 1440p, 4K, and ultrawide displays, including Windows scaling (125%+).</li>
+            <li><strong>Dashboard Skeleton Loading</strong> — Fixed missing skeleton placeholders on initial app launch, ensuring smooth visual feedback while content loads.</li>
+            <li><strong>Hidden Categories Sync</strong> — Fixed an issue where hidden categories could reappear after logging back in.</li>
+          </ul>
+        </div>
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--added">Features</h3>
+          <ul class="changelog-entry__list">
+            <li><strong>EPG (Electronic Program Guide)</strong> — See what's currently playing and coming up next on Live TV channels. Integrated into the player overlay, channel cards, and channel switcher. Auto-syncs at startup.</li>
+            <li><strong>Hardware Acceleration Toggle</strong> — New option in Settings to enable or disable GPU acceleration on the fly for troubleshooting playback issues.</li>
+          </ul>
+        </div>
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--improved">Improved</h3>
+          <ul class="changelog-entry__list">
+            <li><strong>Security</strong> — General security improvements and hardening.</li>
+            <li><strong>Performance</strong> — Various optimizations for smoother UI rendering and reduced resource usage.</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- v0.7.5 -->
+    <article class="changelog-entry">
+      <div class="changelog-entry__header">
+        <span class="changelog-entry__version">v0.7.5</span>
+        <time class="changelog-entry__date" datetime="2026-04-01">April 1, 2026</time>
+      </div>
+      <div class="changelog-entry__body">
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--fixed">Fixed</h3>
+          <ul class="changelog-entry__list">
+            <li><strong>Content Ordering</strong> — Channels, movies, series, and categories are now strictly displayed in the exact order provided by your IPTV source.</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- v0.7.4 -->
+    <article class="changelog-entry">
+      <div class="changelog-entry__header">
+        <span class="changelog-entry__version">v0.7.4</span>
+        <time class="changelog-entry__date" datetime="2026-03-30">March 30, 2026</time>
+      </div>
+      <div class="changelog-entry__body">
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--added">Features</h3>
+          <ul class="changelog-entry__list">
+            <li><strong>Official TMDB Logos</strong> — Dashboard hero banners and detail pages now dynamically display official beautiful logos for movies and series when available.</li>
+            <li><strong>In-Player Channel Switcher</strong> — Browse categories and switch channels directly from the player without leaving your stream.</li>
+            <li><strong>In-Player Episode Switcher</strong> — Navigate seasons and episodes from the player with TMDB-enriched thumbnails and titles.</li>
+          </ul>
+        </div>
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--improved">Improved</h3>
+          <ul class="changelog-entry__list">
+            <li><strong>Stretch Mode</strong> — Added a third aspect ratio option (Fit / Fill / Stretch) to perfectly accommodate ultra-wide content without cropping.</li>
+            <li><strong>Binge Mode</strong> — The "Next Episode" popup now displays the episode thumbnail and title (TMDB or provider fallback).</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- v0.7.3 -->
+    <article class="changelog-entry">
+      <div class="changelog-entry__header">
+        <span class="changelog-entry__version">v0.7.3</span>
+        <time class="changelog-entry__date" datetime="2026-03-28">March 28, 2026</time>
+      </div>
+      <div class="changelog-entry__body">
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--added">Added</h3>
+          <ul class="changelog-entry__list">
+            <li>Changelog page on the website</li>
+            <li>Changelog link in Settings — About</li>
+            <li>Update check now runs automatically on app launch</li>
+            <li>5-second auto-play option for Binge Mode</li>
+          </ul>
+        </div>
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--improved">Improved</h3>
+          <ul class="changelog-entry__list">
+            <li>Player: double-click to toggle fullscreen, click to play/pause</li>
+            <li>Player: aspect ratio toggle (Fit / Fill)</li>
+            <li>Scrollbar design and visibility across the application</li>
+            <li>Dashboard scroll positions and active modes are now preserved when returning from a movie or series page</li>
+          </ul>
+        </div>
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--fixed">Fixed</h3>
+          <ul class="changelog-entry__list">
+            <li>Hero banner not updating when switching language</li>
+            <li>Visual glitch on sidebar hover</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- v0.7.2 -->
+    <article class="changelog-entry">
+      <div class="changelog-entry__header">
+        <span class="changelog-entry__version">v0.7.2</span>
+        <time class="changelog-entry__date" datetime="2026-03-24">March 24, 2026</time>
+      </div>
+      <div class="changelog-entry__body">
+        <div class="changelog-entry__section">
+          <h3 class="changelog-entry__section-title changelog-entry__section-title--fixed">Fixed</h3>
+          <ul class="changelog-entry__list">
+            <li>Movies and series that would not start and load indefinitely</li>
+            <li>Similar movies page not showing all available sources</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="landing-footer__links">
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="legal.html">Legal</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="https://reddit.com/r/nyxplayer" target="_blank" rel="noopener">Reddit</a>
+    </div>
+    <p class="landing-footer__copy">&copy; 2026 Nyx Player. Free software under GPL-3.0-or-later.</p>
+    <a href="mailto:contact@nyxplayer.app" class="landing-footer__contact">contact@nyxplayer.app</a>
+  </footer>
+
+</body>
+
+</html>

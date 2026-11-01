@@ -1,0 +1,704 @@
+.movie-detail-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #0a0a0a;
+  color: var(--text-primary);
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  overflow-x: hidden;
+  z-index: 101;
+
+  animation: pageEntranceFade var(--duration-slow) var(--ease-out) forwards;
+}
+
+/* KB-002: Désactivation stricte du scroll pendant le mode Skeleton (le layout dummy dépasse souvent le viewport) */
+.movie-detail-page.state-loading {
+  overflow-y: hidden !important;
+  scrollbar-color: transparent transparent !important;
+}
+
+@keyframes pageEntranceFade {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Page revealed on mount - maintains final state */
+.movie-detail-page.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Page hiding before unmount - simple fade out (cohérent sidebar) */
+.movie-detail-page.is-exiting {
+  opacity: 0 !important;
+  transition: opacity 150ms var(--ease-out) !important;
+  animation: none !important;
+  pointer-events: none;
+}
+
+
+
+/* Backdrop as full background — sticky so it stays visible during scroll */
+.movie-detail-page .backdrop-bg {
+  position: sticky;
+  top: 0;
+  width: 100vw;
+  /* stylelint-disable-next-line defensive-css/require-dynamic-viewport-height -- vh = dvh en WebView, dvh inconnu avant Chrome 108 */
+  height: 100vh;
+  flex-shrink: 0;
+  margin-bottom: -100vh;
+  /* Pull content up over the backdrop */
+  background-size: cover;
+  background-position: center top;
+  z-index: 0;
+  opacity: 0;
+  /* Hidden by default - will fade in */
+  transition: opacity 0.8s var(--ease-out);
+  pointer-events: none;
+}
+
+/* Visibility based on state — sélecteurs passent par .movie-detail-page (classes d'état) */
+.movie-detail-page.state-ready .backdrop-bg,
+.movie-detail-page.state-fallback .backdrop-bg {
+  opacity: 0.6;
+}
+
+.movie-detail-page.state-loading .backdrop-bg {
+  opacity: 0;
+  /* Forced hidden during loading */
+}
+
+/* Dark gradient overlay — content container */
+.movie-detail-page .content-overlay {
+  position: relative;
+  z-index: 1;
+  /* stylelint-disable-next-line defensive-css/require-dynamic-viewport-height -- vh = dvh en WebView, dvh inconnu avant Chrome 108 */
+  min-height: 100vh;
+  padding: 0;
+  background: radial-gradient(circle at 30% 50%,
+      rgba(10, 10, 10, 0.9) 0%,
+      rgba(10, 10, 10, 0.7) 40%,
+      rgba(10, 10, 10, 0.2) 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Minimalist Back Button - Chevron with Circular Hover */
+.movie-detail-page .back-button {
+  /* Grid item positioning if needed, or absolute is fine since it's overlay */
+  position: absolute;
+  top: clamp(1rem, 3vh, 2.5rem);
+  left: calc(var(--sidebar-safe-zone) - 1rem);
+  /* Align with safe zone but slightly offset for circular aesthetics */
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.8);
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+  z-index: 90;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide back-button during loading, fade in when ready */
+.movie-detail-page.state-loading .back-button {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease-out) 0.1s;
+}
+
+.movie-detail-page.state-ready .back-button,
+.movie-detail-page.state-fallback .back-button {
+  opacity: 1;
+  transition: opacity 0.4s var(--ease-out) 0.1s;
+}
+
+.movie-detail-page .back-button:hover {
+  background: var(--active-overlay);
+  backdrop-filter: blur(0.625rem);
+  -webkit-backdrop-filter: blur(0.625rem);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+.movie-detail-page .back-button svg {
+  width: 2.625rem;
+  height: 2.625rem;
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.3));
+  transition: transform 0.3s ease;
+}
+
+.movie-detail-page .back-button:hover svg {
+  transform: translateX(-2px);
+}
+
+/* Layout - Content section */
+.movie-detail-page .detail-layout {
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: clamp(1.5rem, 4vw, 3.75rem);
+  padding: clamp(2rem, 5vh, 4rem) clamp(1.5rem, 5vw, 3.75rem) 1rem var(--sidebar-safe-zone);
+  min-height: 0;
+  align-items: flex-start;
+  /* Content flows from top */
+  padding-top: clamp(5rem, 10vh, 7rem);
+  /* Extra clearance for back-button */
+  overflow: visible;
+  position: relative;
+  z-index: 20;
+}
+
+/* Layout - Info Column - Relative container for absolute skeleton */
+.movie-detail-page .info-column {
+  flex: 1 1 55%;
+  max-width: 50rem;
+  min-width: 0;
+  /* Prevent flex overflow */
+  /* Minimum height to prevent collapse during loading */
+  position: relative;
+  /* Anchor for absolute skeleton */
+
+  /* Flexbox for vertical alignment */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Skeleton layer - In flow during loading, absolute when hidden */
+.movie-detail-page .skeleton-layer {
+  position: relative;
+  width: 100%;
+  padding-top: 1rem;
+  /* Delayed appearance: skeleton only shows after 200ms */
+  opacity: 0;
+  animation: skeletonDelayedAppear 0.3s ease-out 0.2s forwards;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.movie-detail-page .skeleton-layer.hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  animation: none;
+}
+
+/* Formes cachées mais toujours là : leur scintillement infini faisait redessiner l'écran en continu
+   tant que la fiche restait ouverte (audit performance, ≈ 1 s de travail en plus par fiche
+   sur PC). Aucun effet visible : elles sont transparentes. */
+.movie-detail-page .skeleton-layer.hidden .skeleton-item {
+  animation: none;
+}
+
+@keyframes skeletonDelayedAppear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* Main layer - Out of flow during loading, enters flow when active */
+.movie-detail-page .main-layer {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.4s var(--ease-out) 0.25s,
+    transform 0.4s var(--ease-out) 0.25s,
+    visibility 0s linear 0s;
+}
+
+.movie-detail-page .main-layer.active {
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Title - Massive and Impactful but balanced - FLUID */
+.movie-detail-page .movie-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  margin: 0 0 0.9375rem 0;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: clamp(-1px, -0.1vw, -2px);
+  background: linear-gradient(to bottom, #fff 30%, #aaa 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0.625rem 1.25rem rgba(0, 0, 0, 0.6));
+  width: 100%;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+/* Detail Logo Image (when available) */
+.movie-detail-page .detail-logo {
+  max-width: clamp(14rem, 40vw, 30rem);
+  max-height: clamp(6rem, 15vh, 10rem);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: left bottom;
+  margin: 0 0 1.25rem 0;
+  filter: drop-shadow(0 0.5rem 1rem rgba(0, 0, 0, 0.4));
+  transform-origin: left bottom;
+  animation: logoFloat 6s ease-in-out infinite alternate;
+}
+
+@keyframes logoFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-3px); }
+}
+
+/* Badges */
+.movie-detail-page .badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-bottom: 1.25rem;
+}
+
+.movie-detail-page .badge {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(0.5rem);
+  -webkit-backdrop-filter: blur(0.5rem);
+  border: 1px solid var(--border-glass);
+  padding: 0.375rem 0.875rem;
+  border-radius: 1.25rem;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.movie-detail-page .badge:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Badge SVG icon (film branding picto) */
+.movie-detail-page .badge-icon {
+  width: 0.875em;
+  height: 0.875em;
+  flex-shrink: 0;
+}
+
+.movie-detail-page .badge.age {
+  background: rgba(220, 53, 69, 0.3);
+  border-color: rgba(220, 53, 69, 0.5);
+}
+
+.movie-detail-page .badge.rating .stars {
+  color: #ffc107;
+  margin-right: 0.3125rem;
+}
+
+/* Genres */
+.movie-detail-page .genres {
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  margin-bottom: 1.25rem;
+}
+
+/* Synopsis Container - ~3 lines visible before scroll */
+.movie-detail-page .synopsis-container {
+  max-height: clamp(4rem, 8vh, 5rem);
+  margin-bottom: 1rem;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  position: relative;
+  mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
+  mask-repeat: repeat;
+  -webkit-mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
+  /* Synopsis scrollbar â€” handled by .scrollbar-thin class */
+}
+
+.movie-detail-page .synopsis {
+  font-size: clamp(0.875rem, 1.5vw, 1.0625rem);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  margin: 0;
+  max-width: 95%;
+  font-weight: var(--font-regular);
+}
+
+/* Casting */
+.movie-detail-page .casting {
+  font-size: var(--text-md);
+  color: var(--text-muted);
+  margin-bottom: 1.875rem;
+}
+
+.movie-detail-page .casting .label {
+  color: var(--text-muted);
+}
+
+/* Primary Action Button - Glass Style - FLUID */
+.movie-detail-page .btn-primary {
+  background: #fff;
+  color: #000;
+  border: 1px solid #fff;
+  padding: clamp(0.625rem, 1.5vw, 0.875rem) clamp(1.5rem, 4vw, 2.5rem);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: var(--font-bold);
+  border-radius: 3.125rem;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.3s var(--ease-out);
+  box-shadow: 0 0.25rem 0.75rem rgba(255, 255, 255, 0.08);
+}
+
+.movie-detail-page .btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0.5rem 1.25rem rgba(255, 255, 255, 0.12);
+  background: #f8f8f8;
+}
+
+.movie-detail-page .btn-primary span {
+  font-size: 1.5rem;
+}
+
+/* Watchlist Button â€” styles dans WatchlistButton.css (aucun override nÃ©cessaire) */
+
+.movie-detail-page .action-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 1.875rem;
+  position: relative;
+  z-index: 50;
+}
+
+/* SourceSelector â€” uses NyxDropdown (styles in NyxDropdown.css) */
+
+
+/* Reset Progress Button - Inline with badges */
+.reset-progress-btn {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-left: 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid var(--border-glass);
+  border-radius: 50%;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out);
+  outline: none !important;
+}
+
+.reset-progress-btn .reset-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.reset-progress-btn:hover {
+  background: rgba(74, 74, 208, 0.2);
+  border-color: var(--nyx-violet);
+  transform: scale(1.1);
+}
+
+.reset-progress-btn:active {
+  transform: scale(0.95);
+}
+
+
+/* ============================================
+   Netflix-Style Similar Movies Carousel
+   ============================================ */
+
+@keyframes carouselSlideUp {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Carousel Container - Bottom Section - ALIGNED WITH SeriesDetailPage */
+.similar-movies-carousel-container {
+  /* Positioned after detail-layout in flex column */
+  width: 100%;
+  margin-top: auto;
+  /* Push carousel to bottom of viewport */
+  opacity: 1;
+  /* Visible by default (skeleton during loading) */
+  will-change: transform, opacity;
+  z-index: 100;
+  position: relative;
+  pointer-events: auto;
+  isolation: isolate;
+  padding-left: 0;
+  /* Let ContentCarousel handle padding */
+  padding-bottom: clamp(0.5rem, 1.5vh, 1.5rem);
+  min-width: 0;
+}
+
+/* Override ContentCarousel styles for scroll under sidebar */
+.similar-movies-carousel-container .content-carousel {
+  padding-left: var(--sidebar-safe-zone);
+  /* Start after sidebar */
+  padding-right: 0;
+  /* Scroll to edge (under sidebar) */
+}
+
+/* Disable content-visibility in detail pages — it blocks parent scroll */
+.similar-movies-carousel-container .content-carousel-container {
+  content-visibility: visible;
+  contain: none;
+  margin-bottom: 0;
+}
+
+.similar-movies-carousel-container .carousel-title {
+  padding-left: var(--sidebar-safe-zone);
+  /* Title after sidebar */
+}
+
+/* Hide carousel title during loading */
+.movie-detail-page.state-loading .similar-movies-carousel-container .carousel-title {
+  opacity: 0;
+}
+
+/* Animation activÃ©e seulement aprÃ¨s chargement */
+.similar-movies-carousel-container.ready {
+  opacity: 0;
+  /* Start hidden, animation reveals */
+  animation: carouselSlideUp 0.5s var(--ease-out) forwards;
+  animation-delay: 0.24s;
+}
+
+/* Skeleton Animations â€” @keyframes shimmer dÃ©fini globalement dans App.css */
+
+.skeleton-item {
+  background: #1a1a1a;
+  background-image: linear-gradient(to right, #1a1a1a 0%, #2a2a2a 20%, #1a1a1a 40%, #1a1a1a 100%);
+  background-repeat: no-repeat;
+  background-size: 50rem 100%;
+  display: inline-block;
+  position: relative;
+  animation: shimmer 1.5s linear infinite;
+  border-radius: 0.25rem;
+}
+
+/* Movie Skeleton Layout */
+.movie-skeleton {
+  width: 100%;
+}
+
+.movie-skeleton .skeleton-title {
+  width: 55%;
+  height: 2.8125rem;
+  margin-bottom: 1.25rem;
+}
+
+.skeleton-badges-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.625rem;
+  margin-bottom: 0.9375rem;
+}
+
+.movie-skeleton .skeleton-badge {
+  height: 1.625rem;
+  border-radius: 3.125rem;
+}
+
+.movie-skeleton .skeleton-badge:nth-child(1) {
+  width: 4.375rem;
+}
+
+.movie-skeleton .skeleton-badge:nth-child(2) {
+  width: 5.625rem;
+}
+
+.movie-skeleton .skeleton-badge:nth-child(3) {
+  width: 3.125rem;
+}
+
+.movie-skeleton .skeleton-badge:nth-child(4) {
+  width: 4.375rem;
+}
+
+.movie-skeleton .skeleton-genres {
+  width: 40%;
+  height: 1rem;
+  margin-bottom: 0.9375rem;
+}
+
+.skeleton-synopsis {
+  margin-bottom: 1.25rem;
+}
+
+.movie-skeleton .skeleton-synopsis .skeleton-text {
+  height: 1rem;
+  margin-bottom: 0.625rem;
+}
+
+.movie-skeleton .skeleton-synopsis .skeleton-text:nth-child(1) {
+  width: 95%;
+}
+
+.movie-skeleton .skeleton-synopsis .skeleton-text:nth-child(2) {
+  width: 90%;
+}
+
+.movie-skeleton .skeleton-synopsis .skeleton-text:nth-child(3) {
+  width: 85%;
+}
+
+.movie-skeleton .skeleton-synopsis .skeleton-text:nth-child(4) {
+  width: 65%;
+}
+
+.movie-skeleton .skeleton-casting {
+  width: 50%;
+  height: 0.875rem;
+  margin-bottom: 1.5625rem;
+}
+
+.skeleton-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.skeleton-button-circle {
+  width: 3.625rem;
+  height: 3.625rem;
+  border-radius: 50%;
+}
+
+/* Content Entrance Animation - cascade effect */
+/* Children start hidden, animation only triggers when .active is added */
+.movie-detail-page .main-layer > * {
+  opacity: 0;
+}
+
+.movie-detail-page .main-layer.active > * {
+  animation: fadeInPop 0.7s var(--ease-out) forwards;
+}
+
+/* Skeleton entrance animation */
+.movie-detail-page .movie-skeleton {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Cascade Animation Delays - GROUPED for snappy feel */
+/* Group 1: Title + Badges (0s) */
+.movie-detail-page .main-layer.active > *:nth-child(1),
+.movie-detail-page .main-layer.active > *:nth-child(2) {
+  animation-delay: 0s;
+}
+
+/* Group 2: Genres + Synopsis + Casting (0.08s) */
+.movie-detail-page .main-layer.active > *:nth-child(3),
+.movie-detail-page .main-layer.active > *:nth-child(4),
+.movie-detail-page .main-layer.active > *:nth-child(5) {
+  animation-delay: 0.08s;
+}
+
+/* Group 3: Buttons + Trailer (0.16s) */
+.movie-detail-page .main-layer.active > *:nth-child(6),
+.movie-detail-page .main-layer.active > *:nth-child(7),
+.movie-detail-page .main-layer.active > *:nth-child(8) {
+  animation-delay: 0.16s;
+}
+
+/* ===========================================
+   Toast notification — reset progression
+   =========================================== */
+.detail-toast {
+  position: fixed;
+  bottom: var(--space-8);
+  right: var(--space-8);
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  z-index: var(--z-toast);
+  background: rgba(34, 197, 94, 0.9);
+  color: var(--text-primary);
+  animation: detailToastSlideIn var(--duration-normal) var(--ease-out);
+}
+
+@keyframes detailToastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
