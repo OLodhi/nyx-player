@@ -43,3 +43,19 @@ describe('configuration iOS', () => {
     expect(plistArray('UISupportedInterfaceOrientations~ipad')).toHaveLength(4);
   });
 });
+
+describe('workflow iOS', () => {
+  const yml = readFileSync(resolve(__dirname, '../../.github/workflows/ios.yml'), 'utf8').replace(/\r\n/g, '\n');
+
+  it('aucun secret : contrôle de compilation seulement', () => expect(yml).not.toMatch(/secrets\./));
+
+  it('IPA non signée, Xcode 26', () => {
+    expect(yml).toContain('tauri ios build --ci --target aarch64 --no-sign');
+    expect(yml).toMatch(/Xcode_26/);
+  });
+
+  it('vérifie que Info.ios.plist est bien fusionné', () => expect(yml).toContain('plutil -extract UIBackgroundModes'));
+
+  it('ne part jamais tout seul sur le dépôt public', () =>
+    expect(yml).not.toContain("github.repository == 'kunai974/nyx-player'"));
+});
