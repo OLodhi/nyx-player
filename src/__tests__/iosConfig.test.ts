@@ -56,6 +56,10 @@ describe('workflow iOS', () => {
 
   it('vérifie que Info.ios.plist est bien fusionné', () => expect(yml).toContain('plutil -extract UIBackgroundModes'));
 
+  // Xcode's archive leaves an incomplete .app in DerivedData: pick the complete one built for the Simulator
+  it('choisit l’app du Simulateur par sa plateforme, pas par son dossier', () =>
+    expect(yml).toMatch(/CFBundleSupportedPlatforms[\s\S]*iPhoneSimulator/));
+
   it('ne part jamais tout seul sur le dépôt public', () =>
     expect(yml).not.toContain("github.repository == 'kunai974/nyx-player'"));
 });

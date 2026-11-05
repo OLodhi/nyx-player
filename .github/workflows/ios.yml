@@ -125,7 +125,16 @@ jobs:
       - name: Launch in the Simulator
         run: |
           set -euo pipefail
-          app="$(find src-tauri/gen/apple "$HOME/Library/Developer/Xcode/DerivedData" -name '*.app' -path '*iphonesimulator*' 2>/dev/null | head -n 1)"
+          # Xcode's archive also leaves incomplete .app folders: keep the first complete one whose
+          # Info.plist says it was built for the Simulator.
+          app=""
+          while IFS= read -r candidate; do
+            if [ -f "$candidate/Info.plist" ] &&
+              plutil -extract CFBundleSupportedPlatforms json -o - "$candidate/Info.plist" | grep -q iPhoneSimulator; then
+              app="$candidate"
+              break
+            fi
+          done < <(find src-tauri/gen/apple/build "$HOME/Library/Developer/Xcode/DerivedData" -name '*.app' -type d 2>/dev/null)
           test -n "$app" || { echo "::error::No Simulator .app found"; exit 1; }
           echo "App: $app"
           # Info.ios.plist merged into the app's Info.plist
