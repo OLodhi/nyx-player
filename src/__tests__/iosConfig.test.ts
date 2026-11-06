@@ -74,7 +74,20 @@ describe('projet Xcode généré (gen/apple)', () => {
 describe('workflow iOS', () => {
   const yml = readFileSync(resolve(__dirname, '../../.github/workflows/ios.yml'), 'utf8').replace(/\r\n/g, '\n');
 
-  it('aucun secret : contrôle de compilation seulement', () => expect(yml).not.toMatch(/secrets\./));
+  // A fork can add the public Supabase values as secrets to get an IPA that signs in (as android.yml)
+  it('seuls les secrets Supabase, avec repli sur les valeurs fictives (comme android.yml)', () => {
+    expect([...yml.matchAll(/secrets\.(\w+)/g)].map((m) => m[1]).sort()).toEqual(['VITE_SUPABASE_ANON_KEY', 'VITE_SUPABASE_URL']);
+    expect(yml).toContain("secrets.VITE_SUPABASE_URL || 'https://example.invalid'");
+    expect(yml).toContain("secrets.VITE_SUPABASE_ANON_KEY || 'ci-placeholder'");
+  });
+
+  it('tests Swift de NyxPolicies', () =>
+    expect(yml).toContain('swift test --package-path src-tauri/plugins/tauri-plugin-nyx-android/ios/NyxPolicies'));
+
+  it('vérifie que le processus lancé tourne encore (PID), pas une entrée de launchctl', () => {
+    expect(yml).toMatch(/kill -0 "\$pid"/);
+    expect(yml).not.toContain('launchctl list');
+  });
 
   it('IPA non signée, Xcode 26', () => {
     expect(yml).toContain('tauri ios build --ci --target aarch64 --no-sign');

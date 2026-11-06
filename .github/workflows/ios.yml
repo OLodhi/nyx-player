@@ -1,7 +1,9 @@
 # iOS build check: compiles the app for iPhone (web UI, Rust and the Swift side of the nyx-android
 # plugin), produces an unsigned IPA, then launches a Simulator build and takes a screenshot of the
-# first screen. A compile-and-test check only:
-#   - no secrets: placeholder Supabase values as in ci.yml, so the app stops at the sign-in screen;
+# first screen; also runs the plugin's pure Swift tests (NyxPolicies). A compile-and-test check:
+#   - Supabase: placeholder values as in ci.yml (the app stops at the sign-in screen), unless the
+#     repository has the VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY secrets, as android.yml: a fork
+#     adds them (public values, shipped in every release) to get an IPA that can sign in;
 #   - the IPA is for build verification. To try it on a phone, sideload it (AltStore, SideStore,
 #     Sideloadly) with your own Apple ID and your own bundle ID;
 #   - macOS minutes are costly: never automatic, on either repo. Only on a PR carrying the
@@ -47,9 +49,10 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 60
     env:
-      # Placeholders, as in ci.yml: the Supabase client needs a URL at load time; no real call is made.
-      VITE_SUPABASE_URL: https://example.invalid
-      VITE_SUPABASE_ANON_KEY: ci-placeholder
+      # As android.yml: the repository's secrets if set, otherwise placeholders as in ci.yml (the
+      # Supabase client needs a URL at load time; no real call is made with them).
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://example.invalid' }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'ci-placeholder' }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -107,6 +110,10 @@ jobs:
             !src-tauri/gen/apple/**/xcuserdata
 
       # Also runs `pnpm build` (web UI) before Xcode compiles the Rust and Swift code.
+      - name: Warn if the Supabase secrets are missing
+        if: env.VITE_SUPABASE_URL == 'https://example.invalid'
+        run: echo "::warning::Secrets VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing - the IPA builds but can't sign in."
+
       - name: Build the unsigned IPA
         run: pnpm tauri ios build --ci --target aarch64 --no-sign
 
@@ -146,10 +153,17 @@ jobs:
           xcrun simctl boot "$udid"
           xcrun simctl bootstatus "$udid" -b
           xcrun simctl install "$udid" "$app"
-          xcrun simctl launch "$udid" com.nyxplayer.app
+          # simctl prints "com.nyxplayer.app: <pid>"; the Simulator's apps are processes of this Mac
+          pid="$(xcrun simctl launch "$udid" com.nyxplayer.app | awk '{print $NF}')"
+          echo "PID: $pid"
           sleep 25
-          xcrun simctl spawn "$udid" launchctl list | grep -q com.nyxplayer.app || { echo "::error::Nyx is not running"; exit 1; }
+          kill -0 "$pid" || { echo "::error::Nyx is not running"; exit 1; }
           xcrun simctl io "$udid" screenshot signin.png
+
+      # Pure Swift rules of the plugin (Keychain result mapping, network status), on this Mac.
+      # After the builds: a failing rule still leaves the build and launch results to read.
+      - name: Swift unit tests (NyxPolicies)
+        run: swift test --package-path src-tauri/plugins/tauri-plugin-nyx-android/ios/NyxPolicies
 
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         if: always()
