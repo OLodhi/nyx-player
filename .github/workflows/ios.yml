@@ -151,6 +151,14 @@ jobs:
           xcrun simctl spawn "$udid" launchctl list | grep -q com.nyxplayer.app || { echo "::error::Nyx is not running"; exit 1; }
           xcrun simctl io "$udid" screenshot signin.png
 
+      # SPIKE S1 (never merged): did libmpv link and start? The plugin logs "[nyx-s1] ..." lines.
+      - name: SPIKE S1, mpv lines from the Simulator log
+        run: |
+          set -uo pipefail
+          xcrun simctl spawn booted log show --predicate 'process == "Nyx Player"' --last 5m --style compact > sim.log || true
+          grep -iE 'nyx-s1|mpv' sim.log || true
+          grep -q 'nyx-s1\] mpv_initialize -> 0' sim.log || { echo "::error::mpv did not initialise"; exit 1; }
+
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         if: always()
         with:

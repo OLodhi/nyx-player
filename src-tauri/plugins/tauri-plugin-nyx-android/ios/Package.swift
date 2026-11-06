@@ -17,12 +17,15 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "Tauri", path: "../.tauri/tauri-api"),
+        // SPIKE S1 (never merged): MPVKit, LGPL product only (not MPVKit-GPL).
+        .package(url: "https://github.com/mpvkit/MPVKit.git", exact: "1.0.0"),
     ],
     targets: [
         .target(
             name: "NyxIosPlugin",
             dependencies: [
                 .byName(name: "Tauri"),
+                .product(name: "MPVKit", package: "MPVKit"),
             ],
             path: "Sources/NyxIosPlugin"),
     ]
