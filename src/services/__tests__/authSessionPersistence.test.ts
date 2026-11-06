@@ -19,7 +19,7 @@ const vaultImpl = async (cmd: string, args: { key: string; value?: string }) => 
 };
 const invoke = vi.fn(vaultImpl);
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (cmd: string, args: { key: string; value?: string }) => invoke(cmd, args) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => true }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => true, usesNyxPlugin: () => true }));
 const captureMessage = vi.fn();
 vi.mock('@sentry/react', () => ({ captureMessage: (...args: unknown[]) => captureMessage(...args) }));
 

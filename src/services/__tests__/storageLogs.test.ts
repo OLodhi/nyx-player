@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const invoke = vi.fn();
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...a: unknown[]) => invoke(...a) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => true }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => true, usesNyxPlugin: () => true }));
 vi.mock('../dbCore', () => ({ clearAllData: vi.fn(), hasContent: vi.fn() }));
 
 import { StorageService, describeVaultError } from '../storage';

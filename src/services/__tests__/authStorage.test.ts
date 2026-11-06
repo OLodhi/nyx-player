@@ -4,10 +4,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const invoke = vi.fn();
-let android = true;
+let platform: 'android' | 'ios' | 'windows' = 'android';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...a: unknown[]) => invoke(...a) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => android }));
+vi.mock('../../utils/platform', () => ({
+  isAndroid: () => platform === 'android',
+  usesNyxPlugin: () => platform !== 'windows',
+}));
 const captureMessage = vi.fn();
 vi.mock('@sentry/react', () => ({ captureMessage: (...a: unknown[]) => captureMessage(...a) }));
 
@@ -22,7 +25,7 @@ describe('authStorage', () => {
     captureMessage.mockReset();
     resetAuthStorageReports();
     localStorage.clear();
-    android = true;
+    platform = 'android';
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
@@ -31,11 +34,16 @@ describe('authStorage', () => {
   });
 
   it('Windows / navigateur : stockage par défaut de Supabase (localStorage)', () => {
-    android = false;
+    platform = 'windows';
     expect(authStorageForPlatform()).toBeUndefined();
   });
 
   it('Android : stockage durable', () => {
+    expect(authStorageForPlatform()).toBeDefined();
+  });
+
+  it('iOS : stockage durable', () => {
+    platform = 'ios';
     expect(authStorageForPlatform()).toBeDefined();
   });
 
@@ -232,8 +240,18 @@ describe('authStorage', () => {
     ]);
   });
 
+  it('suppression du compte (iOS) : session, code PKCE et utilisateur effacés du coffre', async () => {
+    platform = 'ios';
+    invoke.mockResolvedValue(undefined);
+    await purgeDurableAuthSession(KEY);
+    expect(invoke.mock.calls.map((c) => c[0])).toEqual(Array(3).fill('plugin:nyx-android|secure_delete'));
+    expect(invoke.mock.calls.map((c) => (c[1] as { key: string }).key)).toEqual([
+      `supabase-auth::${KEY}`, `supabase-auth::${KEY}-code-verifier`, `supabase-auth::${KEY}-user`,
+    ]);
+  });
+
   it('suppression du compte (Windows) : rien à faire dans le coffre', async () => {
-    android = false;
+    platform = 'windows';
     await purgeDurableAuthSession(KEY);
     expect(invoke).not.toHaveBeenCalled();
   });

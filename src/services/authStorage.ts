@@ -1,8 +1,8 @@
 /**
  * Stockage de la session Supabase (jeton d'accès + jeton de renouvellement).
  *
- * Android : la session vit dans le coffre du plugin nyx-android (Keystore, écriture sur disque
- * confirmée avant de rendre la main), et non plus dans le localStorage du WebView.
+ * Android et iOS : la session vit dans le coffre du plugin nyx-android (Keystore sur Android, Trousseau
+ * sur iOS, écriture confirmée avant de rendre la main), et non plus dans le localStorage du WebView.
  * Pourquoi : Supabase remplace le jeton de renouvellement à chaque renouvellement (l'ancien est
  * aussitôt invalidé côté serveur). Le WebView Android n'écrit son localStorage sur disque qu'en
  * différé : si l'app est tuée juste après un renouvellement (balayée des apps récentes, arrêtée par
@@ -17,7 +17,7 @@
 import type { SupportedStorage } from '@supabase/supabase-js';
 import { invoke } from '@tauri-apps/api/core';
 import * as Sentry from '@sentry/react';
-import { isAndroid } from '../utils/platform';
+import { usesNyxPlugin } from '../utils/platform';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('authStorage');
@@ -212,17 +212,17 @@ export function createDurableAuthStorage(): DurableAuthStorage {
   return storage;
 }
 
-/** Stockage à donner à Supabase : le coffre sur Android, le défaut de Supabase (localStorage) ailleurs. */
+/** Stockage à donner à Supabase : le coffre sur Android et iOS, le défaut de Supabase (localStorage) ailleurs. */
 export function authStorageForPlatform(): DurableAuthStorage | undefined {
-  return isAndroid() ? createDurableAuthStorage() : undefined;
+  return usesNyxPlugin() ? createDurableAuthStorage() : undefined;
 }
 
 /**
- * Efface la session Supabase du coffre Android (suppression du compte : l'app redémarre sans passer
+ * Efface la session Supabase du coffre du plugin, Android et iOS (suppression du compte : l'app redémarre sans passer
  * par `signOut`). Ailleurs, la session est dans le localStorage, que la remise à zéro vide déjà.
  */
 export async function purgeDurableAuthSession(storageKey: string): Promise<void> {
-  if (!isAndroid()) return;
+  if (!usesNyxPlugin()) return;
   for (const suffix of AUTH_KEY_SUFFIXES) {
     try {
       // Par la file du stockage en service : une écriture en retard ne peut pas recréer la session
