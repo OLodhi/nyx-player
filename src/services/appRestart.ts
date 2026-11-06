@@ -10,13 +10,15 @@
  * refaisait le nettoyage, relançait et replantait, l'app ne s'ouvrait plus. La page est rechargée à
  * la place : le schéma de la base est recréé à chaque ouverture (dbCore.ts), rien n'impose un
  * nouveau processus.
+ *
+ * iOS : la relance de Tauri n'y est pas prise en charge ; la page est rechargée, comme sur Android.
  */
 
 import { relaunch } from '@tauri-apps/plugin-process';
-import { isAndroid } from '../utils/platform';
+import { usesNyxPlugin } from '../utils/platform';
 
 export async function restartApp(): Promise<void> {
-  if (isAndroid()) {
+  if (usesNyxPlugin()) {
     window.location.reload();
     return;
   }
