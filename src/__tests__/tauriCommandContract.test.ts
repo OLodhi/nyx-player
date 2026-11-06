@@ -258,11 +258,46 @@ function kotlinPlugin() {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Plugin iOS (Swift) : même nom JS, commandes `@objc public func x(_ invoke: Invoke)` (nom camelCase)
+// et types d'arguments `Decodable` (clés reprises telles quelles, comme en Kotlin)
+// ---------------------------------------------------------------------------------------------
+
+const SWIFT_PLUGIN_DIR = `${PLUGIN_DIR}/ios/Sources/NyxIosPlugin`;
+
+/** Mise à jour par APK : Android seulement, appelée derrière isAndroid() ; iOS la refuse */
+const APK_UPDATE_COMMANDS = new Set(['update_info', 'fetch_update_manifest', 'request_install_permission', 'download_update', 'install_update']);
+
+function swiftPlugin() {
+  const dir = join(ROOT, SWIFT_PLUGIN_DIR);
+  const text = readdirSync(dir).filter((f) => f.endsWith('.swift')).map((f) => readFileSync(join(dir, f), 'utf8')).join('\n');
+  const argTypes = new Map<string, KotlinArgs>();
+  for (const [, name, body] of text.matchAll(/(?:struct|class)\s+(\w+)\s*:\s*Decodable\s*\{([\s\S]*?)\r?\n\}/g)) {
+    const fields = new Set<string>();
+    const required = new Set<string>();
+    for (const [, field, type] of body.matchAll(/(?:let|var)\s+(\w+)\s*:\s*([^=\r\n]+)/g)) {
+      fields.add(field);
+      if (!type.trim().endsWith('?')) required.add(field);
+    }
+    argTypes.set(name, { fields, required });
+  }
+  // Chaque commande, avec le type d'arguments lu dans son corps (jusqu'à la commande suivante)
+  const commands = new Map<string, KotlinArgs | null>();
+  for (const part of text.split(/@objc\s+public\s+func\s+/).slice(1)) {
+    const fn = /^(\w+)\(_ invoke: Invoke\)/.exec(part)?.[1];
+    if (!fn) continue;
+    const argsType = /parseArgs\((\w+)\.self\)/.exec(part)?.[1];
+    commands.set(camelToSnake(fn), argsType ? (argTypes.get(argsType) ?? { fields: new Set(), required: new Set(['<type introuvable>']) }) : null);
+  }
+  return commands;
+}
+
+// ---------------------------------------------------------------------------------------------
 
 const app = scanApp();
 const rust = registeredRustCommands();
 const pluginCommands = buildRsCommands();
 const kotlin = kotlinPlugin();
+const swift = swiftPlugin();
 interface Capability {
   platforms?: string[];
   permissions: (string | { identifier: string })[];
@@ -383,6 +418,39 @@ describe('contrat des commandes appli ↔ Rust ↔ Android', () => {
         const fields = args?.fields ?? new Set<string>();
         for (const key of sent) {
           if (!fields.has(key)) problems.push(`${call.where} ${name} : clé « ${key} » ignorée par Kotlin (champs : ${[...fields].join(', ') || 'aucun'})`);
+        }
+        for (const field of args?.required ?? []) {
+          if (!sent.has(field)) problems.push(`${call.where} ${name} : champ obligatoire « ${field} » absent`);
+        }
+      }
+      expect(problems).toEqual([]);
+    });
+  });
+
+  describe('plugin iOS', () => {
+    it('chaque commande Swift est dans COMMANDS de build.rs', () => {
+      expect(swift.size).toBeGreaterThan(0);
+      const listed = new Set(pluginCommands);
+      expect([...swift.keys()].filter((name) => !listed.has(name))).toEqual([]);
+    });
+
+    it('les commandes de M2 existent côté Swift', () => {
+      for (const name of ['device_info', 'network_status', 'secure_get', 'secure_set', 'secure_delete']) {
+        expect([...swift.keys()], name).toContain(name);
+      }
+    });
+
+    it('les clés envoyées correspondent aux champs Decodable Swift (noms identiques)', () => {
+      const problems: string[] = [];
+      for (const call of pluginCalls) {
+        const name = pluginName(call);
+        if (!swift.has(name)) continue; // commande pas encore portée sur iOS
+        if (APK_UPDATE_COMMANDS.has(name)) continue; // Android seulement : refusée sur iOS sans lire ses arguments
+        const args = swift.get(name);
+        const sent = new Set(call.keys ?? []);
+        const fields = args?.fields ?? new Set<string>();
+        for (const key of sent) {
+          if (!fields.has(key)) problems.push(`${call.where} ${name} : clé « ${key} » ignorée par Swift (champs : ${[...fields].join(', ') || 'aucun'})`);
         }
         for (const field of args?.required ?? []) {
           if (!sent.has(field)) problems.push(`${call.where} ${name} : champ obligatoire « ${field} » absent`);

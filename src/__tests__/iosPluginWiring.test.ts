@@ -26,6 +26,21 @@ describe('plugin nyx-android sur iOS', () => {
 
   it('device_info : jamais une TV', () => expect(swift).toMatch(/"isTv":\s*false/));
 
+  it('le paquet NyxPolicies est une dépendance locale', () =>
+    expect(readFileSync(resolve(PLUGIN, 'ios/Package.swift'), 'utf8')).toContain('.package(path: "NyxPolicies")'));
+
+  // Credentials and Supabase tokens go through this file: nothing may be logged from it.
+  it('SecureStore.swift ne journalise rien', () => {
+    const store = readFileSync(resolve(PLUGIN, 'ios/Sources/NyxIosPlugin/SecureStore.swift'), 'utf8');
+    expect(store).not.toMatch(/NSLog\(|print\(|os_log|Logger\(/);
+  });
+
+  it('Keychain : service, accessibilité', () => {
+    const store = readFileSync(resolve(PLUGIN, 'ios/Sources/NyxIosPlugin/SecureStore.swift'), 'utf8');
+    expect(store).toContain('"com.nyxplayer.app.secure"');
+    expect(store).toContain('kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly');
+  });
+
   // The build script writes Tauri's Swift API to <plugin>/.tauri (Package.swift: ../.tauri/tauri-api).
   it('.tauri/ ignoré à la racine du plugin', () => {
     const gitignore = readFileSync(resolve(PLUGIN, '.gitignore'), 'utf8').split(/\r?\n/);
