@@ -8,6 +8,8 @@ let package = Package(
     name: "tauri-plugin-nyx-android",
     platforms: [
         .iOS(.v15),
+        // SPIKE S1: SwiftPM checks every platform; MPVKit declares macOS 12, and an unlisted one defaults to 10.13.
+        .macOS(.v12),
     ],
     products: [
         .library(
