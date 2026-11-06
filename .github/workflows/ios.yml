@@ -148,6 +148,10 @@ jobs:
           modes="$(plutil -extract UIBackgroundModes json -o - "$app/Info.plist")"
           echo "UIBackgroundModes: $modes"
           test "$modes" = '["audio"]' || { echo "::error::Info.ios.plist not merged"; exit 1; }
+          # iPhone in portrait only (the generated Info.plist allows landscape; Info.ios.plist replaces it)
+          orientations="$(plutil -extract UISupportedInterfaceOrientations json -o - "$app/Info.plist")"
+          echo "UISupportedInterfaceOrientations: $orientations"
+          test "$orientations" = '["UIInterfaceOrientationPortrait"]' || { echo "::error::iPhone orientations not portrait-only"; exit 1; }
           udid="$(xcrun simctl list devices available | grep -E 'iPhone 1[6-9]' | grep -v 'Plus' | head -n 1 | grep -oE '[0-9A-F-]{36}')"
           test -n "$udid" || { echo "::error::No iPhone 16+ Simulator available"; exit 1; }
           xcrun simctl boot "$udid"

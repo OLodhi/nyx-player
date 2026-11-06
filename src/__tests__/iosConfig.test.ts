@@ -38,9 +38,10 @@ describe('configuration iOS', () => {
     expect(plist).not.toMatch(/NSAllowsArbitraryLoadsInWebContent|NSAllowsArbitraryLoadsForMedia/);
   });
 
-  it('iPhone : portrait et paysage, pas à l’envers ; iPad : tout', () => {
-    expect(plistArray('UISupportedInterfaceOrientations').sort()).toEqual([
-      'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight', 'UIInterfaceOrientationPortrait']);
+  // Like Android phones (DevicePolicy.locksPortrait): the interface has no landscape layout outside
+  // the player, so an iPhone stays in portrait. Tablets keep every orientation.
+  it('iPhone : portrait seulement, comme les téléphones Android ; iPad : tout', () => {
+    expect(plistArray('UISupportedInterfaceOrientations')).toEqual(['UIInterfaceOrientationPortrait']);
     expect(plistArray('UISupportedInterfaceOrientations~ipad')).toHaveLength(4);
   });
 });
@@ -95,6 +96,10 @@ describe('workflow iOS', () => {
   });
 
   it('vérifie que Info.ios.plist est bien fusionné', () => expect(yml).toContain('plutil -extract UIBackgroundModes'));
+
+  // The generated Info.plist allows landscape on iPhone; only the merge of Info.ios.plist removes it
+  it('vérifie dans l’app construite que l’iPhone reste en portrait', () =>
+    expect(yml).toContain(`plutil -extract UISupportedInterfaceOrientations json -o - "$app/Info.plist"`));
 
   // Xcode's archive leaves an incomplete .app in DerivedData: pick the complete one built for the Simulator
   it('choisit l’app du Simulateur par sa plateforme, pas par son dossier', () =>
