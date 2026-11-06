@@ -4,10 +4,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const SRC_TAURI = resolve(__dirname, '../../src-tauri');
+const GEN_APPLE = resolve(SRC_TAURI, 'gen/apple');
 
 describe('configuration iOS', () => {
   const raw = readFileSync(resolve(SRC_TAURI, 'tauri.ios.conf.json'), 'utf8');
@@ -41,6 +42,32 @@ describe('configuration iOS', () => {
     expect(plistArray('UISupportedInterfaceOrientations').sort()).toEqual([
       'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight', 'UIInterfaceOrientationPortrait']);
     expect(plistArray('UISupportedInterfaceOrientations~ipad')).toHaveLength(4);
+  });
+});
+
+// tauri-cli rewrites project.pbxproj and ExportOptions.plist on each `ios dev`/`ios build` with a
+// team or a `--config` identifier: a build on a Mac must not leave anything personal committed.
+describe('projet Xcode généré (gen/apple)', () => {
+  const files = (readdirSync(GEN_APPLE, { recursive: true }) as string[])
+    .map((f) => f.replace(/\\/g, '/'))
+    .filter((f) => !/^(build|Externals)\/|xcuserdata\/|\.png$/.test(f))
+    .filter((f) => /\.(pbxproj|plist|yml|xcscheme|entitlements|xcsettings|xcworkspacedata|json|storyboard|h|mm)$|Podfile$/.test(f));
+  const text = (f: string) => readFileSync(resolve(GEN_APPLE, f), 'utf8');
+
+  it('trouve les fichiers du projet', () => {
+    expect(files).toContain('nyxplayer.xcodeproj/project.pbxproj');
+    expect(files).toContain('ExportOptions.plist');
+  });
+
+  it('aucune équipe Apple', () => {
+    for (const f of files) expect(text(f), f).not.toMatch(/DEVELOPMENT_TEAM|teamID|DevelopmentTeam/);
+  });
+
+  it('identifiant de bundle : toujours com.nyxplayer.app', () => {
+    const ids = files.flatMap((f) =>
+      [...text(f).matchAll(/PRODUCT_BUNDLE_IDENTIFIER\s*[=:]\s*"?([^";\s]+)"?/g)].map((m) => `${f}: ${m[1]}`));
+    expect(ids.length).toBeGreaterThan(0);
+    for (const id of ids) expect(id).toMatch(/: (com\.nyxplayer\.app|\$\(PRODUCT_BUNDLE_IDENTIFIER\))$/);
   });
 });
 
