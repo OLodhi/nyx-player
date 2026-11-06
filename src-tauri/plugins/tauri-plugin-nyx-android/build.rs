@@ -130,7 +130,9 @@ fn link_mpvkit() {
         let binary = slice_binary(&slice)
             .unwrap_or_else(|| panic!("SPIKE S1: no binary in {}", slice.display()));
 
-        let dest = lib_dir.join(format!("lib{name}.a"));
+        // Prefixed: swift-rs's search path (searched first) holds SwiftPM's own copies of
+        // library-style binaries, from the macOS slice (e.g. a universal libMoltenVK.a).
+        let dest = lib_dir.join(format!("libnyxmpv_{name}.a"));
         if magic(&binary)[..4] == [0xca, 0xfe, 0xba, 0xbe] {
             // Universal file (the Simulator slice is arm64 + x86_64): keep the target's architecture.
             let ok = Command::new("lipo")
@@ -151,7 +153,7 @@ fn link_mpvkit() {
 
         let slice_name = slice.file_name().unwrap().to_string_lossy().into_owned();
         if &magic(&dest) == b"!<arch>\n" {
-            println!("cargo:rustc-link-lib=static={name}");
+            println!("cargo:rustc-link-lib=static=nyxmpv_{name}");
             println!("cargo:warning=SPIKE S1: {name}: static archive, from {slice_name}");
         } else {
             let _ = fs::remove_file(&dest);
