@@ -28,7 +28,12 @@ let package = Package(
             dependencies: [
                 .byName(name: "Tauri"),
                 .product(name: "MPVKit", package: "MPVKit"),
+                "NyxMpvLinks",
             ],
             path: "Sources/NyxIosPlugin"),
+        // SPIKE S1: system frameworks and libraries MPVKit needs (see its module.modulemap).
+        .systemLibrary(
+            name: "NyxMpvLinks",
+            path: "Sources/NyxMpvLinks"),
     ]
 )

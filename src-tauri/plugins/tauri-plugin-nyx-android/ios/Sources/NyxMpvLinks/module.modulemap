@@ -1,0 +1,27 @@
+// SPIKE S1 (never merged): MPVKit's linker settings (its Package.swift, _MPVKit and _FFmpeg),
+// plus what MoltenVK and libass's CoreText font provider need. swift-rs skips SwiftPM's product
+// link, so these are lost; importing this module makes Swift ask the linker for them (autolink).
+module NyxMpvLinks [system] {
+    header "shim.h"
+    link framework "AVFoundation"
+    link framework "AudioToolbox"
+    link framework "CoreAudio"
+    link framework "CoreFoundation"
+    link framework "CoreGraphics"
+    link framework "CoreMedia"
+    link framework "CoreText"
+    link framework "CoreVideo"
+    link framework "IOSurface"
+    link framework "Metal"
+    link framework "QuartzCore"
+    link framework "Security"
+    link framework "VideoToolbox"
+    link "bz2"
+    link "c++"
+    link "expat"
+    link "iconv"
+    link "resolv"
+    link "xml2"
+    link "z"
+    export *
+}

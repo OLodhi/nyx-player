@@ -2,6 +2,7 @@
 // (android/), so the shared JavaScript calls `plugin:nyx-android|…` unchanged.
 // Commands are the camelCase form of the snake_case names in build.rs.
 import Libmpv
+import NyxMpvLinks
 import Tauri
 import UIKit
 import WebKit
@@ -10,9 +11,8 @@ class NyxPlugin: Plugin {
     // MARK: SPIKE S1 (never merged): prove libmpv links and starts
 
     override func load(webview: WKWebView) {
-        #if DEBUG
+        // Every build, so the device (release) build proves the link too.
         mpvSmokeTest()
-        #endif
     }
 
     private func mpvSmokeTest() {
