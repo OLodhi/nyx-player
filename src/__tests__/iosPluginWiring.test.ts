@@ -26,6 +26,12 @@ describe('plugin nyx-android sur iOS', () => {
 
   it('device_info : jamais une TV', () => expect(swift).toMatch(/"isTv":\s*false/));
 
+  // The build script writes Tauri's Swift API to <plugin>/.tauri (Package.swift: ../.tauri/tauri-api).
+  it('.tauri/ ignoré à la racine du plugin', () => {
+    const gitignore = readFileSync(resolve(PLUGIN, '.gitignore'), 'utf8').split(/\r?\n/);
+    expect(gitignore).toContain('/.tauri');
+  });
+
   it.each(['updateInfo', 'fetchUpdateManifest', 'requestInstallPermission', 'downloadUpdate', 'installUpdate'])(
     '%s refusé sur iOS', (name) =>
       expect(swift).toMatch(new RegExp(`func ${name}\\(_ invoke: Invoke\\)[^}]*invoke\\.reject\\("not supported on iOS"\\)`)));
