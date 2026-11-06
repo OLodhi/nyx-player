@@ -24,7 +24,24 @@ public struct NetworkStatusValue: Equatable {
     public let type: String
 }
 
+/// Mirrors Kotlin's DevicePolicy.networkStatus. Metered = expensive (cellular, personal hotspot) or
+/// constrained (Low Data Mode); without a connection, nothing is metered.
 /// Not `networkStatus`: inside NyxPlugin that name is the `@objc` command.
 public func networkStatusValue(_ facts: NetworkPathFacts?) -> NetworkStatusValue {
-    NetworkStatusValue(connected: false, metered: false, type: "none") // not implemented yet
+    guard let facts else { return NetworkStatusValue(connected: false, metered: false, type: "none") }
+    let connected = facts.satisfied
+    let type: String
+    if facts.wifi {
+        type = "wifi"
+    } else if facts.cellular {
+        type = "cellular"
+    } else if facts.wired {
+        type = "ethernet"
+    } else {
+        type = connected ? "other" : "none"
+    }
+    return NetworkStatusValue(
+        connected: connected,
+        metered: connected && (facts.expensive || facts.constrained),
+        type: type)
 }
