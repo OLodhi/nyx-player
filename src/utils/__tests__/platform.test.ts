@@ -6,7 +6,7 @@ vi.mock('@tauri-apps/plugin-os', () => ({ platform: () => 'linux' }));
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
 import {
-  isMobile, isMobileDevice, isPhoneOverrideEnabled, setPhoneMode, setTvMode, PHONE_OVERRIDE_KEY,
+  isMobile, isMobileDevice, isPhoneOverrideEnabled, setPhoneMode, setTvMode, usesNyxPlugin, PHONE_OVERRIDE_KEY,
 } from '../platform';
 
 afterEach(() => {
@@ -23,6 +23,12 @@ describe('mode téléphone forcé', () => {
     expect(isMobile()).toBe(true);
     // Les capacités natives restent celles du bureau (fenêtre, commandes Rust)
     expect(isMobileDevice()).toBe(false);
+  });
+
+  it('un bureau ne passe pas par le plugin natif', () => {
+    expect(usesNyxPlugin()).toBe(false);
+    setPhoneMode(true);
+    expect(usesNyxPlugin()).toBe(false);
   });
 
   it('l\'interface TV l\'emporte sur le forçage téléphone', () => {

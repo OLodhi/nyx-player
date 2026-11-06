@@ -4,7 +4,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 vi.mock('@tauri-apps/plugin-os', () => ({ platform: () => 'android' }));
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 
-import { isMobile, isMobileDevice, setPhoneMode, setTvMode } from '../platform';
+import { isMobile, isMobileDevice, setPhoneMode, setTvMode, usesNyxPlugin } from '../platform';
 
 afterEach(() => {
   setPhoneMode(false);
@@ -22,5 +22,11 @@ describe('appareil Android', () => {
     setPhoneMode(true);
     expect(isMobile()).toBe(false);
     expect(isMobileDevice()).toBe(false);
+  });
+
+  it('Android, TV comprise, passe par le plugin natif', () => {
+    expect(usesNyxPlugin()).toBe(true);
+    setTvMode(true);
+    expect(usesNyxPlugin()).toBe(true);
   });
 });
