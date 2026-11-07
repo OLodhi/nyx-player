@@ -43,6 +43,24 @@ describe('plugin nyx-android sur iOS', () => {
     expect(start).toContain('monitor.start(queue: queue)');
   });
 
+  // MPVKit 1.0.0 (libmpv): the LGPL product only, as the author asked on #23. SwiftPM downloads the
+  // -GPL frameworks too (same package); build.rs links an explicit list that never names them.
+  it('MPVKit 1.0.0, produit LGPL seulement', () => {
+    const pkg = readFileSync(resolve(PLUGIN, 'ios/Package.swift'), 'utf8');
+    expect(pkg).toContain('.package(url: "https://github.com/mpvkit/MPVKit.git", exact: "1.0.0")');
+    expect(pkg).toContain('.product(name: "MPVKit", package: "MPVKit")');
+    expect(pkg).not.toContain('MPVKit-GPL');
+  });
+
+  it('build.rs ne lie aucune bibliothèque GPL', () => {
+    const list = /const MPVKIT_LGPL: &\[&str\] = &\[([\s\S]*?)\];/.exec(buildRs)?.[1] ?? '';
+    expect(list).toContain('"Libmpv"');
+    expect(list).not.toMatch(/-GPL|Libsmbclient/);
+  });
+
+  it('liaison MPVKit pour iOS seulement', () =>
+    expect(buildRs).toMatch(/CARGO_CFG_TARGET_OS[^\n]*"ios"[^\n]*\)\s*\{\s*link_mpvkit\(\);/));
+
   it('le paquet NyxPolicies est une dépendance locale', () =>
     expect(readFileSync(resolve(PLUGIN, 'ios/Package.swift'), 'utf8')).toContain('.package(path: "NyxPolicies")'));
 
