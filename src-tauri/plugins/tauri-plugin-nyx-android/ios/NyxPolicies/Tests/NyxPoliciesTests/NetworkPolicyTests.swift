@@ -17,8 +17,11 @@ final class NetworkPolicyTests: XCTestCase {
         NetworkStatusValue(connected: connected, metered: metered, type: type)
     }
 
-    func testNoPathIsNone() {
-        XCTAssertEqual(networkStatusValue(nil), status(false, false, "none"))
+    /// No reading from the monitor yet: no status at all, not "offline". The command then rejects
+    /// and JS assumes connected and unmetered (the plugin contract) instead of postponing the
+    /// catalogue refresh.
+    func testNoReadingHasNoStatus() {
+        XCTAssertNil(networkStatusValue(nil))
     }
 
     func testWifiUnmetered() {

@@ -36,9 +36,13 @@ class NyxPlugin: Plugin {
         ])
     }
 
-    /// `{connected, metered, type}`, type = wifi, cellular, ethernet, other or none.
+    /// `{connected, metered, type}`, type = wifi, cellular, ethernet, other or none. Rejected while
+    /// the monitor has no reading: JS then assumes connected and unmetered (plugin contract).
     @objc public func networkStatus(_ invoke: Invoke) {
         networkMonitor.status { status in
+            guard let status else {
+                return invoke.reject("network_status: no network reading yet")
+            }
             invoke.resolve([
                 "connected": status.connected,
                 "metered": status.metered,

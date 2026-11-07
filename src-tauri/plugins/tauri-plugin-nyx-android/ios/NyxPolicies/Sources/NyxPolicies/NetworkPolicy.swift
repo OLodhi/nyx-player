@@ -26,9 +26,11 @@ public struct NetworkStatusValue: Equatable {
 
 /// Mirrors Kotlin's DevicePolicy.networkStatus. Metered = expensive (cellular, personal hotspot) or
 /// constrained (Low Data Mode); without a connection, nothing is metered.
+/// nil `facts` (the monitor has given no reading yet) gives nil, not "offline": the command then
+/// rejects, and JS assumes connected and unmetered, as the plugin contract says for a failure.
 /// Not `networkStatus`: inside NyxPlugin that name is the `@objc` command.
-public func networkStatusValue(_ facts: NetworkPathFacts?) -> NetworkStatusValue {
-    guard let facts else { return NetworkStatusValue(connected: false, metered: false, type: "none") }
+public func networkStatusValue(_ facts: NetworkPathFacts?) -> NetworkStatusValue? {
+    guard let facts else { return nil }
     let connected = facts.satisfied
     let type: String
     if facts.wifi {

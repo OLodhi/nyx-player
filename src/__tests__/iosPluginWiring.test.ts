@@ -26,6 +26,13 @@ describe('plugin nyx-android sur iOS', () => {
 
   it('device_info : jamais une TV', () => expect(swift).toMatch(/"isTv":\s*false/));
 
+  // No reading from NWPathMonitor yet: reject, so JS assumes connected and unmetered (plugin
+  // contract), rather than resolve "offline" and postpone the catalogue refresh.
+  it('network_status sans relevé réseau : refusé, pas « hors ligne »', () => {
+    const body = swift.split(/@objc\s+public\s+func\s+/).find((part) => part.startsWith('networkStatus('));
+    expect(body).toMatch(/guard let status else \{\s*return invoke\.reject\("network_status: no network reading yet"\)/);
+  });
+
   it('le paquet NyxPolicies est une dépendance locale', () =>
     expect(readFileSync(resolve(PLUGIN, 'ios/Package.swift'), 'utf8')).toContain('.package(path: "NyxPolicies")'));
 

@@ -23,8 +23,8 @@ final class NetworkMonitor {
     }
 
     /// Right after launch the monitor may not have reported yet: wait up to 1 s for its first
-    /// reading rather than answer "not connected".
-    func status(_ completion: @escaping (NetworkStatusValue) -> Void) {
+    /// reading rather than answer "not connected". Still no reading then: nil (the command rejects).
+    func status(_ completion: @escaping (NetworkStatusValue?) -> Void) {
         latest.get(timeout: 1, queue: queue) { facts in
             completion(networkStatusValue(facts))
         }
