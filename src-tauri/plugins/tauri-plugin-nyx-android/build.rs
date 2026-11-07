@@ -41,6 +41,7 @@ fn main() {
 }
 
 /// MPVKit 1.0.0's LGPL binary targets (the `MPVKit` product: `_MPVKit` + `_FFmpeg`, iOS).
+/// OpenSSL (Libssl, Libcrypto) is left out: FFmpeg's TLS is GnuTLS in this build.
 /// Explicit on purpose: SwiftPM also downloads the `-GPL` xcframeworks and `Libsmbclient`, which
 /// must never be linked.
 const MPVKIT_LGPL: &[&str] = &[
@@ -54,8 +55,6 @@ const MPVKIT_LGPL: &[&str] = &[
     "Libavutil",
     "Libswresample",
     "Libswscale",
-    "Libssl",
-    "Libcrypto",
     "Libass",
     "Libfreetype",
     "Libfribidi",
