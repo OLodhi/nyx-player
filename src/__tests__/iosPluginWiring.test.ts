@@ -116,6 +116,64 @@ describe('plugin nyx-android sur iOS', () => {
     expect(host).toContain('insertSubview(view, belowSubview: webView)');
   });
 
+  // The libmpv engine, read as text: Swift is only compiled in CI
+  const engine = () => readFileSync(resolve(PLUGIN, 'ios/Sources/NyxIosPlugin/MpvEngine.swift'), 'utf8');
+
+  /** The `{…}` block opened after each occurrence of `marker` (balanced braces). */
+  function blocksAfter(source: string, marker: string): string[] {
+    const blocks: string[] = [];
+    let at = source.indexOf(marker);
+    while (at !== -1) {
+      const open = source.indexOf('{', at);
+      let depth = 0;
+      let end = open;
+      for (; end < source.length; end++) {
+        if (source[end] === '{') depth++;
+        else if (source[end] === '}' && --depth === 0) break;
+      }
+      blocks.push(source.slice(open, end + 1));
+      at = source.indexOf(marker, end);
+    }
+    return blocks;
+  }
+
+  // Counterpart of androidTlsVerify.test.ts: HTTPS streams are always verified
+  it('MpvEngine : tls-verify=yes, jamais no', () => {
+    const source = engine();
+    expect(source).toMatch(/"tls-verify",\s*"yes"/);
+    expect(source).not.toMatch(/"tls-verify",\s*"no"/);
+  });
+
+  // MPVKit #57: any other format leaves mpv without its window ("WinID missing")
+  it('MpvEngine : wid en MPV_FORMAT_INT64', () => expect(engine()).toMatch(/"wid",\s*MPV_FORMAT_INT64/));
+
+  // mpv's log lines can carry stream URLs and credentials: only redacted text reaches a log
+  it('MpvEngine : journal mpv seulement après StreamDiagnostics.redact', () => {
+    const source = engine();
+    const lines = source.split(/\r?\n/).filter((line) => /\bLogger\./.test(line));
+    expect(lines.length).toBeGreaterThan(0);
+    for (const line of lines) {
+      expect(line).toContain('StreamDiagnostics.redact(');
+      expect(line).not.toMatch(/\b(text|url)\b/);
+    }
+    expect(source).not.toMatch(/\bNSLog\b|\bprint\(|\bdump\(|\bos_log\b/);
+  });
+
+  // A libmpv call can wait for mpv's video thread, which may need the main thread (MetalLayer)
+  it('MpvEngine : aucun appel libmpv sur la file principale', () => {
+    const blocks = blocksAfter(engine(), 'DispatchQueue.main.async');
+    expect(blocks.length).toBeGreaterThan(0);
+    for (const block of blocks) expect(block).not.toMatch(/\bmpv[_A-Z]/);
+  });
+
+  // MPVKit #4: GPU work left running in the background freezes the video for good
+  it('MpvEngine : vidéo coupée avant l’arrière-plan', () => {
+    const [body = ''] = blocksAfter(engine(), 'func appDidEnterBackground(');
+    expect(body).toContain('beginBackgroundTask');
+    expect(body).toMatch(/\bqueue\.sync\b/);
+    expect(body).toContain('endBackgroundTask');
+  });
+
   it('le paquet NyxPolicies est une dépendance locale', () =>
     expect(readFileSync(resolve(PLUGIN, 'ios/Package.swift'), 'utf8')).toContain('.package(path: "NyxPolicies")'));
 
