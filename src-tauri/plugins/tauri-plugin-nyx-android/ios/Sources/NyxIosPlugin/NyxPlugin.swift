@@ -154,6 +154,20 @@ class NyxPlugin: Plugin {
         }
     }
 
+    // MARK: Exit reports (Android's ExitReports.kt; iOS keeps no record of why the app last closed)
+
+    /// Called by the Back button before closing the app (androidExitReport.ts, Android only).
+    /// Nothing to note on iOS: the app is never closed from the page.
+    @objc public func noteExitRequested(_ invoke: Invoke) {
+        invoke.resolve()
+    }
+
+    /// Read once at launch (androidExitReport.ts, Android only). iOS has no equivalent of Android's
+    /// ApplicationExitInfo, so there is never a report: `{report: null}`, the "nothing to send" answer.
+    @objc public func lastExitReport(_ invoke: Invoke) {
+        invoke.resolve(["report": NSNull()] as JsonObject)
+    }
+
     // MARK: Player (Kotlin's NyxAndroidPlugin: same checks, defaults, clamps and messages)
 
     /// Network streams only, and no header added by the page (PlayerInputPolicy). An https stream
