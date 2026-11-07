@@ -498,10 +498,10 @@ describe('contrat des commandes appli ↔ Rust ↔ Android', () => {
       expect(swift.get('network_status')).toBeNull();
     });
 
-    it('les commandes portées sur iOS existent côté Swift', () => {
-      for (const name of ['device_info', 'network_status', 'secure_get', 'secure_set', 'secure_delete', 'set_fullscreen']) {
-        expect([...swift.keys()], name).toContain(name);
-      }
+    it('chaque commande non APK de COMMANDS existe côté Swift', () => {
+      const expected = pluginCommands.filter((name) => !APK_UPDATE_COMMANDS.has(name) && !KOTLIN_BASE_COMMANDS.has(name));
+      expect(expected.length).toBeGreaterThan(10);
+      expect(expected.filter((name) => !swift.has(name))).toEqual([]);
     });
 
     it('les clés envoyées correspondent aux champs Decodable Swift (noms identiques)', () => {
