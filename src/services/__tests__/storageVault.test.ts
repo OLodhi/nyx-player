@@ -13,7 +13,11 @@ import { join, resolve } from 'node:path';
 const invoke = vi.fn();
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...a: unknown[]) => invoke(...a) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => false }));
+let platform: 'android' | 'ios' | 'windows' = 'windows';
+vi.mock('../../utils/platform', () => ({
+  isAndroid: () => platform === 'android',
+  usesNyxPlugin: () => platform !== 'windows',
+}));
 vi.mock('../dbCore', () => ({ clearAllData: vi.fn(), hasContent: vi.fn() }));
 
 import { StorageService, setKeyringUser, resetKeyringUser } from '../storage';
@@ -32,6 +36,7 @@ describe('coffre des identifiants sur ordinateur', () => {
   });
 
   beforeEach(async () => {
+    platform = 'windows';
     invoke.mockReset();
     await StorageService.clearCredentials();
     invoke.mockReset();
@@ -61,5 +66,31 @@ describe('coffre des identifiants sur ordinateur', () => {
     expect(await StorageService.getCredentials()).toBeNull();
     expect(invoke).toHaveBeenLastCalledWith('nyx_secret_get', { user: 'iptv_credentials' });
     error.mockRestore();
+  });
+});
+
+describe('coffre des identifiants sur iOS', () => {
+  beforeEach(async () => {
+    platform = 'ios';
+    invoke.mockReset();
+    invoke.mockResolvedValue(undefined);
+    await StorageService.clearCredentials();
+    invoke.mockReset();
+    setKeyringUser(UID);
+  });
+
+  it('iOS : identifiants dans le coffre du plugin, jamais par nyx_secret_*', async () => {
+    const key = `nyxplayer::iptv_credentials_${UID}`;
+    invoke.mockResolvedValue(undefined);
+    await StorageService.saveCredentials(creds);
+    expect(invoke).toHaveBeenLastCalledWith('plugin:nyx-android|secure_set', { key, value: JSON.stringify(creds) });
+
+    await StorageService.clearCredentials();
+    expect(invoke).toHaveBeenLastCalledWith('plugin:nyx-android|secure_delete', { key });
+
+    invoke.mockResolvedValueOnce({ value: JSON.stringify(creds) });
+    expect(await StorageService.getCredentialsAtStartup()).toEqual(creds);
+    expect(invoke).toHaveBeenLastCalledWith('plugin:nyx-android|secure_get', { key });
+    for (const [command] of invoke.mock.calls) expect(command).not.toMatch(/^nyx_secret_/);
   });
 });
