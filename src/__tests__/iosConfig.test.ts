@@ -121,6 +121,19 @@ describe('workflow iOS', () => {
     expect(yml).toMatch(/jq -e '\.orientation == "portrait" and \.statusBarHidden == false'/);
   });
 
+  // Playback smoke in CI: a clip made on the CI Mac, served on its loopback (never a real stream),
+  // played by a debug-only hook through the libmpv engine, which writes what it saw to a JSON file
+  it('fumée lecture : clip local servi sur la machine, temps qui avance, liste CA présente', () => {
+    expect(yml).toContain('ffmpeg -f lavfi');
+    expect(yml).toContain('python3 -m http.server');
+    expect(yml).toContain('--bind 127.0.0.1');
+    expect(yml).toContain('SIMCTL_CHILD_NYX_SMOKE_PLAY=http://127.0.0.1:8765/clip.mp4');
+    expect(yml).toMatch(/jq -e '\.timePos > 2'/);
+    expect(yml).toMatch(/jq -e '\.ca\.count >= 100'/);
+    expect(yml).toMatch(/jq -e '\.errors == \[\]'/);
+    expect(yml).toContain('smoke-playing.png');
+  });
+
   // Xcode's archive leaves an incomplete .app in DerivedData: pick the complete one built for the Simulator
   it('choisit l’app du Simulateur par sa plateforme, pas par son dossier', () =>
     expect(yml).toMatch(/CFBundleSupportedPlatforms[\s\S]*iPhoneSimulator/));

@@ -81,6 +81,10 @@ class NyxPlugin: Plugin {
     /// The CA file for mpv's TLS, written once at load (CaBundle); read by the engine after `caReady`
     private let caReady = DispatchGroup()
     private var caFileURL: URL?
+    #if DEBUG
+    /// CI's playback smoke (NYX_SMOKE_PLAY), when requested
+    private var smoke: SmokePlayCheck?
+    #endif
 
     override func load(webview: WKWebView) {
         networkMonitor.start()
@@ -106,16 +110,26 @@ class NyxPlugin: Plugin {
             caFileURL = CaBundle.prepare(cacheDirectory: caches)
             caReady.leave()
         }
-        engine = MpvEngine(
+        let caFile: () -> URL? = { [weak self] in
+            guard let self else { return nil }
+            self.caReady.wait()
+            // Retried at every play if the first write failed, as Android does
+            if self.caFileURL == nil { self.caFileURL = CaBundle.prepare(cacheDirectory: caches) }
+            return self.caFileURL
+        }
+        let engine = MpvEngine(
             host: VideoHost(webView: webView),
-            emit: { [weak self] event, payload in self?.trigger(event, data: payload) },
-            caFile: { [weak self] in
-                guard let self else { return nil }
-                self.caReady.wait()
-                // Retried at every play if the first write failed, as Android does
-                if self.caFileURL == nil { self.caFileURL = CaBundle.prepare(cacheDirectory: caches) }
-                return self.caFileURL
-            })
+            emit: { [weak self] event, payload in
+                #if DEBUG
+                self?.smoke?.observe(event, payload)
+                #endif
+                self?.trigger(event, data: payload)
+            },
+            caFile: caFile)
+        self.engine = engine
+        #if DEBUG
+        smoke = SmokePlayCheck.startIfRequested(webView: webView, engine: engine, caFile: caFile)
+        #endif
         let center = NotificationCenter.default
         lifecycleObservers = [
             center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) {

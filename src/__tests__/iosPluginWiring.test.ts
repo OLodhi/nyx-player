@@ -204,6 +204,19 @@ describe('plugin nyx-android sur iOS', () => {
     expect(gitignore).toContain('/.tauri');
   });
 
+  // NYX_SMOKE_PLAY plays any address it is given, without the play command's checks: it must not
+  // exist in a release build, where an environment variable could otherwise start a stream
+  it('fumée lecture : seulement dans les versions de débogage', () => {
+    const smoke = readFileSync(resolve(PLUGIN, 'ios/Sources/NyxIosPlugin/SmokePlayCheck.swift'), 'utf8');
+    expect(smoke.trimStart().startsWith('#if DEBUG')).toBe(true);
+    expect(smoke.trimEnd().endsWith('#endif')).toBe(true);
+    expect(smoke).toContain('environment["NYX_SMOKE_PLAY"]');
+    // Every use in the plugin sits inside a DEBUG block
+    const outsideDebug = swift.replace(/#if DEBUG[\s\S]*?#endif/g, '');
+    expect(swift).toContain('SmokePlayCheck');
+    expect(outsideDebug).not.toMatch(/SmokePlayCheck|\bsmoke\b/);
+  });
+
   it.each(['updateInfo', 'fetchUpdateManifest', 'requestInstallPermission', 'downloadUpdate', 'installUpdate'])(
     '%s refusé sur iOS', (name) =>
       expect(swift).toMatch(new RegExp(`func ${name}\\(_ invoke: Invoke\\)[^}]*invoke\\.reject\\("not supported on iOS"\\)`)));

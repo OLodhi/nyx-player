@@ -186,6 +186,36 @@ jobs:
           cat "$data/Library/Caches/nyx-spike-s3-exit.json"
           jq -e '.orientation == "portrait" and .statusBarHidden == false' "$data/Library/Caches/nyx-spike-s3-exit.json"
 
+      # Playback smoke: a 20 s 720p H.264/AAC clip made on this Mac and served on its loopback, never a
+      # real stream. A debug-only hook (NYX_SMOKE_PLAY, SmokePlayCheck.swift) plays it through the
+      # libmpv engine about 5 s after launch, then writes what the page would have seen: the last
+      # time-pos, the error codes, mpv's video output and decoder, and the certificates in the CA file.
+      - name: Playback smoke (local clip through libmpv)
+        run: |
+          set -euo pipefail
+          command -v ffmpeg >/dev/null || brew install ffmpeg
+          command -v jq >/dev/null || brew install jq
+          mkdir -p smoke
+          ffmpeg -f lavfi -i testsrc2=size=1280x720:rate=30:duration=20 -f lavfi -i sine=frequency=440:duration=20 \
+            -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 128k -movflags +faststart -shortest -loglevel error -y smoke/clip.mp4
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory smoke > smoke-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 20); do curl -fsI http://127.0.0.1:8765/clip.mp4 >/dev/null && break; sleep 0.5; done
+          xcrun simctl terminate "$SIM_UDID" com.nyxplayer.app || true
+          SIMCTL_CHILD_NYX_SMOKE_PLAY=http://127.0.0.1:8765/clip.mp4 xcrun simctl launch "$SIM_UDID" com.nyxplayer.app
+          # Played at about 5 s, read at about 15 s: the screenshot falls in between
+          sleep 12
+          xcrun simctl io "$SIM_UDID" screenshot smoke-playing.png
+          data="$(xcrun simctl get_app_container "$SIM_UDID" com.nyxplayer.app data)"
+          result="$data/Library/Caches/nyx-smoke.json"
+          for _ in $(seq 1 15); do test -f "$result" && break; sleep 1; done
+          echo "Clip requests:"; cat smoke-server.log || true
+          cat "$result"
+          jq -e '.timePos > 2' "$result"
+          jq -e '.ca.count >= 100' "$result"
+          jq -e '.errors == []' "$result"
+
       # Pure Swift rules of the plugin (Keychain result mapping, network status), on this Mac.
       # After the builds, so a failing rule still leaves the build and launch results to read; and
       # run even when a build or the launch failed (only a cancelled run skips them), so the rules
@@ -201,5 +231,6 @@ jobs:
           path: |
             signin.png
             s3-fullscreen.png
+            smoke-playing.png
           if-no-files-found: warn
           retention-days: 14
