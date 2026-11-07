@@ -141,7 +141,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-2) 0 var(--space-3);
+  /* iPhone : contenu hors de l'encoche et des barres, le fond va jusqu'au bord (PlayerControls.css) */
+  padding: calc(var(--space-3) + var(--player-inset-top)) var(--space-2) var(--player-inset-bottom) calc(var(--space-3) + var(--player-inset-left));
   background: rgba(10, 10, 15, 0.94);
   border-right: 1px solid var(--border-glass);
   transform: translateX(-100%);

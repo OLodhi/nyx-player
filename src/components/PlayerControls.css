@@ -12,15 +12,31 @@
   pointer-events: auto;
   /* Block clicks from reaching pages behind player */
   overflow: hidden; /* Prevent absolute offscreen elements from expanding body width */
+  /* iPhone : la page couvre tout l'écran pendant la lecture (iosPlayerViewport.ts). Les commandes
+     s'écartent de la barre d'état ou de l'encoche en haut, de la barre d'accueil en bas, et sur les
+     côtés seulement du côté de l'encoche (règles suivantes). env() vaut 0 hors iOS. */
+  --player-inset-top: env(safe-area-inset-top);
+  --player-inset-bottom: env(safe-area-inset-bottom);
+  --player-inset-left: 0px;
+  --player-inset-right: 0px;
+}
+
+/* En paysage, iOS donne la même marge des deux côtés : seul celui de l'encoche la garde */
+html.player-notch-left .player-overlay {
+  --player-inset-left: env(safe-area-inset-left);
+}
+
+html.player-notch-right .player-overlay {
+  --player-inset-right: env(safe-area-inset-right);
 }
 
 /* Safe area that dynamically shrinks and shifts when ChannelSwitcher opens */
 .player-ui-safe-area {
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: var(--switcher-offset, 0px);
+  top: var(--player-inset-top);
+  right: var(--player-inset-right);
+  bottom: var(--player-inset-bottom);
+  left: calc(var(--switcher-offset, 0px) + var(--player-inset-left));
   z-index: 60;
   pointer-events: none; /* Let clicks pass to body except for interactive children */
   transition: left var(--duration-normal) var(--ease-out);
@@ -131,7 +147,9 @@
   flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.25rem;
+  /* Le dégradé va jusqu'aux bords de l'écran (marges négatives), le contenu reste dans la zone sûre */
+  margin: calc(-1 * var(--player-inset-top)) calc(-1 * var(--player-inset-right)) 0 calc(-1 * var(--player-inset-left));
+  padding: calc(1rem + var(--player-inset-top)) calc(1.25rem + var(--player-inset-right)) 1rem calc(1.25rem + var(--player-inset-left));
   background: linear-gradient(to bottom, var(--surface-overlay), transparent);
 }
 
@@ -172,7 +190,9 @@
 
 /* Bottom bar */
 .player-bottom-bar {
-  padding: 0 1.25rem 1rem;
+  /* Comme la barre du haut : dégradé jusqu'aux bords, contenu dans la zone sûre */
+  margin: 0 calc(-1 * var(--player-inset-right)) calc(-1 * var(--player-inset-bottom)) calc(-1 * var(--player-inset-left));
+  padding: 0 calc(1.25rem + var(--player-inset-right)) calc(1rem + var(--player-inset-bottom)) calc(1.25rem + var(--player-inset-left));
   background: linear-gradient(to top, var(--surface-overlay), transparent);
   transition: opacity var(--duration-normal) var(--ease-out);
 }

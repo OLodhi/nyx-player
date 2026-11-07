@@ -13,9 +13,10 @@
 
 .episode-switcher-overlay {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  bottom: var(--player-controls-height); /* Token global défini en rem — App.css */
+  /* iPhone : écarté de l'encoche et des barres du système (PlayerControls.css) */
+  top: calc(1rem + var(--player-inset-top));
+  right: calc(1rem + var(--player-inset-right));
+  bottom: calc(var(--player-controls-height) + var(--player-inset-bottom)); /* Token global défini en rem — App.css */
   width: 35%;
   min-width: 300px;
   /* stylelint-disable-next-line defensive-css/no-fixed-sizes -- plafond de confort : le panneau reste un pourcentage de l'écran entre deux bornes (300 et 450 px) */

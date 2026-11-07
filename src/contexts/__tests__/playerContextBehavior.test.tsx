@@ -58,7 +58,7 @@ vi.mock('../../services/memoryService', () => ({
     purgeInPlayerMode,
 }));
 vi.mock('@tauri-apps/api/core', () => ({ invoke }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.os === 'android', usesNyxPlugin: () => platform.os !== 'windows' }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.os === 'android', usesNyxPlugin: () => platform.os !== 'windows', isIos: () => platform.os === 'ios' }));
 vi.mock('../../services/player/androidPlayer', () => ({ setFullscreen }));
 
 import { PlayerProvider, usePlayer } from '../PlayerContext';

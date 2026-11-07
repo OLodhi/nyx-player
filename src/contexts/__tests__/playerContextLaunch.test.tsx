@@ -44,7 +44,7 @@ vi.mock('../../services/memoryService', () => ({
 }));
 vi.mock('../../services/m3uCatalog', () => ({ resolveM3uPlayback }));
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn().mockResolvedValue(undefined) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => false, usesNyxPlugin: () => false }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => false, usesNyxPlugin: () => false, isIos: () => false }));
 vi.mock('../../services/player/androidPlayer', () => ({ setFullscreen: vi.fn().mockResolvedValue(undefined) }));
 
 import { PlayerProvider, usePlayer } from '../PlayerContext';
