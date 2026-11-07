@@ -19,7 +19,7 @@ vi.mock('tauri-plugin-mpv-api', () => ({
   listenEvents: vi.fn(async (cb: (e: MpvEvent) => void) => { events.callback = cb; return () => {}; }),
 }));
 vi.mock('../appSettingsService', () => ({ isHardwareAccelerationEnabled: vi.fn().mockResolvedValue(true) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => false }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => false, usesNyxPlugin: () => false }));
 vi.mock('../player/androidPlayer', () => ({}));
 vi.mock('../../dev/lecteurSimule', async () => {
   const reel = await vi.importActual<typeof import('../../dev/lecteurSimule')>('../../dev/lecteurSimule');
@@ -31,7 +31,9 @@ async function load(audit: boolean) {
   events.callback = null;
   vi.stubEnv('VITE_AUDIT', audit ? '1' : '');
   vi.stubEnv('VITE_BANC', audit ? '1' : '');
-  return import('../mpvBridge');
+  const bridge = await import('../mpvBridge');
+  await import('../../dev/prisesBanc'); // outils du banc branchés, comme au démarrage (main.tsx)
+  return bridge;
 }
 
 const VRAI = 'http://fournisseur.exemple.invalid:8080/live/u/p/1.ts';
@@ -104,6 +106,7 @@ describe('mpvBridge — seconde barrière de la sonde', () => {
       return { ...reel, command: vi.fn(async () => undefined) };
     });
     const { mpvPlay, mpvStop } = await import('../mpvBridge');
+    await import('../../dev/prisesBanc');
     await mpvPlay(VRAI);
     events.callback!(endFileError);
     await new Promise((r) => setTimeout(r, 0));

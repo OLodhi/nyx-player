@@ -24,7 +24,7 @@ const {
     enterPlayerMode: vi.fn(),
     exitPlayerMode: vi.fn(),
     purgeInPlayerMode: vi.fn(),
-    platform: { android: false },
+    platform: { os: 'windows' as 'android' | 'ios' | 'windows' },
     connection: { listener: null as ((state: string) => void) | null, unsubscribe: vi.fn() },
 }));
 
@@ -58,7 +58,7 @@ vi.mock('../../services/memoryService', () => ({
     purgeInPlayerMode,
 }));
 vi.mock('@tauri-apps/api/core', () => ({ invoke }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.android }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.os === 'android', usesNyxPlugin: () => platform.os !== 'windows', isIos: () => platform.os === 'ios' }));
 vi.mock('../../services/player/androidPlayer', () => ({ setFullscreen }));
 
 import { PlayerProvider, usePlayer } from '../PlayerContext';
@@ -110,7 +110,7 @@ describe('PlayerContext — comportement figé avant découpage', () => {
     let unmount: () => void;
     beforeEach(() => {
         vi.useFakeTimers();
-        platform.android = false;
+        platform.os = 'windows';
         connection.listener = null;
         connection.unsubscribe.mockReset();
         for (const fn of [mpvPlay, mpvSwitchChannel, mpvStop, startPlayback, invoke, setFullscreen]) {
@@ -351,7 +351,13 @@ describe('PlayerContext — comportement figé avant découpage', () => {
         });
 
         it('Android : plein écran demandé une fois la vidéo chargée', async () => {
-            platform.android = true;
+            platform.os = 'android';
+            await playAndSettle(channel(3));
+            expect(setFullscreen).toHaveBeenCalledWith(true);
+        });
+
+        it('iOS : lecture en plein écran par le plugin', async () => {
+            platform.os = 'ios';
             await playAndSettle(channel(3));
             expect(setFullscreen).toHaveBeenCalledWith(true);
         });

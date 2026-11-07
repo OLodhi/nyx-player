@@ -14,13 +14,14 @@ import type { XtreamCredentials } from '../types/iptv';
 import { clearAllData as clearSQLiteData, hasContent } from './dbCore';
 import { checkLocalDatabase } from './localDatabaseHealth';
 import { invoke } from '@tauri-apps/api/core';
-import { isAndroid } from '../utils/platform';
+import { usesNyxPlugin } from '../utils/platform';
 import { sanitizeIptvUrl } from '../utils/sanitizeUrl';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('StorageService');
 
-// Android : pas de keyring OS → Android Keystore (AES-256-GCM, clé non exportable) via le plugin nyx-android
+// Android et iOS : pas de keyring OS → coffre du plugin nyx-android (Android Keystore AES-256-GCM, clé
+// non exportable ; Trousseau iOS)
 const ANDROID_SERVICE = 'nyxplayer';
 const androidKey = (user: string) => `${ANDROID_SERVICE}::${user}`;
 
@@ -51,20 +52,30 @@ export function describeVaultError(e: unknown): string {
 // Le service (« nyxplayer », ou « nyxplayer-audit » pour la version d'audit Windows) est fixé côté
 // Rust et seuls les comptes de Nyx sont acceptés : la page n'atteint plus les autres identifiants.
 async function getPassword(user: string): Promise<string | null> {
-  if (!isAndroid()) return (await invoke<string | null>('nyx_secret_get', { user })) ?? null;
+  if (!usesNyxPlugin()) return (await invoke<string | null>('nyx_secret_get', { user })) ?? null;
   const result = await invoke<{ value: string | null }>('plugin:nyx-android|secure_get', { key: androidKey(user) });
   return result?.value ?? null;
 }
 
 async function setPassword(user: string, value: string): Promise<void> {
-  if (!isAndroid()) return invoke('nyx_secret_set', { user, value });
+  if (!usesNyxPlugin()) return invoke('nyx_secret_set', { user, value });
   await invoke('plugin:nyx-android|secure_set', { key: androidKey(user), value });
 }
 
 async function deletePassword(user: string): Promise<void> {
-  if (!isAndroid()) return invoke('nyx_secret_delete', { user });
+  if (!usesNyxPlugin()) return invoke('nyx_secret_delete', { user });
   await invoke('plugin:nyx-android|secure_delete', { key: androidKey(user) });
 }
+
+/**
+ * Accès brut au coffre (ordinateur ou Android), pour les entrées des sources
+ * (services/sources/sourceVault.ts). Côté ordinateur, Rust n'accepte que les comptes de Nyx.
+ */
+export const secretVault = {
+  read: getPassword,
+  write: setPassword,
+  remove: deletePassword,
+};
 
 /** Compte du coffre : `iptv_credentials_<uid>` par utilisateur Supabase (dynamique). */
 let keyringUser = 'iptv_credentials';
@@ -139,14 +150,15 @@ export const StorageService = {
   },
 
   /**
-   * Lecture des identifiants au démarrage. Sur Android, une
-   * ERREUR du coffre (Keystore momentanément indisponible, appareil verrouillé) n'est plus prise pour
-   * « aucun identifiant » : on attend que l'app soit visible (appareil déverrouillé) et on réessaie,
-   * 3 fois au plus. Le coffre Android répond `null` quand il n'y a vraiment rien : pas d'attente alors.
+   * Lecture des identifiants au démarrage. Sur Android et iOS, une
+   * ERREUR du coffre (Keystore ou Trousseau momentanément indisponible, appareil verrouillé) n'est plus
+   * prise pour « aucun identifiant » : on attend que l'app soit visible (appareil déverrouillé) et on
+   * réessaie, 3 fois au plus. Le coffre du plugin répond `null` quand il n'y a vraiment rien : pas
+   * d'attente alors.
    * Ailleurs (Windows : le coffre signale l'absence par une erreur), comportement inchangé.
    */
   async getCredentialsAtStartup(): Promise<XtreamCredentials | null> {
-    if (!isAndroid()) return this.getCredentials();
+    if (!usesNyxPlugin()) return this.getCredentials();
     for (let attempt = 1; ; attempt++) {
       const user = keyringUser;
       const version = credentialsVersion;

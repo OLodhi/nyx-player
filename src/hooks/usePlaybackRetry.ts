@@ -9,14 +9,14 @@
  * - Seules les erreurs passagères sont relancées (limite de connexions, réseau, serveur).
  * - Délais croissants RETRY_DELAYS_S (30, 60, 120, 180 s), 4 tentatives maximum : le
  *   fournisseur ne voit jamais de rafale de requêtes (anti-flood des panels Xtream).
- * - Android : le compte à rebours s'arrête tant que l'app est en arrière-plan (touche Accueil,
+ * - Android et iOS : le compte à rebours s'arrête tant que l'app est en arrière-plan (touche Accueil,
  *   appel), sinon la relance rouvrirait le flux sans personne devant l'écran. Il reprend au
  *   retour. Windows garde son comportement : une fenêtre réduite continue de se reconnecter.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RETRY_DELAYS_S, isAutoRetryable, type PlaybackError } from '../services/player/playbackErrors';
-import { isAndroid } from '../utils/platform';
+import { usesNyxPlugin } from '../utils/platform';
 
 export interface PlaybackRetryState {
   /** Secondes avant la prochaine tentative automatique (null = aucune programmée) */
@@ -56,7 +56,7 @@ export function usePlaybackRetry(
     }
     let left = RETRY_DELAYS_S[attempt];
     setSecondsLeft(left);
-    const holdWhileHidden = isAndroid();
+    const holdWhileHidden = usesNyxPlugin();
     const interval = setInterval(() => {
       if (holdWhileHidden && document.hidden) return;
       left -= 1;

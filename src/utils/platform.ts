@@ -27,6 +27,18 @@ export function getPlatform(): string {
 
 export const isAndroid = (): boolean => getPlatform() === 'android';
 
+/** iPhone et iPad (pour les rares cas propres à iOS ; la couche native commune : usesNyxPlugin) */
+export const isIos = (): boolean => getPlatform() === 'ios';
+
+/**
+ * La couche native est le plugin nyx-android (téléphones et TV Android, iPhone et iPad) : lecteur,
+ * coffre sécurisé, état du réseau. Pas isMobileDevice(), qui exclut la TV.
+ */
+export const usesNyxPlugin = (): boolean => {
+  const p = getPlatform();
+  return p === 'android' || p === 'ios';
+};
+
 /**
  * Téléphone ou tablette tactile. Une TV Android est aussi `android` pour le système :
  * elle est exclue ici, car son interface se pilote à la télécommande, pas au doigt. Vrai aussi quand

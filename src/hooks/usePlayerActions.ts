@@ -14,7 +14,7 @@ import {
   setFullscreen as setAndroidFullscreen,
   observeProperties as observeAndroidProperties,
 } from '../services/player/androidPlayer';
-import { isAndroid } from '../utils/platform';
+import { usesNyxPlugin } from '../utils/platform';
 import type { useMpvObserver } from './useMpvObserver';
 import { warnOnReject } from '../utils/warnOnReject';
 import { createLogger } from '../utils/logger';
@@ -59,8 +59,8 @@ interface PlayerActionsReturn {
 // ============================================================================
 
 export function usePlayerActions({ mpv, prefs, onClose, progressRef }: PlayerActionsParams): PlayerActionsReturn {
-  // Android : PlayerContext passe le lecteur en plein écran immersif dès le lancement
-  const [isFullscreen, setIsFullscreen] = useState(() => isAndroid());
+  // Android et iOS : PlayerContext passe le lecteur en plein écran immersif dès le lancement
+  const [isFullscreen, setIsFullscreen] = useState(() => usesNyxPlugin());
   const [aspectMode, setAspectMode] = useState<AspectMode>('fit');
   const aspectModeRef = useRef<AspectMode>('fit');
   // Refs stables de useMpvObserver, sorties de `mpv` : la règle react-hooks/immutability interdit d'écrire dans un argument du hook
@@ -69,10 +69,10 @@ export function usePlayerActions({ mpv, prefs, onClose, progressRef }: PlayerAct
   // Sync ref avec state pour accès dans les listeners
   useEffect(() => { aspectModeRef.current = aspectMode; }, [aspectMode]);
 
-  // Android : le plein écran change aussi hors de ce hook (PlayerContext à chaque play/zapping,
+  // Android et iOS : le plein écran change aussi hors de ce hook (PlayerContext à chaque play/zapping,
   // retour au premier plan, stop) → suivre la propriété native pour garder le bouton cohérent
   useEffect(() => {
-    if (!isAndroid()) return;
+    if (!usesNyxPlugin()) return;
     let disposed = false;
     let unlisten: (() => void) | undefined;
     observeAndroidProperties(['fullscreen'], (event) => setIsFullscreen(Boolean(event.data)))
@@ -82,9 +82,9 @@ export function usePlayerActions({ mpv, prefs, onClose, progressRef }: PlayerAct
   }, []);
 
   // Recalculer video-aspect-override lors des resize quand en mode stretch
-  // (Android : le mode "stretch" natif suit la taille de la vue, rien à recalculer)
+  // (Android et iOS : le mode "stretch" natif suit la taille de la vue, rien à recalculer)
   useEffect(() => {
-    if (isAndroid()) return;
+    if (usesNyxPlugin()) return;
     const win = getCurrentWindow();
     const applyStretch = async () => {
       if (aspectModeRef.current !== 'stretch') return;
@@ -160,7 +160,7 @@ export function usePlayerActions({ mpv, prefs, onClose, progressRef }: PlayerAct
   }, [mpv.isMuted]); // eslint-disable-line react-hooks/exhaustive-deps -- setIsMuted est un setter stable
 
   const toggleFullscreen = useCallback(async () => {
-    if (isAndroid()) {
+    if (usesNyxPlugin()) {
       const next = !isFullscreen;
       try {
         await setAndroidFullscreen(next);
@@ -197,7 +197,7 @@ export function usePlayerActions({ mpv, prefs, onClose, progressRef }: PlayerAct
           // Étirer = forcer le ratio fenêtre sur la vidéo
           // Appliquer l'override AVANT de couper panscan pour éviter un flash Fit
           let windowRatio = window.innerWidth / window.innerHeight;
-          if (!isAndroid()) {
+          if (!usesNyxPlugin()) {
             const size = await getCurrentWindow().innerSize();
             windowRatio = size.width / size.height;
           }
@@ -252,8 +252,8 @@ export function usePlayerActions({ mpv, prefs, onClose, progressRef }: PlayerAct
     try { await setProperty('mute', false); } catch (_) { /* ignore */ }
 
     const exitFullscreen = async () => {
-      // Android : la commande stop du plugin restaure déjà barres système et orientation
-      if (isAndroid()) return;
+      // Android et iOS : la commande stop du plugin restaure déjà barres système et orientation
+      if (usesNyxPlugin()) return;
       try {
         const win = getCurrentWindow();
         const isFs = await win.isFullscreen();

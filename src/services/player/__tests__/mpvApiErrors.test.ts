@@ -17,13 +17,13 @@ const { invoke, plugin, android, platform, forced } = vi.hoisted(() => ({
     listenMediaCommands: vi.fn(),
     setVideoMarginRatio: vi.fn(),
   },
-  platform: { android: false },
+  platform: { os: 'windows' as 'android' | 'ios' | 'windows' },
   forced: { cancelForcedUnpause: vi.fn() },
 }));
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke }));
 vi.mock('tauri-plugin-mpv-api', () => plugin);
-vi.mock('../../../utils/platform', () => ({ isAndroid: () => platform.android }));
+vi.mock('../../../utils/platform', () => ({ isAndroid: () => platform.os === 'android', usesNyxPlugin: () => platform.os !== 'windows' }));
 vi.mock('../androidPlayer', () => android);
 vi.mock('../forcedUnpause', () => forced);
 
@@ -39,7 +39,7 @@ const resetAll = () => {
 describe('mpvApi — Android', () => {
   beforeEach(() => {
     resetAll();
-    platform.android = true;
+    platform.os = 'android';
   });
 
   it('les refus du plugin natif remontent tels quels, sans passer par la garde Windows', async () => {
@@ -78,10 +78,43 @@ describe('mpvApi — Android', () => {
   });
 });
 
+describe('mpvApi — iOS', () => {
+  beforeEach(() => {
+    resetAll();
+    platform.os = 'ios';
+  });
+
+  it('iOS : init, moteur vivant, événements bureau ignorés, pause par le plugin', async () => {
+    android.init.mockResolvedValue('main');
+    await expect(mpvApi.init({ args: ['--vo=gpu'], observedProperties: [], ipcTimeoutMs: 1 })).resolves.toBe('main');
+    expect(android.init).toHaveBeenCalledWith();
+    await expect(mpvApi.isEngineAlive()).resolves.toBe(true);
+    await expect(mpvApi.isHttpsVerifiable()).resolves.toBe(true);
+    const unlisten = await mpvApi.listenDesktopEvents(() => {});
+    expect(() => unlisten()).not.toThrow();
+
+    await mpvApi.command('cycle', ['pause']);
+    await mpvApi.setProperty('volume', 40);
+    await mpvApi.getProperty('time-pos');
+    await mpvApi.observeProperties(['pause'], () => {});
+    await mpvApi.listenMediaCommands(() => {});
+    await mpvApi.setVideoMarginRatio({ left: 0.2 });
+    expect(android.command).toHaveBeenCalledWith('cycle', ['pause']);
+    expect(forced.cancelForcedUnpause).toHaveBeenCalledTimes(1);
+    expect(android.setProperty).toHaveBeenCalledWith('volume', 40);
+    expect(android.getProperty).toHaveBeenCalledWith('time-pos');
+    expect(android.observeProperties).toHaveBeenCalledTimes(1);
+    expect(android.listenMediaCommands).toHaveBeenCalledTimes(1);
+    expect(android.setVideoMarginRatio).toHaveBeenCalledWith({ left: 0.2 });
+    expect(invoke).not.toHaveBeenCalled();
+    Object.values(plugin).forEach((fn) => expect(fn).not.toHaveBeenCalled());
+  });
+});
+
 describe('mpvApi — Windows', () => {
   beforeEach(() => {
     resetAll();
-    platform.android = false;
+    platform.os = 'windows';
   });
 
   it('init sans configuration est refusé avant tout appel', async () => {

@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('tauri-plugin-mpv-api', () => ({}));
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn().mockResolvedValue(null) }));
-vi.mock('../../../utils/platform', () => ({ isAndroid: () => false }));
+vi.mock('../../../utils/platform', () => ({ isAndroid: () => false, usesNyxPlugin: () => false }));
 vi.mock('../androidPlayer', () => ({}));
 
 import { setProperty, command } from '../mpvApi';

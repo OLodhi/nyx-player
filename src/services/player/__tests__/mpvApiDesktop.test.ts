@@ -14,7 +14,7 @@ const { invoke, plugin } = vi.hoisted(() => ({
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke }));
 vi.mock('tauri-plugin-mpv-api', () => plugin);
-vi.mock('../../../utils/platform', () => ({ isAndroid: () => false }));
+vi.mock('../../../utils/platform', () => ({ isAndroid: () => false, usesNyxPlugin: () => false }));
 vi.mock('../androidPlayer', () => ({}));
 
 import { init, command, setProperty, getProperty, setVideoMarginRatio } from '../mpvApi';

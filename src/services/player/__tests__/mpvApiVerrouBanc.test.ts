@@ -12,12 +12,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const { invoke, android, platform } = vi.hoisted(() => ({
   invoke: vi.fn(),
   android: { command: vi.fn(), setFullscreen: vi.fn() },
-  platform: { android: false },
+  platform: { os: 'windows' as 'android' | 'ios' | 'windows' },
 }));
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke }));
 vi.mock('tauri-plugin-mpv-api', () => ({}));
-vi.mock('../../../utils/platform', () => ({ isAndroid: () => platform.android }));
+vi.mock('../../../utils/platform', () => ({ isAndroid: () => platform.os === 'android', usesNyxPlugin: () => platform.os !== 'windows' }));
 vi.mock('../androidPlayer', () => android);
 
 async function load(audit: boolean) {
@@ -25,6 +25,7 @@ async function load(audit: boolean) {
   vi.stubEnv('VITE_AUDIT', audit ? '1' : '');
   vi.stubEnv('VITE_BANC', audit ? '1' : '');
   const api = await import('../mpvApi');
+  await import('../../../dev/prisesBanc'); // outils du banc branchés, comme au démarrage (main.tsx)
   const banc = await import('../../../dev/bancAdresses');
   return { ...api, ...banc };
 }
@@ -38,7 +39,7 @@ describe('mpvApi — verrou du banc (version du banc)', () => {
     invoke.mockReset().mockResolvedValue(null);
     android.command.mockReset().mockResolvedValue(undefined);
     android.setFullscreen.mockReset().mockResolvedValue(undefined);
-    platform.android = false;
+    platform.os = 'windows';
     warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
   afterEach(() => {
@@ -54,7 +55,7 @@ describe('mpvApi — verrou du banc (version du banc)', () => {
   });
 
   it('Android : refuse de même, le plugin natif ne reçoit rien', async () => {
-    platform.android = true;
+    platform.os = 'android';
     const { command } = await load(true);
     await expect(command('loadfile', [VRAI])).rejects.toMatchObject({ code: 'BANC_LECTURE_REFUSEE' });
     expect(android.command).not.toHaveBeenCalled();
@@ -84,7 +85,7 @@ describe('mpvApi — verrou du banc (version du banc)', () => {
       { genre: 'live', numero: 1 }, { genre: 'movie', numero: 2 }, { genre: 'live', numero: 3 }, { genre: 'series', numero: 4 },
     ]);
     expect(invoke).not.toHaveBeenCalled();
-    platform.android = true;
+    platform.os = 'android';
     await command('loadfile', [FAUX, 'replace']);
     expect(android.command).not.toHaveBeenCalled();
   });
@@ -163,7 +164,7 @@ describe('mpvApi — verrou du banc (version du banc)', () => {
   });
 
   it('Android : l\'arrêt du lecteur simulé sort du paysage plein écran natif, sans toucher au moteur', async () => {
-    platform.android = true;
+    platform.os = 'android';
     const { command } = await load(true);
     await command('loadfile', [FAUX, 'replace']);
     await command('cycle', ['pause']);
@@ -173,7 +174,7 @@ describe('mpvApi — verrou du banc (version du banc)', () => {
     expect(android.setFullscreen).toHaveBeenCalledExactlyOnceWith(false);
     expect(android.command).not.toHaveBeenCalled();
     // Windows : rien de natif (la fenêtre sort du plein écran par PlayerControls)
-    platform.android = false;
+    platform.os = 'windows';
     android.setFullscreen.mockClear();
     await command('stop');
     expect(android.setFullscreen).not.toHaveBeenCalled();
@@ -183,7 +184,7 @@ describe('mpvApi — verrou du banc (version du banc)', () => {
 describe('mpvApi — version normale', () => {
   beforeEach(() => {
     invoke.mockReset().mockResolvedValue(null);
-    platform.android = false;
+    platform.os = 'windows';
   });
   afterEach(() => vi.unstubAllEnvs());
 
@@ -224,12 +225,14 @@ describe('mpvApi — variante « vrai lecteur » du banc (VITE_BANC_LECTEUR=reel
     vi.stubEnv('VITE_AUDIT', '1');
     vi.stubEnv('VITE_BANC', '1');
     vi.stubEnv('VITE_BANC_LECTEUR', 'reel');
-    return { ...(await import('../mpvApi')), ...(await import('../../../dev/bancAdresses')) };
+    const api = await import('../mpvApi');
+    await import('../../../dev/prisesBanc');
+    return { ...api, ...(await import('../../../dev/bancAdresses')) };
   }
   beforeEach(() => {
     invoke.mockReset().mockResolvedValue(null);
     android.command.mockReset().mockResolvedValue(undefined);
-    platform.android = false;
+    platform.os = 'windows';
     warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
   afterEach(() => {
@@ -243,7 +246,7 @@ describe('mpvApi — variante « vrai lecteur » du banc (VITE_BANC_LECTEUR=reel
     expect(estLectureRefusee(await command('loadlist', [FAUX]).catch((err: unknown) => err))).toBe(true);
     expect(estLectureRefusee(await setProperty('stream-open-filename' as never, VRAI as never).catch((err: unknown) => err))).toBe(true);
     expect(invoke).not.toHaveBeenCalled();
-    platform.android = true;
+    platform.os = 'android';
     expect(estLectureRefusee(await command('loadfile', [VRAI]).catch((err: unknown) => err))).toBe(true);
     expect(android.command).not.toHaveBeenCalled();
   });
@@ -253,8 +256,48 @@ describe('mpvApi — variante « vrai lecteur » du banc (VITE_BANC_LECTEUR=reel
     await command('loadfile', [FAUX, 'replace']);
     expect(invoke).toHaveBeenLastCalledWith('nyx_mpv_command', { name: 'loadfile', args: [FAUX, 'replace'] });
     expect(tentativesLecture()).toEqual([expect.objectContaining({ cible: 'faux', acceptee: true })]);
-    platform.android = true;
+    platform.os = 'android';
     await command('loadfile', [FAUX]);
     expect(android.command).toHaveBeenCalledWith('loadfile', [FAUX]);
+  });
+});
+
+describe('mpvApi — version du banc sans outils de test branchés (prise vide)', () => {
+  beforeEach(() => {
+    invoke.mockReset().mockResolvedValue(null);
+    android.command.mockReset().mockResolvedValue(undefined);
+    platform.os = 'windows';
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('refuse tout, même le faux fournisseur, et rien ne part vers mpv.exe ni Android', async () => {
+    vi.resetModules();
+    vi.stubEnv('VITE_AUDIT', '1');
+    vi.stubEnv('VITE_BANC', '1');
+    const { command, setProperty, getProperty, observeProperties, listenDesktopEvents } = await import('../mpvApi');
+    await expect(command('loadfile', [FAUX, 'replace'])).rejects.toThrow('non branchés');
+    await expect(command('loadfile', [VRAI, 'replace'])).rejects.toThrow('non branchés');
+    await expect(command('loadlist', [FAUX])).rejects.toThrow('non branchés');
+    await expect(setProperty('stream-open-filename', VRAI)).rejects.toThrow('non branchés');
+    await expect(command('stop')).rejects.toThrow('non branchés');
+    await expect(getProperty('time-pos')).rejects.toThrow('non branchés');
+    await expect(observeProperties(['time-pos'], () => {})).rejects.toThrow('non branchés');
+    await expect(listenDesktopEvents(() => {})).rejects.toThrow('non branchés');
+    platform.os = 'android';
+    await expect(command('loadfile', [FAUX, 'replace'])).rejects.toThrow('non branchés');
+    expect(invoke).not.toHaveBeenCalled();
+    expect(android.command).not.toHaveBeenCalled();
+  });
+
+  it('variante « vrai lecteur » : le faux fournisseur est refusé aussi, rien ne part vers mpv.exe', async () => {
+    vi.resetModules();
+    vi.stubEnv('VITE_AUDIT', '1');
+    vi.stubEnv('VITE_BANC', '1');
+    vi.stubEnv('VITE_BANC_LECTEUR', 'reel');
+    const { command } = await import('../mpvApi');
+    await expect(command('loadfile', [FAUX, 'replace'])).rejects.toThrow('non branchés');
+    expect(invoke).not.toHaveBeenCalled();
   });
 });
