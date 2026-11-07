@@ -106,6 +106,16 @@ describe('plugin nyx-android sur iOS', () => {
     for (const f of files) expect(readFileSync(resolve(dir, f), 'utf8'), f).not.toMatch(/DispatchQueue\.main\.sync/);
   });
 
+  // MPVKit's demo layer: MoltenVK sets a 1x1 size to force a presentation (flicker, can stick), and
+  // sets EDR from mpv's video thread, which the demo answers with main.sync (deadlock risk)
+  it('MetalLayer : tailles ≤ 1 ignorées, EDR en asynchrone', () => {
+    const layer = readFileSync(resolve(PLUGIN, 'ios/Sources/NyxIosPlugin/MetalLayer.swift'), 'utf8');
+    expect(layer).toMatch(/newValue\.width > 1 && newValue\.height > 1/);
+    expect(layer).toMatch(/override var wantsExtendedDynamicRangeContent[\s\S]*DispatchQueue\.main\.async/);
+    const host = readFileSync(resolve(PLUGIN, 'ios/Sources/NyxIosPlugin/VideoHost.swift'), 'utf8');
+    expect(host).toContain('insertSubview(view, belowSubview: webView)');
+  });
+
   it('le paquet NyxPolicies est une dépendance locale', () =>
     expect(readFileSync(resolve(PLUGIN, 'ios/Package.swift'), 'utf8')).toContain('.package(path: "NyxPolicies")'));
 
