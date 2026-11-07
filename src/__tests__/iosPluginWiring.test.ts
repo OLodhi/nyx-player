@@ -217,6 +217,16 @@ describe('plugin nyx-android sur iOS', () => {
     expect(outsideDebug).not.toMatch(/SmokePlayCheck|\bsmoke\b/);
   });
 
+  // Written once playback reaches 5 s, or 30 s after the play request at the latest, with the start
+  // time: a fixed delay left only 0.3 s of margin over CI's 2 s bar (checkpoint C)
+  it('fumée lecture : résultat écrit à 5 s de lecture, délai maximal 30 s', () => {
+    const smoke = readFileSync(resolve(PLUGIN, 'ios/Sources/NyxIosPlugin/SmokePlayCheck.swift'), 'utf8');
+    expect(smoke).toMatch(/static let targetSeconds(: Double)? = 5\b/);
+    expect(smoke).toMatch(/static let deadlineSeconds(: Double)? = 30\b/);
+    expect(smoke).toContain('"secondsToFirstTimePos"');
+    expect(smoke).toContain('"reachedTarget"');
+  });
+
   it.each(['updateInfo', 'fetchUpdateManifest', 'requestInstallPermission', 'downloadUpdate', 'installUpdate'])(
     '%s refusé sur iOS', (name) =>
       expect(swift).toMatch(new RegExp(`func ${name}\\(_ invoke: Invoke\\)[^}]*invoke\\.reject\\("not supported on iOS"\\)`)));

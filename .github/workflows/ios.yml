@@ -203,13 +203,14 @@ jobs:
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for _ in $(seq 1 20); do curl -fsI http://127.0.0.1:8765/clip.mp4 >/dev/null && break; sleep 0.5; done
           xcrun simctl terminate "$SIM_UDID" com.nyxplayer.app || true
-          SIMCTL_CHILD_NYX_SMOKE_PLAY=http://127.0.0.1:8765/clip.mp4 xcrun simctl launch "$SIM_UDID" com.nyxplayer.app
-          # Played at about 5 s, read at about 15 s: the screenshot falls in between
-          sleep 12
-          xcrun simctl io "$SIM_UDID" screenshot smoke-playing.png
           data="$(xcrun simctl get_app_container "$SIM_UDID" com.nyxplayer.app data)"
           result="$data/Library/Caches/nyx-smoke.json"
-          for _ in $(seq 1 15); do test -f "$result" && break; sleep 1; done
+          rm -f "$result"
+          SIMCTL_CHILD_NYX_SMOKE_PLAY=http://127.0.0.1:8765/clip.mp4 xcrun simctl launch "$SIM_UDID" com.nyxplayer.app
+          # Played about 5 s after launch; the result is written once the clip has played 5 s (30 s
+          # after the play request at most). The 20 s clip is still playing for the screenshot.
+          for _ in $(seq 1 60); do test -f "$result" && break; sleep 1; done
+          xcrun simctl io "$SIM_UDID" screenshot smoke-playing.png
           echo "Clip requests:"; cat smoke-server.log || true
           cat "$result"
           jq -e '.timePos > 2' "$result"

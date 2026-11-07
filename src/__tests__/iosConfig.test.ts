@@ -134,6 +134,14 @@ describe('workflow iOS', () => {
     expect(yml).toContain('smoke-playing.png');
   });
 
+  // The hook writes its result once the clip has played 5 s: CI waits for that file (startup in the
+  // Simulator takes several seconds), then takes the screenshot while the clip is still playing
+  it('fumée lecture : attend le résultat, puis la capture pendant la lecture', () => {
+    const wait = yml.indexOf('for _ in $(seq 1 60); do test -f "$result" && break; sleep 1; done');
+    expect(wait).toBeGreaterThan(-1);
+    expect(yml.indexOf('screenshot smoke-playing.png')).toBeGreaterThan(wait);
+  });
+
   // Xcode's archive leaves an incomplete .app in DerivedData: pick the complete one built for the Simulator
   it('choisit l’app du Simulateur par sa plateforme, pas par son dossier', () =>
     expect(yml).toMatch(/CFBundleSupportedPlatforms[\s\S]*iPhoneSimulator/));
