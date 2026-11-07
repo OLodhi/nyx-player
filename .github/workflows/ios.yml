@@ -109,11 +109,11 @@ jobs:
             !src-tauri/gen/apple/Externals
             !src-tauri/gen/apple/**/xcuserdata
 
-      # Also runs `pnpm build` (web UI) before Xcode compiles the Rust and Swift code.
       - name: Warn if the Supabase secrets are missing
         if: env.VITE_SUPABASE_URL == 'https://example.invalid'
         run: echo "::warning::Secrets VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY missing - the IPA builds but can't sign in."
 
+      # Also runs `pnpm build` (web UI) before Xcode compiles the Rust and Swift code.
       - name: Build the unsigned IPA
         run: pnpm tauri ios build --ci --target aarch64 --no-sign
 
@@ -165,8 +165,11 @@ jobs:
           xcrun simctl io "$udid" screenshot signin.png
 
       # Pure Swift rules of the plugin (Keychain result mapping, network status), on this Mac.
-      # After the builds: a failing rule still leaves the build and launch results to read.
+      # After the builds, so a failing rule still leaves the build and launch results to read; and
+      # run even when a build or the launch failed (only a cancelled run skips them), so the rules
+      # still report.
       - name: Swift unit tests (NyxPolicies)
+        if: ${{ !cancelled() }}
         run: swift test --package-path src-tauri/plugins/tauri-plugin-nyx-android/ios/NyxPolicies
 
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5

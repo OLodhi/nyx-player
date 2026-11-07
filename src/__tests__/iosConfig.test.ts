@@ -85,6 +85,13 @@ describe('workflow iOS', () => {
   it('tests Swift de NyxPolicies', () =>
     expect(yml).toContain('swift test --package-path src-tauri/plugins/tauri-plugin-nyx-android/ios/NyxPolicies'));
 
+  // A failed build or launch must not hide the Swift rules' results (only a cancelled run skips them)
+  it('les tests Swift tournent même après l’échec d’une construction ou du lancement', () =>
+    expect(yml).toMatch(/- name: Swift unit tests \(NyxPolicies\)\n {8}if: \$\{\{ !cancelled\(\) \}\}\n {8}run: swift test /));
+
+  it('le commentaire sur `pnpm build` est juste au-dessus de la construction de l’IPA', () =>
+    expect(yml).toMatch(/\n {6}# Also runs `pnpm build` \(web UI\) before Xcode compiles the Rust and Swift code\.\n {6}- name: Build the unsigned IPA\n/));
+
   it('vérifie que le processus lancé tourne encore (PID), pas une entrée de launchctl', () => {
     expect(yml).toMatch(/kill -0 "\$pid"/);
     expect(yml).not.toContain('launchctl list');
