@@ -5,10 +5,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const invoke = vi.fn();
-let android = true;
+let platform: 'android' | 'ios' | 'windows' = 'android';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: (...a: unknown[]) => invoke(...a) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => android }));
+vi.mock('../../utils/platform', () => ({
+  isAndroid: () => platform === 'android',
+  usesNyxPlugin: () => platform !== 'windows',
+}));
 const hasContent = vi.fn();
 vi.mock('../dbCore', () => ({ clearAllData: vi.fn(), hasContent: () => hasContent() }));
 const checkLocalDatabase = vi.fn(async () => 'corrupt');
@@ -23,7 +26,7 @@ describe('StorageService.getCredentialsAtStartup', () => {
     vi.useFakeTimers();
     await StorageService.clearCredentials();
     invoke.mockReset();
-    android = true;
+    platform = 'android';
     vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
@@ -48,12 +51,28 @@ describe('StorageService.getCredentialsAtStartup', () => {
     expect(await p).toBeNull();
     expect(invoke).toHaveBeenCalledTimes(3);
   });
+
+  it('iOS, coffre momentanément indisponible puis disponible : identifiants retrouvés', async () => {
+    platform = 'ios';
+    invoke.mockRejectedValueOnce('secure_get failed (OSStatus -25308)').mockResolvedValueOnce({ value: JSON.stringify(creds) });
+    const p = StorageService.getCredentialsAtStartup();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(await p).toEqual(creds);
+    expect(invoke.mock.calls.map(([cmd]) => cmd)).toEqual(['plugin:nyx-android|secure_get', 'plugin:nyx-android|secure_get']);
+  });
+
+  it('iOS, rien dans le coffre : null tout de suite, sans nouvel essai', async () => {
+    platform = 'ios';
+    invoke.mockResolvedValueOnce({ value: null });
+    expect(await StorageService.getCredentialsAtStartup()).toBeNull();
+    expect(invoke.mock.calls.map(([cmd]) => cmd)).toEqual(['plugin:nyx-android|secure_get']);
+  });
 });
 
 describe('StorageService.getCredentials — identifiants gardés pour la session', () => {
   beforeEach(() => {
     invoke.mockReset();
-    android = true;
+    platform = 'android';
   });
 
   it('plusieurs lectures et zaps : un seul accès au coffre', async () => {

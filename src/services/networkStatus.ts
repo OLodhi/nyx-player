@@ -2,12 +2,12 @@
  * networkStatus.ts — Type de connexion réseau.
  *
  * Sert à ne pas télécharger l'EPG (≈ 205 Mo) sur des données mobiles limitées.
- * Android : `ConnectivityManager` via le plugin natif. Desktop : connexion considérée
+ * Android (`ConnectivityManager`) et iOS (`NWPathMonitor`) : via le plugin natif. Desktop : connexion considérée
  * comme non limitée (l'app Windows tourne sur une machine fixe).
  */
 
 import { invoke } from '@tauri-apps/api/core';
-import { isAndroid } from '../utils/platform';
+import { usesNyxPlugin } from '../utils/platform';
 import { devLog } from '../utils/devLog';
 
 export interface NetworkStatus {
@@ -20,7 +20,7 @@ export interface NetworkStatus {
 const DESKTOP_STATUS: NetworkStatus = { connected: true, metered: false, type: 'other' };
 
 export async function getNetworkStatus(): Promise<NetworkStatus> {
-  if (!isAndroid()) return DESKTOP_STATUS;
+  if (!usesNyxPlugin()) return DESKTOP_STATUS;
 
   try {
     return await invoke<NetworkStatus>('plugin:nyx-android|network_status');

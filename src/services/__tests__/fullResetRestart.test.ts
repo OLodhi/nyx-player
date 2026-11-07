@@ -23,8 +23,11 @@ vi.mock('../sync/syncState', () => ({ getCurrentSyncUserId: () => 'user-1' }));
 vi.mock('../syncService', () => ({ purgeCloudData: vi.fn() }));
 vi.mock('../authStorage', () => ({ purgeDurableAuthSession: vi.fn() }));
 vi.mock('../supabaseClient', () => ({ SUPABASE_STORAGE_KEY: 'sb-test-auth-token' }));
-let android = false;
-vi.mock('../../utils/platform', () => ({ isAndroid: () => android }));
+let platform: 'android' | 'ios' | 'windows' = 'windows';
+vi.mock('../../utils/platform', () => ({
+  isAndroid: () => platform === 'android',
+  usesNyxPlugin: () => platform !== 'windows',
+}));
 
 import { performFullReset } from '../fullResetService';
 import { ACCOUNT_DELETION_PENDING_KEY, confirmAccountDeletion, markAccountDeletionPending } from '../accountDeletion';
@@ -43,7 +46,7 @@ describe('performFullReset : relance de l’app', () => {
   });
 
   it('Android : la page est rechargée, sans relance du processus (plantage natif)', async () => {
-    android = true;
+    platform = 'android';
     markAccountDeletionPending(UID);
     confirmAccountDeletion();
 
@@ -55,8 +58,17 @@ describe('performFullReset : relance de l’app', () => {
     expect(localStorage.getItem(ACCOUNT_DELETION_PENDING_KEY)).toBeNull();
   });
 
+  it('iOS : la page est rechargée, sans relance du processus', async () => {
+    platform = 'ios';
+
+    await performFullReset();
+
+    expect(relaunchMock).not.toHaveBeenCalled();
+    expect(reloadMock).toHaveBeenCalledTimes(1);
+  });
+
   it('ordinateur : vraie relance, comme avant', async () => {
-    android = false;
+    platform = 'windows';
 
     await performFullReset();
 
@@ -65,7 +77,7 @@ describe('performFullReset : relance de l’app', () => {
   });
 
   it('affiches réduites du disque effacées aussi, comme la confirmation le promet', async () => {
-    android = false;
+    platform = 'windows';
 
     await performFullReset();
 
@@ -74,7 +86,7 @@ describe('performFullReset : relance de l’app', () => {
   });
 
   it('effacement des affiches en échec : la réinitialisation va quand même jusqu\'à la relance', async () => {
-    android = false;
+    platform = 'windows';
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     invokeMock.mockImplementation(async (cmd: string) => { if (cmd === 'poster_cache_clear') throw new Error('ipc'); });
 
