@@ -29,10 +29,19 @@ describe('plugin nyx-android sur iOS', () => {
   it('le paquet NyxPolicies est une dépendance locale', () =>
     expect(readFileSync(resolve(PLUGIN, 'ios/Package.swift'), 'utf8')).toContain('.package(path: "NyxPolicies")'));
 
-  // Credentials and Supabase tokens go through this file: nothing may be logged from it.
+  // Credentials and Supabase tokens go through the secure store and its three commands: nothing
+  // there may be logged (Tauri's Logger.info/error included).
+  const LOGGING = /\bLogger\.|\bLogger\(|\bNSLog\b|\bprint\(|\bdump\(|\bos_log\b/;
+
   it('SecureStore.swift ne journalise rien', () => {
     const store = readFileSync(resolve(PLUGIN, 'ios/Sources/NyxIosPlugin/SecureStore.swift'), 'utf8');
-    expect(store).not.toMatch(/NSLog\(|print\(|os_log|Logger\(/);
+    expect(store).not.toMatch(LOGGING);
+  });
+
+  it('les commandes secure_* ne journalisent rien (clés et valeurs)', () => {
+    const commands = swift.split(/@objc\s+public\s+func\s+/).filter((part) => /^secure(Get|Set|Delete)\(/.test(part));
+    expect(commands).toHaveLength(3);
+    for (const body of commands) expect(body).not.toMatch(LOGGING);
   });
 
   it('Keychain : service, accessibilité', () => {
