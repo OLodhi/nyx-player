@@ -1,0 +1,6 @@
+// C declarations of the Rust functions the Swift side calls (src/*.rs, iOS only). A C header keeps
+// the C calling convention that Rust's extern "C" functions use.
+module NyxRustExports [system] {
+    header "nyx_rust_exports.h"
+    export *
+}

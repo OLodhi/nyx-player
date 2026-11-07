@@ -3,6 +3,10 @@ use tauri::{
     Runtime,
 };
 
+// Root certificates handed to the Swift player (CaBundle.swift)
+#[cfg(target_os = "ios")]
+mod ios_ca;
+
 // Swift entry point of the iOS side (ios/Sources/NyxIosPlugin/NyxPlugin.swift)
 #[cfg(target_os = "ios")]
 tauri::ios_plugin_binding!(init_plugin_nyx_android);

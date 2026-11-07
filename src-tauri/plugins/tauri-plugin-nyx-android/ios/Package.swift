@@ -34,11 +34,16 @@ let package = Package(
                 .product(name: "NyxPolicies", package: "NyxPolicies"),
                 .product(name: "MPVKit", package: "MPVKit"),
                 "NyxMpvLinks",
+                "NyxRustExports",
             ],
             path: "Sources/NyxIosPlugin"),
         // System frameworks and libraries MPVKit's archives need (see its module.modulemap)
         .systemLibrary(
             name: "NyxMpvLinks",
             path: "Sources/NyxMpvLinks"),
+        // C declarations of the plugin crate's Rust exports (iOS only), e.g. the root certificates
+        .systemLibrary(
+            name: "NyxRustExports",
+            path: "Sources/NyxRustExports"),
     ]
 )

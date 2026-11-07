@@ -11,5 +11,9 @@ publish = false
 [dependencies]
 tauri = { version = "2", features = [] }
 
+# iOS: Mozilla's root certificates for mpv's TLS (GnuTLS in MPVKit can't read the iOS trust store)
+[target.'cfg(target_os = "ios")'.dependencies]
+webpki-root-certs = "1"
+
 [build-dependencies]
 tauri-plugin = { version = "2", features = ["build"] }

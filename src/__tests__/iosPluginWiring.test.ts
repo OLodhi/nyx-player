@@ -61,6 +61,31 @@ describe('plugin nyx-android sur iOS', () => {
   it('liaison MPVKit pour iOS seulement', () =>
     expect(buildRs).toMatch(/CARGO_CFG_TARGET_OS[^\n]*"ios"[^\n]*\)\s*\{\s*link_mpvkit\(\);/));
 
+  // GnuTLS (MPVKit's FFmpeg) can't read iOS's own roots: the plugin ships Mozilla's list from
+  // webpki-root-certs (Rust, iOS only) and writes it as a PEM file for mpv's tls-ca-file.
+  it('certificats racine pour iOS seulement', () => {
+    const cargo = readFileSync(resolve(PLUGIN, 'Cargo.toml'), 'utf8');
+    const iosDeps = /\[target\.'cfg\(target_os = "ios"\)'\.dependencies\]([\s\S]*?)(\n\[|$)/.exec(cargo)?.[1] ?? '';
+    expect(iosDeps).toMatch(/^webpki-root-certs\s*=/m);
+    expect(cargo.replace(iosDeps, '')).not.toContain('webpki-root-certs');
+    expect(libRs).toMatch(/#\[cfg\(target_os = "ios"\)\]\s*mod ios_ca;/);
+  });
+
+  it('fichier CA écrit de façon atomique', () => {
+    const ca = readFileSync(resolve(PLUGIN, 'ios/Sources/NyxIosPlugin/CaBundle.swift'), 'utf8');
+    expect(ca).toContain('nyx-cacert.pem.tmp');
+    expect(ca).toMatch(/replaceItemAt|moveItem/);
+    // Rust's extern "C" functions are reached through a C header (C calling convention), not
+    // @_silgen_name (Swift's)
+    expect(ca).toContain('import NyxRustExports');
+    const header = readFileSync(resolve(PLUGIN, 'ios/Sources/NyxRustExports/nyx_rust_exports.h'), 'utf8');
+    expect(header).toContain('size_t nyx_ios_root_cert_count(void);');
+    expect(header).toContain('const unsigned char *nyx_ios_root_cert(size_t index, size_t *len);');
+    const rust = readFileSync(resolve(PLUGIN, 'src/ios_ca.rs'), 'utf8');
+    expect(rust).toMatch(/#\[no_mangle\]\s*pub extern "C" fn nyx_ios_root_cert_count\(\) -> usize/);
+    expect(rust).toMatch(/#\[no_mangle\]\s*pub unsafe extern "C" fn nyx_ios_root_cert\(index: usize, len: \*mut usize\) -> \*const u8/);
+  });
+
   it('le paquet NyxPolicies est une dépendance locale', () =>
     expect(readFileSync(resolve(PLUGIN, 'ios/Package.swift'), 'utf8')).toContain('.package(path: "NyxPolicies")'));
 
