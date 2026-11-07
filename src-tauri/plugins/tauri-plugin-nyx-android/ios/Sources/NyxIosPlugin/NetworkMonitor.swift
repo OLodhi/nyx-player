@@ -8,8 +8,14 @@ final class NetworkMonitor {
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "com.nyxplayer.network-monitor")
     private let latest = FirstValue<NetworkPathFacts>()
+    private var started = false
 
+    /// Starts the monitor once: NyxPlugin.load(webview:) may run again for another webview, and an
+    /// NWPathMonitor must not be started twice. A plain flag, not thread-safe: only load(webview:)
+    /// calls this, on the main thread.
     func start() {
+        guard !started else { return }
+        started = true
         monitor.pathUpdateHandler = { [latest] path in
             latest.publish(NetworkPathFacts(
                 satisfied: path.status == .satisfied,

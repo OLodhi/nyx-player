@@ -33,6 +33,16 @@ describe('plugin nyx-android sur iOS', () => {
     expect(body).toMatch(/guard let status else \{\s*return invoke\.reject\("network_status: no network reading yet"\)/);
   });
 
+  // load(webview:) can run again for a second webview: NWPathMonitor must not be started twice
+  it('NetworkMonitor ne démarre NWPathMonitor qu’une fois', () => {
+    const monitor = readFileSync(resolve(PLUGIN, 'ios/Sources/NyxIosPlugin/NetworkMonitor.swift'), 'utf8');
+    const start = /func start\(\) \{([\s\S]*?)\n {4}\}/.exec(monitor)?.[1] ?? '';
+    expect(monitor).toMatch(/private var started = false/);
+    expect(start).toMatch(/^\s*guard !started else \{ return \}\s*started = true\n/);
+    expect(monitor.match(/monitor\.start\(/g)).toHaveLength(1);
+    expect(start).toContain('monitor.start(queue: queue)');
+  });
+
   it('le paquet NyxPolicies est une dépendance locale', () =>
     expect(readFileSync(resolve(PLUGIN, 'ios/Package.swift'), 'utf8')).toContain('.package(path: "NyxPolicies")'));
 
