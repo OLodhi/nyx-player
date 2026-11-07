@@ -38,10 +38,12 @@ describe('configuration iOS', () => {
     expect(plist).not.toMatch(/NSAllowsArbitraryLoadsInWebContent|NSAllowsArbitraryLoadsForMedia/);
   });
 
-  // Like Android phones (DevicePolicy.locksPortrait): the interface has no landscape layout outside
-  // the player, so an iPhone stays in portrait. Tablets keep every orientation.
-  it('iPhone : portrait seulement, comme les téléphones Android ; iPad : tout', () => {
-    expect(plistArray('UISupportedInterfaceOrientations')).toEqual(['UIInterfaceOrientationPortrait']);
+  // The iPhone lists landscape for the player, but the plugin locks portrait at start-up (like
+  // Android phones, DevicePolicy.locksPortrait: no landscape layout outside the player) and unlocks
+  // landscape only for playback. Tablets keep every orientation.
+  it('iPhone : portrait et paysage dans Info.plist, verrou portrait à l’exécution ; iPad : tout', () => {
+    expect(plistArray('UISupportedInterfaceOrientations')).toEqual([
+      'UIInterfaceOrientationPortrait', 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight']);
     expect(plistArray('UISupportedInterfaceOrientations~ipad')).toHaveLength(4);
   });
 });
@@ -105,8 +107,19 @@ describe('workflow iOS', () => {
   it('vérifie que Info.ios.plist est bien fusionné', () => expect(yml).toContain('plutil -extract UIBackgroundModes'));
 
   // The generated Info.plist allows landscape on iPhone; only the merge of Info.ios.plist removes it
-  it('vérifie dans l’app construite que l’iPhone reste en portrait', () =>
-    expect(yml).toContain(`plutil -extract UISupportedInterfaceOrientations json -o - "$app/Info.plist"`));
+  it('vérifie l’orientation dans l’app construite', () => {
+    expect(yml).toContain(`plutil -extract UISupportedInterfaceOrientations json -o - "$app/Info.plist"`);
+    expect(yml).toContain(`'["UIInterfaceOrientationPortrait","UIInterfaceOrientationLandscapeLeft","UIInterfaceOrientationLandscapeRight"]'`);
+  });
+
+  // Spike S3 in CI: a debug-only hook puts a plain view under the page, makes the page transparent,
+  // enters fullscreen and writes what UIKit reports (orientation, bars, view order) to a JSON file
+  it('contrôle S3 : vue sous la page, plein écran paysage, barres masquées', () => {
+    expect(yml).toContain('SIMCTL_CHILD_NYX_SPIKE_S3=1 xcrun simctl launch');
+    expect(yml).toMatch(/jq -e '\.orientation == "landscapeLeft" or \.orientation == "landscapeRight"'/);
+    expect(yml).toMatch(/jq -e '\.statusBarHidden == true and \.homeIndicatorAutoHidden == true and \.videoBelowWebView == true'/);
+    expect(yml).toMatch(/jq -e '\.orientation == "portrait" and \.statusBarHidden == false'/);
+  });
 
   // Xcode's archive leaves an incomplete .app in DerivedData: pick the complete one built for the Simulator
   it('choisit l’app du Simulateur par sa plateforme, pas par son dossier', () =>

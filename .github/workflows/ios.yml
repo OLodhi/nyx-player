@@ -148,12 +148,16 @@ jobs:
           modes="$(plutil -extract UIBackgroundModes json -o - "$app/Info.plist")"
           echo "UIBackgroundModes: $modes"
           test "$modes" = '["audio"]' || { echo "::error::Info.ios.plist not merged"; exit 1; }
-          # iPhone in portrait only (the generated Info.plist allows landscape; Info.ios.plist replaces it)
+          # iPhone: portrait and landscape listed (Info.ios.plist replaces the generated list); the
+          # plugin locks portrait at runtime and unlocks landscape only for the player
           orientations="$(plutil -extract UISupportedInterfaceOrientations json -o - "$app/Info.plist")"
           echo "UISupportedInterfaceOrientations: $orientations"
-          test "$orientations" = '["UIInterfaceOrientationPortrait"]' || { echo "::error::iPhone orientations not portrait-only"; exit 1; }
-          udid="$(xcrun simctl list devices available | grep -E 'iPhone 1[6-9]' | grep -v 'Plus' | head -n 1 | grep -oE '[0-9A-F-]{36}')"
-          test -n "$udid" || { echo "::error::No iPhone 16+ Simulator available"; exit 1; }
+          test "$orientations" = '["UIInterfaceOrientationPortrait","UIInterfaceOrientationLandscapeLeft","UIInterfaceOrientationLandscapeRight"]' || { echo "::error::iPhone orientations not merged"; exit 1; }
+          # A model with a Dynamic Island, the same each run (the S3 check reads its safe area)
+          udid="$(xcrun simctl list devices available | grep -E '^ +iPhone 17 \(' | head -n 1 | grep -oE '[0-9A-F-]{36}' || true)"
+          test -n "$udid" || udid="$(xcrun simctl list devices available | grep -E 'iPhone 1[6-9] Pro \(' | head -n 1 | grep -oE '[0-9A-F-]{36}' || true)"
+          test -n "$udid" || { echo "::error::No iPhone 17 or 16+ Pro Simulator available"; exit 1; }
+          echo "SIM_UDID=$udid" >> "$GITHUB_ENV"
           xcrun simctl boot "$udid"
           xcrun simctl bootstatus "$udid" -b
           xcrun simctl install "$udid" "$app"
@@ -163,6 +167,24 @@ jobs:
           sleep 25
           kill -0 "$pid" || { echo "::error::Nyx is not running"; exit 1; }
           xcrun simctl io "$udid" screenshot signin.png
+
+      # Spike S3: a debug-only hook (NYX_SPIKE_S3, SpikeS3Check.swift) puts a magenta view under the
+      # page, makes the page transparent, enters the player's fullscreen and writes what UIKit
+      # reports. simctl screenshots are always portrait-shaped, so the orientation comes from the JSON.
+      - name: S3 check (view under the page, landscape, hidden bars, then back)
+        run: |
+          set -euo pipefail
+          xcrun simctl terminate "$SIM_UDID" com.nyxplayer.app || true
+          SIMCTL_CHILD_NYX_SPIKE_S3=1 xcrun simctl launch "$SIM_UDID" com.nyxplayer.app
+          sleep 12
+          xcrun simctl io "$SIM_UDID" screenshot s3-fullscreen.png
+          data="$(xcrun simctl get_app_container "$SIM_UDID" com.nyxplayer.app data)"
+          cat "$data/Library/Caches/nyx-spike-s3.json"
+          jq -e '.orientation == "landscapeLeft" or .orientation == "landscapeRight"' "$data/Library/Caches/nyx-spike-s3.json"
+          jq -e '.statusBarHidden == true and .homeIndicatorAutoHidden == true and .videoBelowWebView == true' "$data/Library/Caches/nyx-spike-s3.json"
+          sleep 6
+          cat "$data/Library/Caches/nyx-spike-s3-exit.json"
+          jq -e '.orientation == "portrait" and .statusBarHidden == false' "$data/Library/Caches/nyx-spike-s3-exit.json"
 
       # Pure Swift rules of the plugin (Keychain result mapping, network status), on this Mac.
       # After the builds, so a failing rule still leaves the build and launch results to read; and
@@ -176,6 +198,8 @@ jobs:
         if: always()
         with:
           name: nyx-ios-sim-screenshot
-          path: signin.png
+          path: |
+            signin.png
+            s3-fullscreen.png
           if-no-files-found: warn
           retention-days: 14

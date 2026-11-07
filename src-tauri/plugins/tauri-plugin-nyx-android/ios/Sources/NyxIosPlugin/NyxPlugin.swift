@@ -16,12 +16,27 @@ struct SecureSetArgs: Decodable {
     let value: String
 }
 
+struct SetFullscreenArgs: Decodable {
+    let enabled: Bool?
+}
+
 class NyxPlugin: Plugin {
     private let secureStore = SecureStore()
     private let networkMonitor = NetworkMonitor()
+    private var fullscreen: FullscreenController?
 
     override func load(webview: WKWebView) {
         networkMonitor.start()
+        // Once: load(webview:) runs again for any other web view
+        guard fullscreen == nil else { return }
+        let chrome = TaoChrome(webView: webview)
+        let controller = FullscreenController(chrome: chrome)
+        fullscreen = controller
+        // Portrait on iPhone outside the player, as on Android phones
+        controller.applyEverydayLock()
+        #if DEBUG
+        SpikeS3Check.startIfRequested(webView: webview, fullscreen: controller, chrome: chrome)
+        #endif
     }
 
     // MARK: Device
@@ -48,6 +63,23 @@ class NyxPlugin: Plugin {
                 "metered": status.metered,
                 "type": status.type,
             ] as JsonObject)
+        }
+    }
+
+    // MARK: Player
+
+    /// Landscape with the bars hidden on iPhone, then back. Always answers with the `fullscreen`
+    /// property, changed or not: the page waits for it (as on Android).
+    @objc public func setFullscreen(_ invoke: Invoke) {
+        let enabled = (try? invoke.parseArgs(SetFullscreenArgs.self))?.enabled ?? false
+        DispatchQueue.main.async { [self] in
+            if enabled {
+                fullscreen?.enter()
+            } else {
+                fullscreen?.exit()
+            }
+            trigger("property", data: ["name": "fullscreen", "data": enabled] as JSObject)
+            invoke.resolve()
         }
     }
 

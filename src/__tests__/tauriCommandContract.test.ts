@@ -498,8 +498,8 @@ describe('contrat des commandes appli ↔ Rust ↔ Android', () => {
       expect(swift.get('network_status')).toBeNull();
     });
 
-    it('les commandes de M2 existent côté Swift', () => {
-      for (const name of ['device_info', 'network_status', 'secure_get', 'secure_set', 'secure_delete']) {
+    it('les commandes portées sur iOS existent côté Swift', () => {
+      for (const name of ['device_info', 'network_status', 'secure_get', 'secure_set', 'secure_delete', 'set_fullscreen']) {
         expect([...swift.keys()], name).toContain(name);
       }
     });

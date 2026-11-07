@@ -6,9 +6,10 @@
     "Keep playing in the background" (off by default) and enables picture-in-picture.
   - NSAllowsArbitraryLoads: provider logos and posters load over plain http in the WebView, as on
     Android. Only this ATS key: iOS ignores it when the ...InWebContent or ...ForMedia keys are present.
-  - Orientations: iPhone portrait only, like Android phones (DevicePolicy.locksPortrait): the
-    interface has no landscape layout outside the player. iPad all four. This list replaces the
-    generated one, which allows landscape on iPhone.
+  - Orientations: iPhone portrait and landscape, iPad all four. On iPhone the plugin locks portrait
+    when it loads and unlocks landscape only for the player (FullscreenController), like Android
+    phones (DevicePolicy.locksPortrait: no landscape layout outside the player). Landscape must be
+    listed here to be requested at all.
 -->
 <plist version="1.0">
 <dict>
@@ -24,6 +25,8 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>

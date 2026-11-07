@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const PLUGIN = resolve(__dirname, '../../src-tauri/plugins/tauri-plugin-nyx-android');
@@ -84,6 +84,26 @@ describe('plugin nyx-android sur iOS', () => {
     const rust = readFileSync(resolve(PLUGIN, 'src/ios_ca.rs'), 'utf8');
     expect(rust).toMatch(/#\[no_mangle\]\s*pub extern "C" fn nyx_ios_root_cert_count\(\) -> usize/);
     expect(rust).toMatch(/#\[no_mangle\]\s*pub unsafe extern "C" fn nyx_ios_root_cert\(index: usize, len: \*mut usize\) -> \*const u8/);
+  });
+
+  // Like Android phones: portrait outside the player, set by the plugin when it loads
+  it('verrou portrait au chargement', () => {
+    const load = /override func load\(webview: WKWebView\) \{([\s\S]*?)\r?\n {4}\}/.exec(swift)?.[1] ?? '';
+    expect(load).toContain('applyEverydayLock()');
+  });
+
+  // The page waits for this property after every set_fullscreen, changed or not (Android does the same)
+  it('set_fullscreen émet toujours la propriété fullscreen', () => {
+    const body = swift.split(/@objc\s+public\s+func\s+/).find((part) => part.startsWith('setFullscreen(')) ?? '';
+    expect(body).toMatch(/trigger\("property", data: \["name": "fullscreen", "data": enabled\]/);
+  });
+
+  // MoltenVK's video thread hops to main; a main thread blocked on it would deadlock
+  it('aucun DispatchQueue.main.sync dans le plugin', () => {
+    const dir = resolve(PLUGIN, 'ios/Sources');
+    const files = (readdirSync(dir, { recursive: true }) as string[]).filter((f) => f.endsWith('.swift'));
+    expect(files.length).toBeGreaterThan(3);
+    for (const f of files) expect(readFileSync(resolve(dir, f), 'utf8'), f).not.toMatch(/DispatchQueue\.main\.sync/);
   });
 
   it('le paquet NyxPolicies est une dépendance locale', () =>
