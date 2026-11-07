@@ -8,12 +8,13 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const { init, command, setProperty, isEngineAlive, platform } = vi.hoisted(() => ({
+const { init, command, setProperty, isEngineAlive, listenDesktopEvents, platform } = vi.hoisted(() => ({
   init: vi.fn(),
+  listenDesktopEvents: vi.fn().mockResolvedValue(() => {}),
   command: vi.fn(),
   setProperty: vi.fn(),
   isEngineAlive: vi.fn(),
-  platform: { android: false },
+  platform: { os: 'windows' as 'android' | 'ios' | 'windows' },
 }));
 
 vi.mock('../player/mpvApi', () => ({
@@ -21,11 +22,11 @@ vi.mock('../player/mpvApi', () => ({
   command,
   setProperty,
   isEngineAlive,
-  listenDesktopEvents: vi.fn().mockResolvedValue(() => {}),
+  listenDesktopEvents,
 }));
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 vi.mock('../appSettingsService', () => ({ isHardwareAccelerationEnabled: vi.fn().mockResolvedValue(true) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.android }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.os === 'android', usesNyxPlugin: () => platform.os !== 'windows' }));
 
 import type { PlaybackError } from '../player/playbackErrors';
 
@@ -44,7 +45,7 @@ describe('mpvBridge — mpv.exe arrêté pendant la lecture', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     // Module neuf à chaque test : la surveillance démarre au premier lancement de mpv
     vi.resetModules();
-    platform.android = false;
+    platform.os = 'windows';
     alive = true;
     init.mockReset().mockImplementation(async () => {
       alive = true;
@@ -133,12 +134,36 @@ describe('mpvBridge — mpv.exe arrêté pendant la lecture', () => {
   });
 
   it('Android : libmpv vit dans l\'app, aucune surveillance du processus', async () => {
-    platform.android = true;
+    platform.os = 'android';
     await bridge.mpvPlay('http://test.invalid/live/1.ts');
     alive = false;
     await tick();
 
     expect(isEngineAlive).not.toHaveBeenCalled();
     expect(errors).toEqual([]);
+  });
+
+  it('iOS : aucune surveillance du processus mpv de bureau', async () => {
+    platform.os = 'ios';
+    listenDesktopEvents.mockClear();
+    await bridge.mpvPlay('http://test.invalid/live/1.ts');
+    alive = false;
+    await tick();
+    await tick();
+
+    expect(init).toHaveBeenCalledWith(undefined);
+    expect(listenDesktopEvents).not.toHaveBeenCalled();
+    expect(isEngineAlive).not.toHaveBeenCalled();
+    expect(errors).toEqual([]);
+  });
+
+  it('iOS : une erreur de tube n\'est pas prise pour un mpv.exe arrêté, rien n\'est relancé', async () => {
+    platform.os = 'ios';
+    const pipeClosed = 'IPC communication error: pipe closed';
+    command.mockImplementation(async (name: string) => {
+      if (name === 'loadfile') throw pipeClosed;
+    });
+    await expect(bridge.mpvPlay('http://test.invalid/live/1.ts')).rejects.toBe(pipeClosed);
+    expect(init).toHaveBeenCalledTimes(1);
   });
 });

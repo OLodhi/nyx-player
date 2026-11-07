@@ -19,7 +19,7 @@ vi.mock('tauri-plugin-mpv-api', () => ({
   listenEvents: vi.fn(async (cb: (e: MpvEvent) => void) => { events.callback = cb; return () => {}; }),
 }));
 vi.mock('../appSettingsService', () => ({ isHardwareAccelerationEnabled: vi.fn().mockResolvedValue(true) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => false }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => false, usesNyxPlugin: () => false }));
 vi.mock('../player/androidPlayer', () => ({}));
 vi.mock('../../dev/lecteurSimule', async () => {
   const reel = await vi.importActual<typeof import('../../dev/lecteurSimule')>('../../dev/lecteurSimule');

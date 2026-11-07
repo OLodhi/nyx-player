@@ -19,7 +19,7 @@ import { UpdaterProvider } from './contexts/UpdaterContext';
 import { DevOverrideProvider } from './contexts/DevOverrideContext';
 import * as Sentry from '@sentry/react';
 import { sentryPrivacyOptions } from './utils/sentryScrub';
-import { isAndroid, isMobile, isMobileDevice, isTv, detectDeviceType, setTvMode, setPhoneMode, isTvOverrideEnabled, isPhoneOverrideEnabled } from './utils/platform';
+import { isAndroid, usesNyxPlugin, isMobile, isMobileDevice, isTv, detectDeviceType, setTvMode, setPhoneMode, isTvOverrideEnabled, isPhoneOverrideEnabled } from './utils/platform';
 import { applyTvViewport, installDesktopTvZoom, resetDesktopZoom } from './utils/tvScale';
 import { installViewportHeightVar } from './utils/viewportHeight';
 import { installSpatialNavigation } from './utils/spatialNavigation';
@@ -144,7 +144,7 @@ void runStartup(startupReady, () => {
     // Sortie du mode TV forcé (DevPanel, outil de mesure de la version d'audit) : zoom rendu à 1
     void resetDesktopZoom();
   }
-  if (isAndroid()) resetAndroidPlayer();
+  if (usesNyxPlugin()) resetAndroidPlayer();
 }, () => {
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>

@@ -17,6 +17,7 @@ const { mpv, mpvStop, win, android, platform } = vi.hoisted(() => ({
   mpvStop: vi.fn(),
   win: {
     fullscreen: false,
+    windowCalls: 0,
     resized: null as (() => Promise<void>) | null,
     isFullscreen: vi.fn(),
     setFullscreen: vi.fn(),
@@ -27,7 +28,7 @@ const { mpv, mpvStop, win, android, platform } = vi.hoisted(() => ({
     observeProperties: vi.fn(),
     listener: null as ((e: FullscreenEvent) => void) | null,
   },
-  platform: { android: false },
+  platform: { os: 'windows' as 'android' | 'ios' | 'windows' },
 }));
 
 vi.mock('../../services/player/mpvApi', () => ({
@@ -40,14 +41,17 @@ vi.mock('../../services/player/androidPlayer', () => ({
   setFullscreen: android.setFullscreen,
   observeProperties: android.observeProperties,
 }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.android }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.os === 'android', usesNyxPlugin: () => platform.os !== 'windows' }));
 vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => ({
-    onResized: (cb: () => Promise<void>) => { win.resized = cb; return Promise.resolve(() => {}); },
-    isFullscreen: win.isFullscreen,
-    setFullscreen: win.setFullscreen,
-    innerSize: win.innerSize,
-  }),
+  getCurrentWindow: () => {
+    win.windowCalls += 1;
+    return {
+      onResized: (cb: () => Promise<void>) => { win.resized = cb; return Promise.resolve(() => {}); },
+      isFullscreen: win.isFullscreen,
+      setFullscreen: win.setFullscreen,
+      innerSize: win.innerSize,
+    };
+  },
 }));
 
 import { usePlayerActions } from '../usePlayerActions';
@@ -94,8 +98,9 @@ const refused = () => Promise.reject(new Error('moteur de lecture indisponible')
 
 describe('usePlayerActions : erreurs du moteur de lecture', () => {
   beforeEach(() => {
-    platform.android = false;
+    platform.os = 'windows';
     win.fullscreen = false;
+    win.windowCalls = 0;
     win.resized = null;
     mpv.setProperty.mockReset().mockResolvedValue(undefined);
     mpv.getProperty.mockReset().mockResolvedValue(null);
@@ -256,7 +261,7 @@ describe('usePlayerActions : erreurs du moteur de lecture', () => {
     });
 
     it('Android : part en plein écran, bascule par le plugin, et suit les changements venus d\'ailleurs', async () => {
-      platform.android = true;
+      platform.os = 'android';
       const { result } = setup();
       expect(result.current.isFullscreen).toBe(true);
       await act(async () => { await result.current.toggleFullscreen(); });
@@ -268,13 +273,35 @@ describe('usePlayerActions : erreurs du moteur de lecture', () => {
     });
 
     it('Android : plugin qui refuse, l\'icône ne change pas ; suivi impossible, pas de plantage', async () => {
-      platform.android = true;
+      platform.os = 'android';
       android.setFullscreen.mockImplementation(refused);
       android.observeProperties.mockImplementation(refused);
       const { result } = setup();
       await act(async () => { await result.current.toggleFullscreen(); });
       expect(result.current.isFullscreen).toBe(true);
       expect(console.warn).toHaveBeenCalled();
+    });
+
+    // Pas de fenêtre Tauri sur iOS : plein écran, format Étirer et fermeture passent par le plugin
+    it('iOS : plein écran par le plugin, jamais getCurrentWindow', async () => {
+      vi.useFakeTimers();
+      platform.os = 'ios';
+      const { result, onClose } = setup();
+      expect(result.current.isFullscreen).toBe(true);
+      await act(async () => { await result.current.toggleFullscreen(); });
+      expect(android.setFullscreen).toHaveBeenCalledWith(false);
+      expect(result.current.isFullscreen).toBe(false);
+      act(() => { android.listener?.({ data: true }); });
+      expect(result.current.isFullscreen).toBe(true);
+
+      await act(async () => { await result.current.toggleAspect(); });
+      await act(async () => { await result.current.toggleAspect(); });
+      expect(mpv.setProperty).toHaveBeenCalledWith('video-aspect-override', String(window.innerWidth / window.innerHeight));
+
+      act(() => { void result.current.handleClose(); });
+      await act(async () => { await vi.advanceTimersByTimeAsync(600); });
+      expect(onClose).toHaveBeenCalledTimes(1);
+      expect(win.windowCalls).toBe(0);
     });
   });
 
@@ -359,7 +386,7 @@ describe('usePlayerActions : erreurs du moteur de lecture', () => {
 
     it('Android : ne touche pas à la fenêtre (le plugin restaure l\'écran à l\'arrêt)', async () => {
       vi.useFakeTimers();
-      platform.android = true;
+      platform.os = 'android';
       const { result, onClose } = setup();
       act(() => { void result.current.handleClose(); });
       await act(async () => { await vi.advanceTimersByTimeAsync(600); });

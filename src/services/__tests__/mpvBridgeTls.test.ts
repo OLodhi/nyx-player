@@ -20,7 +20,7 @@ vi.mock('tauri-plugin-mpv-api', () => ({
   listenEvents: vi.fn(async (cb: (e: MpvEvent) => void) => { events.callback = cb; return () => {}; }),
 }));
 vi.mock('../appSettingsService', () => ({ isHardwareAccelerationEnabled: vi.fn().mockResolvedValue(true) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => false }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => false, usesNyxPlugin: () => false }));
 vi.mock('../player/androidPlayer', () => ({}));
 
 const HTTPS = 'https://fournisseur.exemple.invalid/movie/u/p/1.mkv';

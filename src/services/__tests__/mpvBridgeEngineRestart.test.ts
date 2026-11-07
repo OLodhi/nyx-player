@@ -13,7 +13,7 @@ const { init, command, setProperty, platform } = vi.hoisted(() => ({
   init: vi.fn().mockResolvedValue('main'),
   command: vi.fn().mockResolvedValue(undefined),
   setProperty: vi.fn().mockResolvedValue(undefined),
-  platform: { android: false },
+  platform: { os: 'windows' as 'android' | 'ios' | 'windows' },
 }));
 
 vi.mock('../player/mpvApi', () => ({
@@ -26,7 +26,7 @@ vi.mock('../player/mpvApi', () => ({
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 vi.mock('@tauri-apps/api/path', () => ({ resolveResource: vi.fn().mockResolvedValue('C:/Nyx/mpv/mpv.exe') }));
 vi.mock('../appSettingsService', () => ({ isHardwareAccelerationEnabled: vi.fn().mockResolvedValue(true) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.android }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.os === 'android', usesNyxPlugin: () => platform.os !== 'windows' }));
 
 import { mpvPlay, mpvSwitchChannel, mpvStop, onMpvConnectionChange } from '../mpvBridge';
 
@@ -42,7 +42,7 @@ describe('mpvBridge — mpv.exe arrêté pendant que l\'app tourne', () => {
     vi.useFakeTimers();
     info = vi.spyOn(console, 'info').mockImplementation(() => {});
     warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    platform.android = false;
+    platform.os = 'windows';
     alive = true;
     // Le plugin : `init` relance mpv.exe s'il s'est arrêté ; toute commande échoue tant qu'il est arrêté
     init.mockReset().mockImplementation(async () => {

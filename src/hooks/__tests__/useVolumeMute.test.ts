@@ -43,7 +43,7 @@ vi.mock('../../services/player/mpvApi', () => ({
 }));
 vi.mock('../../services/mpvBridge', () => ({ mpvStop }));
 vi.mock('../../services/player/androidPlayer', () => ({ setFullscreen: vi.fn(), observeProperties: vi.fn() }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => false }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => false, usesNyxPlugin: () => false }));
 vi.mock('../../services/preferencesService', () => ({
   isBingeModeEnabled: () => false,
   getBingeCountdown: () => 10,

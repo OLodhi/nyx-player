@@ -14,7 +14,7 @@ const { mpvStop, command } = vi.hoisted(() => ({
 vi.mock('../../services/player/mpvApi', () => ({ setProperty: vi.fn().mockResolvedValue(undefined), command }));
 vi.mock('../../services/mpvBridge', () => ({ mpvStop }));
 vi.mock('../../services/player/androidPlayer', () => ({ setFullscreen: vi.fn(), observeProperties: vi.fn() }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => false }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => false, usesNyxPlugin: () => false }));
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({
     onResized: () => Promise.resolve(() => {}),

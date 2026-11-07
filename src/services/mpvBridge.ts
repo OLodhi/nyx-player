@@ -19,7 +19,7 @@ import {
 import { invoke } from '@tauri-apps/api/core';
 import { isHardwareAccelerationEnabled } from './appSettingsService';
 import { createLogger } from '../utils/logger';
-import { isAndroid } from '../utils/platform';
+import { usesNyxPlugin } from '../utils/platform';
 import { classifyHttpStatus, emitPlaybackError } from './player/playbackErrors';
 import { scheduleForcedUnpause, cancelForcedUnpause } from './player/forcedUnpause';
 import { estLectureRefusee } from '../dev/bancAdresses';
@@ -41,7 +41,7 @@ let loadErrorWatch: Promise<unknown> | null = null;
  * Une requête par échec seulement : aucun risque vis-à-vis de l'anti-flood du fournisseur.
  */
 const watchDesktopLoadErrors = () => {
-  if (isAndroid() || loadErrorWatch) return;
+  if (usesNyxPlugin() || loadErrorWatch) return;
   loadErrorWatch = listenDesktopEvents(async (event) => {
     if (event.event !== 'end-file' || !('reason' in event) || event.reason !== 'error') return;
     const url = lastStreamUrl;
@@ -168,8 +168,8 @@ const initMpv = async (): Promise<void> => {
   initPromise = (async () => {
     setConnectionState('connecting');
     try {
-      // Android : libmpv intégrée au plugin natif, pas de binaire mpv ni d'arguments CLI
-      const config = isAndroid() ? undefined : await getMpvConfig();
+      // Android et iOS : libmpv intégrée au plugin natif, pas de binaire mpv ni d'arguments CLI
+      const config = usesNyxPlugin() ? undefined : await getMpvConfig();
       await init(config);
       mpvInitialized = true;
       watchDesktopLoadErrors();
@@ -195,7 +195,7 @@ const ENGINE_GONE = /IPC communication error|mpv process failed/i;
 const ENGINE_SLOW = /Timeout/i;
 
 const isEngineGone = (e: unknown): boolean =>
-  !isAndroid() && ENGINE_GONE.test(String(e)) && !ENGINE_SLOW.test(String(e));
+  !usesNyxPlugin() && ENGINE_GONE.test(String(e)) && !ENGINE_SLOW.test(String(e));
 
 /**
  * mpv.exe s'est arrêté : l'état « initialisé » est oublié pour que le prochain `initMpv` relance le
@@ -230,7 +230,7 @@ const stopEngineWatch = () => {
  * Aucun flux → rien à afficher, mpv.exe sera relancé à la prochaine lecture.
  */
 const watchEngineProcess = () => {
-  if (isAndroid() || engineWatch) return;
+  if (usesNyxPlugin() || engineWatch) return;
   engineWatch = setInterval(() => {
     if (engineCheckPending) return;
     engineCheckPending = true;
@@ -360,9 +360,9 @@ export const mpvPlay = async (url: string, startPosition?: number, options?: Mpv
   await initMpv();
   if (sequence !== loadSequence) return;
 
-  // Stop le flux précédent (desktop). Android : play remplace déjà le flux en cours, et le stop natif
+  // Stop le flux précédent (desktop). Android et iOS : play remplace déjà le flux en cours, et le stop natif
   // sortirait du plein écran → rotation portrait/paysage à chaque lecture ou nouvelle tentative.
-  if (!isAndroid()) {
+  if (!usesNyxPlugin()) {
     try {
       await command('stop');
     } catch (e) {
@@ -401,7 +401,7 @@ export const mpvSwitchChannel = async (url: string, options?: MpvLoadOptions): P
 
 /**
  * Arrête la lecture. Appelé par la fermeture du lecteur (PlayerControls) puis par PlayerContext.stop :
- * un seul « stop » part vers le moteur. Android : le stop natif sort aussi du plein écran.
+ * un seul « stop » part vers le moteur. Android et iOS : le stop natif sort aussi du plein écran.
  */
 export const mpvStop = async (): Promise<void> => {
   // Un lancement encore en attente ne chargera plus rien, et sa reprise automatique ne partira pas

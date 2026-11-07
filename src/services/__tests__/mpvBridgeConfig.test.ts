@@ -4,7 +4,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const { init, command, setProperty } = vi.hoisted(() => ({
+const { init, command, setProperty, platform } = vi.hoisted(() => ({
+  platform: { os: 'windows' as 'android' | 'ios' | 'windows' },
   init: vi.fn().mockResolvedValue('main'),
   command: vi.fn().mockResolvedValue(undefined),
   setProperty: vi.fn().mockResolvedValue(undefined),
@@ -19,7 +20,7 @@ vi.mock('../player/mpvApi', () => ({
 }));
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 vi.mock('../appSettingsService', () => ({ isHardwareAccelerationEnabled: vi.fn().mockResolvedValue(true) }));
-vi.mock('../../utils/platform', () => ({ isAndroid: () => false }));
+vi.mock('../../utils/platform', () => ({ isAndroid: () => platform.os === 'android', usesNyxPlugin: () => platform.os !== 'windows' }));
 
 import { mpvPlay, mpvSwitchChannel, mpvStop } from '../mpvBridge';
 import { cancelForcedUnpause } from '../player/forcedUnpause';
@@ -161,5 +162,31 @@ describe('mpvBridge — reprise, zap rapide, pause et arrêt', () => {
     await mpvStop();
     await vi.advanceTimersByTimeAsync(1000);
     expect(setProperty).not.toHaveBeenCalledWith('pause', false);
+  });
+});
+
+// libmpv vit dans l'app : pas de binaire mpv.exe à configurer, et le « stop » natif sortirait du
+// plein écran (rotation) avant chaque lecture. Module neuf : l'init n'a lieu qu'une fois par module.
+describe('mpvBridge — libmpv dans l\'app (iOS, Android)', () => {
+  afterEach(() => {
+    platform.os = 'windows';
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it.each([['iOS', 'ios'], ['Android', 'android']] as const)('%s : ni getMpvConfig ni stop avant lecture', async (_label, os) => {
+    vi.useFakeTimers();
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.resetModules();
+    platform.os = os;
+    init.mockClear();
+    command.mockClear();
+    setProperty.mockClear();
+    const bridge = await import('../mpvBridge');
+
+    await bridge.mpvPlay('http://test.invalid/movie/1.mkv');
+    expect(init).toHaveBeenCalledWith(undefined);
+    expect(calls()).toEqual(['loadfile']);
+    await bridge.mpvStop();
   });
 });

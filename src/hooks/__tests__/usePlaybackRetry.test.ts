@@ -11,8 +11,8 @@ import { renderHook, act } from '@testing-library/react';
 import { usePlaybackRetry } from '../usePlaybackRetry';
 import type { PlaybackError } from '../../services/player/playbackErrors';
 
-let android = false;
-vi.mock('../../utils/platform', () => ({ isAndroid: () => android }));
+let os: 'android' | 'ios' | 'windows' = 'windows';
+vi.mock('../../utils/platform', () => ({ isAndroid: () => os === 'android', usesNyxPlugin: () => os !== 'windows' }));
 
 /** Simule l'app qui passe en arrière-plan (touche Accueil, appel) ou qui revient */
 function setHidden(hidden: boolean) {
@@ -22,7 +22,7 @@ function setHidden(hidden: boolean) {
 const limit: PlaybackError = { kind: 'connection_limit', httpStatus: 458 };
 
 describe('usePlaybackRetry', () => {
-  beforeEach(() => { vi.useFakeTimers(); android = false; setHidden(false); });
+  beforeEach(() => { vi.useFakeTimers(); os = 'windows'; setHidden(false); });
   afterEach(() => { vi.useRealTimers(); setHidden(false); });
 
   it('espace les relances 30 → 60 → 120 → 180 s même si l\'écran est remonté à chaque échec, puis s\'arrête', () => {
@@ -82,7 +82,7 @@ describe('usePlaybackRetry', () => {
   });
 
   it('Android : le compte à rebours s\'arrête en arrière-plan et reprend au retour', () => {
-    android = true;
+    os = 'android';
     const retry = vi.fn();
     const { result } = renderHook(() => usePlaybackRetry(limit, 0, retry));
     act(() => { vi.advanceTimersByTime(10_000); });
@@ -99,6 +99,21 @@ describe('usePlaybackRetry', () => {
     act(() => { vi.advanceTimersByTime(19_000); });
     expect(retry).not.toHaveBeenCalled();
     act(() => { vi.advanceTimersByTime(1_000); });
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('iOS : décompte en pause quand la page est cachée', () => {
+    os = 'ios';
+    const retry = vi.fn();
+    const { result } = renderHook(() => usePlaybackRetry(limit, 0, retry));
+    act(() => { vi.advanceTimersByTime(10_000); });
+    setHidden(true);
+    act(() => { vi.advanceTimersByTime(600_000); });
+    expect(retry).not.toHaveBeenCalled();
+    expect(result.current.secondsLeft).toBe(20);
+
+    setHidden(false);
+    act(() => { vi.advanceTimersByTime(20_000); });
     expect(retry).toHaveBeenCalledTimes(1);
   });
 

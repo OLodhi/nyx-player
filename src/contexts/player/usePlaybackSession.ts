@@ -13,7 +13,7 @@ import { mpvPlay, mpvStop, mpvSwitchChannel } from '../../services/mpvBridge';
 import { devLog } from '../../utils/devLog';
 import { sanitizeIptvUrl } from '../../utils/sanitizeUrl';
 import { enterPlayerMode, exitPlayerMode, purgeInPlayerMode } from '../../services/memoryService';
-import { isAndroid } from '../../utils/platform';
+import { usesNyxPlugin } from '../../utils/platform';
 import { setFullscreen as setAndroidFullscreen } from '../../services/player/androidPlayer';
 import {
     subscribePlaybackErrors,
@@ -134,7 +134,7 @@ export function usePlaybackSession(): PlaybackSession {
             await mpvPlay(result.url, resumeAt, { live: result.live });
             // Arrêt ou autre lecture demandés pendant le chargement : ils ont repris la main sur le moteur
             if (!isCurrent()) return;
-            if (isAndroid()) {
+            if (usesNyxPlugin()) {
                 // Paysage + barres système masquées, comme un lecteur vidéo natif
                 setAndroidFullscreen(true).catch(e => log.warn('fullscreen failed:', e));
             }
