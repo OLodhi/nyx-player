@@ -267,26 +267,83 @@ const SWIFT_PLUGIN_DIR = `${PLUGIN_DIR}/ios/Sources/NyxIosPlugin`;
 /** Mise à jour par APK : Android seulement, appelée derrière isAndroid() ; iOS la refuse */
 const APK_UPDATE_COMMANDS = new Set(['update_info', 'fetch_update_manifest', 'request_install_permission', 'download_update', 'install_update']);
 
-function swiftPlugin() {
-  const dir = join(ROOT, SWIFT_PLUGIN_DIR);
-  const text = readdirSync(dir).filter((f) => f.endsWith('.swift')).map((f) => readFileSync(join(dir, f), 'utf8')).join('\n');
-  const argTypes = new Map<string, KotlinArgs>();
-  for (const [, name, body] of text.matchAll(/(?:struct|class)\s+(\w+)\s*:\s*Decodable\s*\{([\s\S]*?)\r?\n\}/g)) {
-    const fields = new Set<string>();
-    const required = new Set<string>();
-    for (const [, field, type] of body.matchAll(/(?:let|var)\s+(\w+)\s*:\s*([^=\r\n]+)/g)) {
-      fields.add(field);
-      if (!type.trim().endsWith('?')) required.add(field);
+/** Les `.swift` du dossier et de ses sous-dossiers */
+function swiftFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) return swiftFiles(path);
+    return entry.name.endsWith('.swift') ? [path] : [];
+  });
+}
+
+/**
+ * Le code Swift, commentaires et chaînes remplacés par des espaces (positions et fins de ligne
+ * gardées) : une accolade ou un `parseArgs` écrit dans un commentaire ou une chaîne ne compte pas.
+ */
+function swiftCode(text: string): string {
+  let out = '';
+  let i = 0;
+  while (i < text.length) {
+    let end: number;
+    if (text.startsWith('//', i)) {
+      end = text.indexOf('\n', i);
+      if (end === -1) end = text.length;
+    } else if (text.startsWith('/*', i)) {
+      end = text.indexOf('*/', i + 2);
+      end = end === -1 ? text.length : end + 2;
+    } else if (text[i] === '"') {
+      // Chaîne sur une ligne, ou sur plusieurs entre """ ; « \" » ne la ferme pas
+      const quote = text.startsWith('"""', i) ? '"""' : '"';
+      end = i + quote.length;
+      while (end < text.length && !text.startsWith(quote, end) && (quote.length > 1 || text[end] !== '\n')) end += text[end] === '\\' ? 2 : 1;
+      if (text.startsWith(quote, end)) end += quote.length;
+    } else {
+      out += text[i++];
+      continue;
     }
-    argTypes.set(name, { fields, required });
+    out += text.slice(i, end).replace(/[^\r\n]/g, ' ');
+    i = end;
   }
-  // Chaque commande, avec le type d'arguments lu dans son corps (jusqu'à la commande suivante)
+  return out;
+}
+
+/** Le corps d'un bloc : du « { » à la position `open` jusqu'à l'accolade qui le ferme */
+function braceBody(code: string, open: number, what: string): string {
+  let depth = 0;
+  for (let i = open; i < code.length; i++) {
+    if (code[i] === '{') depth++;
+    else if (code[i] === '}' && --depth === 0) return code.slice(open + 1, i);
+  }
+  throw new Error(`${what} : accolade fermante introuvable`);
+}
+
+function swiftPlugin() {
+  // Chaque fichier lu à part : le corps d'une commande ne déborde jamais sur le fichier suivant
+  const files = swiftFiles(join(ROOT, SWIFT_PLUGIN_DIR)).map((path) => ({
+    file: relative(ROOT, path).replace(/\\/g, '/'),
+    code: swiftCode(readFileSync(path, 'utf8')),
+  }));
+  const argTypes = new Map<string, KotlinArgs>();
+  for (const { code } of files) {
+    for (const [, name, body] of code.matchAll(/(?:struct|class)\s+(\w+)\s*:\s*Decodable\s*\{([\s\S]*?)\r?\n\}/g)) {
+      const fields = new Set<string>();
+      const required = new Set<string>();
+      for (const [, field, type] of body.matchAll(/(?:let|var)\s+(\w+)\s*:\s*([^=\r\n]+)/g)) {
+        fields.add(field);
+        if (!type.trim().endsWith('?')) required.add(field);
+      }
+      argTypes.set(name, { fields, required });
+    }
+  }
+  // Chaque commande, avec le type d'arguments lu dans son seul corps (accolades appariées depuis son
+  // « { ») : un `parseArgs` d'une fonction écrite plus loin ne lui est pas attribué
   const commands = new Map<string, KotlinArgs | null>();
-  for (const part of text.split(/@objc\s+public\s+func\s+/).slice(1)) {
-    const fn = /^(\w+)\(_ invoke: Invoke\)/.exec(part)?.[1];
-    if (!fn) continue;
-    const argsType = /parseArgs\((\w+)\.self\)/.exec(part)?.[1];
-    commands.set(camelToSnake(fn), argsType ? (argTypes.get(argsType) ?? { fields: new Set(), required: new Set(['<type introuvable>']) }) : null);
+  for (const { file, code } of files) {
+    for (const match of code.matchAll(/@objc\s+public\s+func\s+(\w+)\(_ invoke: Invoke\)\s*\{/g)) {
+      const body = braceBody(code, (match.index ?? 0) + match[0].length - 1, `${file} : ${match[1]}`);
+      const argsType = /parseArgs\((\w+)\.self\)/.exec(body)?.[1];
+      commands.set(camelToSnake(match[1]), argsType ? (argTypes.get(argsType) ?? { fields: new Set(), required: new Set(['<type introuvable>']) }) : null);
+    }
   }
   return commands;
 }
@@ -432,6 +489,13 @@ describe('contrat des commandes appli ↔ Rust ↔ Android', () => {
       expect(swift.size).toBeGreaterThan(0);
       const listed = new Set(pluginCommands);
       expect([...swift.keys()].filter((name) => !listed.has(name))).toEqual([]);
+    });
+
+    it('la lecture du Swift attribue à chaque commande son propre type d\'arguments', () => {
+      // Garde-fou de l'analyseur, comme pour les quatre côtés plus haut
+      expect(swift.get('secure_set')).toEqual({ fields: new Set(['key', 'value']), required: new Set(['key', 'value']) });
+      expect(swift.get('secure_delete')?.required).toEqual(new Set(['key']));
+      expect(swift.get('network_status')).toBeNull();
     });
 
     it('les commandes de M2 existent côté Swift', () => {
